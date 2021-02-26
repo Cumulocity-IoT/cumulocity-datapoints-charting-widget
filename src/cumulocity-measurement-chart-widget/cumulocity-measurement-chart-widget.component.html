@@ -1,0 +1,9 @@
+<div class="chart-container" *ngIf="verifyConfig() else message">
+    <!-- <div style="display: block; width: 500px; height: 400px;"> -->
+    <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions"
+        [chartType]="widgetHelper.getWidgetConfig().chart.type">
+    </canvas>
+</div>
+<ng-template #message>
+    <h4>Please choose at least one device, and measurment and a graph type to see a chart display</h4>
+</ng-template>

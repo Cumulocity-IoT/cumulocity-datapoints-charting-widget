@@ -1,0 +1,9 @@
+/** @format */
+
+.chart-container {
+    display: block;
+    position: relative;
+    height: 90%;
+    /* border: 1px solid black; */
+    margin: 1rem;
+}

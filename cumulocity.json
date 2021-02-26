@@ -1,0 +1,12 @@
+{
+    "name": "Measuement Charting Widget",
+    "contextPath": "cumulocity-measurement-chart",
+    "key": "cumulocity-measurement-chart-application-key",
+    "contentSecurityPolicy": "default-src 'self'",
+    "icon": {
+        "class": "fa fa-line-chart"
+    },
+    "manifest": {
+        "noAppSwitcher": true
+    }
+}
