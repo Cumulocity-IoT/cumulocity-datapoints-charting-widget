@@ -107,33 +107,39 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 this.seriesData[key].times.shift();
                 //log it
                 console.log(
-                    `Realtime ${options.name} - ${d} : ${measurementValue}`,
-                    data.data.data
+                    `Realtime ${options.name} - ${d} : ${measurementValue}`
                 );
-                //console.log("AFTER");
-                //console.log(this.seriesData[key].vals);
-                if (options.avgPeriod > 0) {
-                    ////console.log("Changing average");
 
-                    let a = sma(
-                        this.seriesData[key].vals.slice(
-                            Math.max(
-                                this.seriesData[key].vals.length -
-                                    options.avgPeriod,
-                                0
-                            )
-                        ),
-                        options.avgPeriod,
-                        3
+                if (options.avgPeriod > 0) {
+                    let source = this.seriesData[key].valtimes.slice(
+                        Math.max(
+                            this.seriesData[key].valtimes.length -
+                                options.avgPeriod,
+                            0
+                        )
                     );
+
+                    let a = sma(source, options.avgPeriod, 3);
 
                     //aggregate needs x and y coordinates
                     this.seriesData[key].aggregate.push({
                         x: d,
                         y: a[a.length - 1],
                     });
-                    this.seriesData[key].aggregate.shift();
-                    ////console.log(this.seriesData[key].aggregate);
+
+                    //only remove the first if we are longer than the source array.
+                    if (
+                        this.seriesData[key].aggregate.length >
+                        this.seriesData[key].valtimes.length
+                    ) {
+                        this.seriesData[key].aggregate.shift();
+                    }
+
+                    console.log(this.seriesData[key].vals);
+                    // console.log(
+                    //     `result key:${key} vals:${this.seriesData[key].vals.length} agg:${this.seriesData[key].aggregate.length}`
+                    // );
+                    console.log(this.seriesData[key].aggregate);
                 }
 
                 //make sure we get unique labels

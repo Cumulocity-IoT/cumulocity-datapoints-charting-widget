@@ -7,6 +7,9 @@ const del = require('del');
 const execSync = require('child_process').execSync;
 const replace = require('gulp-replace');
 const path = require('path');
+const semver = require('semver')
+const pkgJson = require('./dist/widget-library/package.json');
+
 
 function clean() {
     return del(['dist']);
@@ -32,7 +35,7 @@ const bundle = series(
         return src('./dist/widget/**/*')
             // Filter out the webpackRuntime chunk, we only need the widget code chunks
             .pipe(filter(file => !/^[a-f0-9]{20}\.js(\.map)?$/.test(file.relative)))
-            .pipe(zip('measurement_chart_widget_v1.0.0.zip'))
+            .pipe(zip(`${pkgJson.name}-${pkgJson.version}.zip`))
             .pipe(dest('dist/'))
     }
 )
@@ -42,7 +45,6 @@ exports.build = compile;
 exports.bundle = bundle;
 exports.default = series(clean, compile, bundle, async function success() {
     console.log("Build Finished Successfully!");
-    console.log("Runtime Widget Output (Install in the browser): dist/widget.zip");
-    const pkgJson = require('./dist/widget-library/package.json');
+    console.log(`Runtime Widget Output (Install in the browser): dist/${pkgJson.name}-${pkgJson.version}.zip`);
     console.log(`Widget Angular Library (Install with: "npm i <filename.tgz>"): dist/${pkgJson.name}-${pkgJson.version}.tgz`);
 });

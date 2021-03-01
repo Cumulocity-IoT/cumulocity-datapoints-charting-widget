@@ -7,7 +7,7 @@
     "version": "0.0.0-development",
     "description": "Template widget for runtime loading in Cumulocity using the cumulocity-runtime-widget-loader (written by Software AG Global Presales)",
     "scripts": {
-        "build": "gulp"
+        "build": "npm version patch && gulp"
     },
     "keywords": [],
     "author": "Richard Peach - Software AG, Global Presales",
