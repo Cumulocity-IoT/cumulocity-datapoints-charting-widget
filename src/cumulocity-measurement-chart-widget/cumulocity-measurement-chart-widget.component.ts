@@ -15,6 +15,7 @@ import { MeasurementService, Realtime } from "@c8y/ngx-components/api";
 import { WidgetHelper } from "./widget-helper";
 //import { HttpClient } from "@angular/common/http";
 import { sma } from "moving-averages";
+import { getDate } from "ngx-bootstrap/chronos/utils/date-getters";
 
 @Component({
     templateUrl: "./cumulocity-measurement-chart-widget.component.html",
@@ -103,17 +104,16 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                     x: d,
                     y: measurementValue,
                 });
-                this.seriesData[key].vals.shift();
-                this.seriesData[key].times.shift();
+
                 //log it
                 console.log(
                     `Realtime ${options.name} - ${d} : ${measurementValue}`
                 );
 
                 if (options.avgPeriod > 0) {
-                    let source = this.seriesData[key].valtimes.slice(
+                    let source = this.seriesData[key].vals.slice(
                         Math.max(
-                            this.seriesData[key].valtimes.length -
+                            this.seriesData[key].vals.length -
                                 options.avgPeriod,
                             0
                         )
@@ -127,20 +127,44 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                         y: a[a.length - 1],
                     });
 
-                    //only remove the first if we are longer than the source array.
                     if (
-                        this.seriesData[key].aggregate.length >
+                        this.chartLabels.length >
                         this.seriesData[key].valtimes.length
                     ) {
-                        this.seriesData[key].aggregate.shift();
+                        this.chartLabels.shift(); //lose the first
                     }
-
-                    console.log(this.seriesData[key].vals);
-                    // console.log(
-                    //     `result key:${key} vals:${this.seriesData[key].vals.length} agg:${this.seriesData[key].aggregate.length}`
-                    // );
-                    console.log(this.seriesData[key].aggregate);
                 }
+
+                let to = Date.now();
+                let from = new Date(
+                    to -
+                        this.widgetHelper.getChartConfig().rangeValue.quantity *
+                            this.widgetHelper.getChartConfig().rangeType.id *
+                            1000
+                );
+
+                //if the time difference > specied else let it grow
+                let diff =
+                    from.getDate() -
+                    new Date(this.seriesData[key].times[0]).getDate();
+                console.log(
+                    `${this.seriesData[key].times[0]} -  ${from} = ${diff}`
+                );
+                if (diff <= 0) {
+                    this.seriesData[key].vals.shift();
+                    this.seriesData[key].valtimes.shift();
+                    this.seriesData[key].times.shift();
+                    this.seriesData[key].aggregate.shift();
+                    this.chartLabels.shift();
+                }
+
+                //only remove the first if we are longer than the source array.
+                // if (
+                //     this.seriesData[key].aggregate.length >
+                //     this.seriesData[key].valtimes.length + 1
+                // ) {
+                //     this.seriesData[key].aggregate.shift();
+                // }
 
                 //make sure we get unique labels
                 this.chartLabels = [...new Set(this.chartLabels.concat([d]))];
