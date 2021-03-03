@@ -15,6 +15,7 @@ import { ListItem, WidgetConfig } from "./widget-config";
 
 import * as _ from "lodash";
 import { WidgetHelper } from "./widget-helper";
+import * as moment from "moment";
 
 @Component({
     templateUrl: "cumulocity-measurement-chart-widget-config.component.html",
@@ -244,6 +245,12 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
                 conf.selectedDevices
             );
         }
+
+        this.widgetHelper.getChartConfig().dateExample = moment().format(
+            this.widgetHelper.getChartConfig().rangeDisplay[
+                this.widgetHelper.getChartConfig().rangeType.text
+            ]
+        );
 
         // this.widgetHelper.getChartConfig().dateExample = formatDate(
         //     new Date(),

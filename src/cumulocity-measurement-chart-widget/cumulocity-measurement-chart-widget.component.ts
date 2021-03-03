@@ -239,7 +239,7 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 thisSeries2.data = this.seriesData[key].aggregate;
                 localChartData.push(thisSeries2);
             }
-            
+
             //Update series as measurments come in.
             if (this.widgetHelper.getChartConfig().series[key].realTime) {
                 //console.log(`Subscribing to ${options.name}`);
@@ -291,6 +291,7 @@ export class CumulocityMeasurementChartWidget implements OnInit {
             stacked: this.widgetHelper.getChartConfig().stackSeries,
             type: "time",
             time: {
+                displayFormats: this.widgetHelper.getChartConfig().rangeDisplay,
                 unit: this.widgetHelper.getChartConfig().rangeType.text,
             },
         });

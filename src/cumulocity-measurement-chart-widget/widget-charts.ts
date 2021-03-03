@@ -1,6 +1,7 @@
 /** @format */
 import { ListItem } from "./widget-config";
 import * as _ from "lodash";
+import { TimeDisplayFormat } from "chart.js";
 
 export interface Aggregation {
     type: string;
@@ -85,11 +86,24 @@ export class ChartConfig {
         { id: 31536000, text: "year" },
     ];
 
+    public rangeDisplayTemplate: TimeDisplayFormat = {
+        millisecond: "h:mm:ss.SSS a",
+        second: "h:mm:ss a",
+        minute: "h:mm a",
+        hour: "hA",
+        day: "MMM D",
+        week: "ll",
+        month: "MMM YYYY",
+        quarter: "[Q]Q - YYYY",
+        year: "YYYY",
+    };
+
     //Global properties
     enabled: boolean = true;
     type: string = "line";
     rangeType: ListItem = this.rangeUnits[1];
-    rangeValue: number = 50;
+    rangeValue: number = 10;
+    rangeDisplay: TimeDisplayFormat ={...this.rangeDisplayTemplate };
     position: string = "None";
     height: number = 100;
     aggregation: Aggregation = {
@@ -99,7 +113,6 @@ export class ChartConfig {
     };
 
     dateExample: string = "yyyy-MM-dd hh:mm";
-    locale: string = "en_US";
     showx: boolean = true;
     showy: boolean = true;
     showAdvanced: boolean = false;

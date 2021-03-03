@@ -128,8 +128,13 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-layout col-lg-12">
-                    <label for="dateFormat" translate>Date Format '{{widgetHelper.getChartConfig().rangeType}}'</label>
+                <div class="col-layout col-lg-6">
+                    <label for="dateFormat" translate>Date Format</label>
+                    <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
+                        [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeType.text]"
+                        (ngModelChange)="updateConfig()" />
+                </div>
+                <div class="col-layout col-lg-6">
                     <p>
                         Example Output:
                         {{ widgetHelper.getChartConfig().dateExample }}
