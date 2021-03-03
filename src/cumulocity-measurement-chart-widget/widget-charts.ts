@@ -62,25 +62,34 @@ export class ChartConfig {
     /**
      * id = number of seconds in 1
      * if 0 then we want the number of measurements
+     *  'millisecond'
+        'second'
+        'minute'
+        'hour'
+        'day'
+        'week'
+        'month'
+        'quarter'
+        'year'
      */
     public rangeUnits: ListItem[] = [
         // { id: -1, text: "Dates" },
         // { id: 0, text: "Measurements" },
-        { id: 1, text: "Seconds" },
-        { id: 60, text: "Minutes" },
-        { id: 3600, text: "Hours" },
-        { id: 86400, text: "Days" },
-        { id: 604800, text: "Weeks" },
+        { id: 1, text: "second" },
+        { id: 60, text: "minute" },
+        { id: 3600, text: "hour" },
+        { id: 86400, text: "day" },
+        { id: 604800, text: "week" },
+        { id: 2592000, text: "month" },
+        { id: 7776000, text: "quarter" },
+        { id: 31536000, text: "year" },
     ];
 
     //Global properties
     enabled: boolean = true;
     type: string = "line";
     rangeType: ListItem = this.rangeUnits[1];
-    rangeValue: { quantity: number; from: Date } = {
-        quantity: 50,
-        from: new Date(),
-    };
+    rangeValue: number = 50;
     position: string = "None";
     height: number = 100;
     aggregation: Aggregation = {
@@ -89,7 +98,6 @@ export class ChartConfig {
         count: 100,
     };
 
-    dateFormat: string = "yyyy-MM-dd hh:mm";
     dateExample: string = "yyyy-MM-dd hh:mm";
     locale: string = "en_US";
     showx: boolean = true;

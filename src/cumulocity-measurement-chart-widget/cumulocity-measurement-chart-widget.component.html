@@ -1,8 +1,14 @@
 <div class="chart-container" *ngIf="verifyConfig() else message">
     <!-- <div style="display: block; width: 500px; height: 400px;"> -->
-    <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions"
-        [chartType]="widgetHelper.getWidgetConfig().chart.type">
-    </canvas>
+    <!-- <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions" -->
+    <ng-container *ngIf="chartData && chartData.length > 0 else waiting">
+        <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
+            [chartType]="widgetHelper.getWidgetConfig().chart.type">
+        </canvas>
+    </ng-container>
+    <ng-template #waiting>
+        <h1>loading...</h1>
+    </ng-template>
 </div>
 <ng-template #message>
     <h4>Please choose at least one device, and measurment and a graph type to see a chart display</h4>

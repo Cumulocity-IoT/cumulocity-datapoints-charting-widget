@@ -11,10 +11,18 @@ const bump = require('gulp-bump');
 
 
 
+/**
+ * Remove dist folder ready for next build 
+ */
 function clean() {
     return del(['dist']);
 }
 
+/**
+ *  Series of functions that compile the target
+ *  if we are building then bump the "patch" number 
+ *  build angular parts , webpack and styles. 
+ */
 const compile = series(
     //increase patch
     function () {
@@ -34,6 +42,9 @@ const compile = series(
     async function packLibrary() { return execSync("npm pack ./widget-library", { cwd: './dist', stdio: 'inherit' }) }
 )
 
+/**
+ * Create the webpack build include the relvent items and zip it.
+ */
 const bundle = series(
     async function webpackBuild() { return execSync("npx webpack", { stdio: 'inherit' }) },
     function copyCumulocityJson() { return fs.copy('./cumulocity.json', './dist/widget/cumulocity.json') },
@@ -50,9 +61,14 @@ const bundle = series(
 exports.clean = clean;
 exports.build = compile;
 exports.bundle = bundle;
+
+/**
+ * simply running gulp starts this series 
+ */
 exports.default = series(clean, compile, bundle, async function success() {
     console.log("Build Finished Successfully!");
     const pkgJson = require('./dist/widget-library/package.json');
     console.log(`Runtime Widget Output (Install in the browser): dist/${pkgJson.name}-${pkgJson.version}.zip`);
     console.log(`Widget Angular Library (Install with: "npm i <filename.tgz>"): dist/${pkgJson.name}-${pkgJson.version}.tgz`);
 });
+

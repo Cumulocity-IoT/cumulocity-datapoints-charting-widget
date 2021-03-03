@@ -43,45 +43,21 @@
         <h4 translate>Global Chart Settings</h4>
         <div class="configsection">
             <div class="row">
-                <ng-container *ngIf="
-                        widgetHelper.getWidgetConfig().selectedDevices.length >
-                        0
-                    ">
-                    <div class="col-layout col-lg-4">
-                        <label for="rangeSelector" translate>Range Type</label>
-                        <select name="rangeSelector" [(ngModel)]="
-                                widgetHelper.getChartConfig().rangeType
-                            " (ngModelChange)="updateConfig()" >
-                            <option *ngFor="
-                                    let rType of widgetHelper.getChartConfig()
-                                        .rangeUnits 
-                                " [ngValue]="rType">
-                                {{ rType.text }}
-                            </option>
-                        </select>
-                    </div>
+                <ng-container *ngIf="widgetHelper.getWidgetConfig().selectedDevices.length>0">
                     <ng-container *ngIf="widgetHelper.getChartConfig().rangeType.id >= 0">
-                        <div class="col-layout col-lg-4">
+                        <div class="col-layout col-lg-12">
                             Retrieve
-                            {{ widgetHelper.getChartConfig().rangeValue.quantity }}
-                            {{widgetHelper.getChartConfig().rangeType.text}}
-                            <span *ngIf="widgetHelper.getChartConfig().rangeType.id >= 1"> of measurments</span>
-                        </div>
-                        <div class="col-layout col-lg-4">
-                            <input type="range" min="1" max="100" step="1" name="rangevalue" [(ngModel)]="
-                                    widgetHelper.getChartConfig().rangeValue.quantity
-                                " />
-                        </div>
-                    </ng-container>
-                    <ng-container *ngIf="widgetHelper.getChartConfig().rangeType.id < 0">
-                        <div class="col-layout col-lg-4">
-                            Retrieve Measurements from
-                        </div>
-                        <div class="col-layout col-lg-4">
-                            <input type="datetime-local" name="fromDate"
-                                [(ngModel)]="widgetHelper.getChartConfig().rangeValue.from" max="new Date()" />
-                            <!-- <input type="text" name="rangedate" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
-                        (ngModelChange)="updateConfig()" /> -->
+                            <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
+                                (ngModelChange)="updateConfig()" />
+                            &nbsp;
+                            <select name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
+                                (ngModelChange)="updateConfig()">
+                                <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits"
+                                    [ngValue]="rType">
+                                    {{ rType.text }}
+                                </option>
+                            </select>
+                            (s) of measurments
                         </div>
                     </ng-container>
                 </ng-container>
@@ -153,9 +129,7 @@
             </div>
             <div class="row">
                 <div class="col-layout col-lg-12">
-                    <label for="dateFormat" translate>Date Format</label>
-                    <input type="text" name="dateFormat" [(ngModel)]="widgetHelper.getChartConfig().dateFormat"
-                        (ngModelChange)="updateConfig()" />
+                    <label for="dateFormat" translate>Date Format '{{widgetHelper.getChartConfig().rangeType}}'</label>
                     <p>
                         Example Output:
                         {{ widgetHelper.getChartConfig().dateExample }}

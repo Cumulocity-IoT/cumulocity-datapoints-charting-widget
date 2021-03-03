@@ -16,7 +16,6 @@ export class MeasurementOptions {
     fragment: string;
     series: string;
     pageSize: number;
-    displayDateFormat: string;
     queryDateFormat: string;
     locale: string;
     avgPeriod: number;
@@ -26,7 +25,6 @@ export class MeasurementOptions {
     constructor(
         deviceId: string,
         name: string,
-        df: string,
         fragment: string,
         series: string,
         averagePeriod?: number
@@ -36,7 +34,6 @@ export class MeasurementOptions {
         this.fragment = fragment;
         this.series = series;
         this.pageSize = 50;
-        this.displayDateFormat = df;
         this.queryDateFormat = "yyyy-MM-ddTHH:mm:ssZ";
         this.locale = "en";
         this.avgPeriod = averagePeriod;
@@ -60,7 +57,9 @@ export class MeasurementOptions {
         _.set(filter, "valueFragmentSeries", this.series);
         _.set(filter, "pageSize", 2000);
         _.set(filter, "revert", true);
-        //_.set(filter, "withTotalPages", true);
+        _.set(filter, "withTotalPages", true);
+
+        //dates are strings in the filter
         if (_.has(this, "dateFrom")) {
             _.set(
                 filter,
@@ -98,10 +97,8 @@ export class MeasurementOptions {
  */
 export class MeasurementList {
     sourceCriteria: MeasurementOptions;
-    vals: any[];
     aggregate: any[];
-    times: Date[];
-    valtimes: { x: string; y: any }[];
+    valtimes: { x: Date; y: any }[];
     mx: Number;
     mn: Number;
     sm: Number;
@@ -109,68 +106,27 @@ export class MeasurementList {
 
     constructor(
         options: MeasurementOptions,
-        vals: number[],
         aggregate: number[],
-        times: Date[],
-        valtimes: { x: string; y: any }[],
+        valtimes: { x: Date; y: any }[],
         mx: number,
         mn: number,
         sm: number
     ) {
         if (options !== undefined) {
             this.sourceCriteria = options;
-            this.vals = vals;
             this.aggregate = aggregate;
-            this.times = times;
             this.valtimes = valtimes;
-            this.av = sm / vals.length;
+            this.av = sm / valtimes.length;
             this.mx = mx;
             this.mn = mn;
         } else {
-            this.sourceCriteria = new MeasurementOptions("", "", "", "", "");
-            this.vals = [];
+            this.sourceCriteria = new MeasurementOptions("", "", "", "");
             this.aggregate = [];
-            this.times = [];
             this.valtimes = [];
             this.av = 0;
             this.mx = 0;
             this.mn = 0;
         }
-    }
-
-    public createAggregatedCounts(freq: string): number[] {
-        //aggregate data: for loop to access both arrays
-        let rawData = [];
-        //console.log(freq);
-        for (let index = 0; index < this.vals.length; index++) {
-            let currentDate: Date = new Date(this.times[index]);
-            let day = currentDate.getDay();
-            let hour = currentDate.getHours();
-            let min = currentDate.getMinutes();
-
-            if (freq == "hourly") {
-                if (rawData[hour] === undefined) {
-                    rawData[hour] = 1;
-                } else {
-                    rawData[hour] += 1;
-                }
-            } else if (freq == "mins") {
-                let key = `${hour}:${min}`;
-
-                if (rawData[key] === undefined) {
-                    rawData[key] = 1;
-                } else {
-                    rawData[key] += 1;
-                }
-            } else if (freq == "daily") {
-                if (rawData[day] === undefined) {
-                    rawData[day] = 1;
-                } else {
-                    rawData[day] += 1;
-                }
-            }
-        }
-        return rawData;
     }
 }
 
@@ -185,7 +141,9 @@ export class MeasurementHelper {
     }
 
     /**
-     * Use the options to return a MeasurementList
+     * Use the options to return a MeasurementList. 
+     * There may be many pages of measurements, we 
+     * can return them all 
      *
      * @param options
      * @param from
@@ -200,8 +158,31 @@ export class MeasurementHelper {
         count?: number
     ): Promise<MeasurementList> {
         options.setFilter(dateFrom, dateTo, count);
-        const resp = await measurementService.list(options.filter());
-        return this.processData(resp, options);
+        let filter = options.filter();
+
+        //get the first page
+        _.set(filter, "currentPage", 1);
+        let data = [];
+        let page = 1;
+        let resp = await measurementService.list(options.filter());
+        if (resp.res.status == 200) {
+            data = [...resp.data];
+            page = resp.paging.nextPage;
+            while (page != null) {
+                console.log(`requesting page ${page}`);
+                // Need to handle errors here and also could there be
+                // other status codes to handle?
+                resp = await resp.paging.next();
+                if (resp.res.status == 200) {
+                    //add next range of stuff...
+                    data = [...data, ...resp.data];
+                }
+
+                page = resp.paging.nextPage;
+            }
+            console.log(`total of ${data.length} points`);
+        }
+        return this.processData(data, options);
     }
 
     /**
@@ -210,17 +191,17 @@ export class MeasurementHelper {
      * @param data the array of measurements
      */
     private processData(
-        resp: IResultList<IMeasurement>,
+        data: IMeasurement[],
         options: MeasurementOptions
     ): MeasurementList {
         //We may get any fragment/series so use lowdash
         //simplify
         //console.log("RESPONSE");
         //console.log(resp);
-        let rawData = resp.data.reduce(
+        let rawData = data.reduce(
             (newArr, row) => {
                 //default
-                let measurementDate = row.time;
+                let measurementDate = new Date(row.time);
                 let measurementValue = 0;
                 //need the fragment, series
                 if (_.has(row, options.fragment)) {
@@ -239,41 +220,30 @@ export class MeasurementHelper {
                     }
                 }
 
-                let d = formatDate(
-                    measurementDate,
-                    options.displayDateFormat,
-                    options.locale
-                );
-                newArr.v.push(measurementValue);
-                newArr.l.push(d);
-                newArr.vl.push({ x: d, y: measurementValue });
+                newArr.vl.push({ x: measurementDate, y: measurementValue });
                 return newArr;
             },
-            { v: [], l: [], vl: [], mx: 0, mn: Number.MAX_VALUE, sm: 0 }
+            { vl: [], mx: 0, mn: Number.MAX_VALUE, sm: 0 }
         );
 
         //display the data in reverse (earlier on left)
-        rawData.v = rawData.v.reverse();
-        rawData.l = rawData.l.reverse();
         rawData.vl = rawData.vl.reverse();
 
+        //Create aggregate function from data (decompose and recompose {x,y}[])
         let aggseries = [];
         if (options.avgPeriod && options.avgPeriod > 0) {
-            //Need to apply the correct function here
-            aggseries = sma(rawData.v, options.avgPeriod, 3);
+            //just the values
+            let source = rawData.vl.map((val) => val.y);
+            //average and bollinger bands
+            let a = sma(source, options.avgPeriod, 3);
+            aggseries = a.map((v, index) => {
+                return { x: rawData.vl[index].x, y: v };
+            });
         }
-
-        //add labels
-        aggseries = aggseries.reduce((acc: ChartPoint[], val, index) => {
-            acc.push({ x: rawData.l[index], y: val });
-            return acc;
-        }, []);
 
         let measurementList: MeasurementList = new MeasurementList(
             options,
-            rawData.v,
             aggseries,
-            rawData.l,
             rawData.vl,
             rawData.mx,
             rawData.mn,

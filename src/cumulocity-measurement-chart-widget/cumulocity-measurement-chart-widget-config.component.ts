@@ -15,7 +15,6 @@ import { ListItem, WidgetConfig } from "./widget-config";
 
 import * as _ from "lodash";
 import { WidgetHelper } from "./widget-helper";
-import { formatDate } from "@angular/common";
 
 @Component({
     templateUrl: "cumulocity-measurement-chart-widget-config.component.html",
@@ -246,11 +245,11 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
             );
         }
 
-        this.widgetHelper.getChartConfig().dateExample = formatDate(
-            new Date(),
-            this.widgetHelper.getChartConfig().dateFormat,
-            this.widgetHelper.getChartConfig().locale
-        );
+        // this.widgetHelper.getChartConfig().dateExample = formatDate(
+        //     new Date(),
+        //     this.widgetHelper.getChartConfig().dateFormat,
+        //     this.widgetHelper.getChartConfig().locale
+        // );
 
         this.widgetHelper.setWidgetConfig(this.config);
     }
