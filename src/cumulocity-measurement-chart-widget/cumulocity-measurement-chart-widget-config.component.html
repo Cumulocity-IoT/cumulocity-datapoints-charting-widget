@@ -4,8 +4,8 @@
     <!-- 
         Device and Measurement selection
     -->
-    <h4 translate>Please select one or more Devices and Measurements</h4>
     <div class="configsection">
+        <h4 translate>Please select one or more Devices and Measurements</h4>
         <div class="row">
             <div class="col-lg-6">
                 <label for="deviceSelector" translate>Select Device</label>
@@ -40,8 +40,8 @@
         <!-- 
             Chart Type & global settings
     -->
-        <h4 translate>Global Chart Settings</h4>
         <div class="configsection">
+            <h4 translate>Global Chart Settings</h4>
             <div class="row">
                 <ng-container *ngIf="widgetHelper.getWidgetConfig().selectedDevices.length>0">
                     <ng-container *ngIf="widgetHelper.getChartConfig().rangeType.id >= 0">
@@ -147,8 +147,8 @@
             Individual series settings (color, line style, points etc... and other related per series options)
             -->
         <div>
-            <h4 translate>Series Settings</h4>
             <div class="configsection">
+                <h4 translate>Series Settings</h4>
                 <div *ngIf="widgetHelper.getChartConfig().hasSeries()">
                     <div *ngFor="
                             let seriesKey of widgetHelper
