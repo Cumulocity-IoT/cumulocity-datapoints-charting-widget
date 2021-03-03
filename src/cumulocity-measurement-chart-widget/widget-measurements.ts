@@ -2,9 +2,8 @@
 
 import { formatDate } from "@angular/common";
 import _ from "lodash";
-import { sma } from "moving-averages";
-import { IResultList, IMeasurement, MeasurementService } from "@c8y/client";
-import { ChartPoint } from "chart.js";
+import boll from "bollinger-bands";
+import { IMeasurement, MeasurementService } from "@c8y/client";
 
 /**
  * These elements can form the criteria
@@ -97,7 +96,9 @@ export class MeasurementOptions {
  */
 export class MeasurementList {
     sourceCriteria: MeasurementOptions;
-    aggregate: any[];
+    upper: { x: Date; y: any }[];
+    aggregate: { x: Date; y: any }[];
+    lower: { x: Date; y: any }[];
     valtimes: { x: Date; y: any }[];
     mx: Number;
     mn: Number;
@@ -106,7 +107,9 @@ export class MeasurementList {
 
     constructor(
         options: MeasurementOptions,
-        aggregate: number[],
+        upper: { x: Date; y: any }[],
+        aggregate: { x: Date; y: any }[],
+        lower: { x: Date; y: any }[],
         valtimes: { x: Date; y: any }[],
         mx: number,
         mn: number,
@@ -114,7 +117,9 @@ export class MeasurementList {
     ) {
         if (options !== undefined) {
             this.sourceCriteria = options;
+            this.upper = upper;
             this.aggregate = aggregate;
+            this.lower = lower;
             this.valtimes = valtimes;
             this.av = sm / valtimes.length;
             this.mx = mx;
@@ -141,9 +146,9 @@ export class MeasurementHelper {
     }
 
     /**
-     * Use the options to return a MeasurementList. 
-     * There may be many pages of measurements, we 
-     * can return them all 
+     * Use the options to return a MeasurementList.
+     * There may be many pages of measurements, we
+     * can return them all
      *
      * @param options
      * @param from
@@ -230,20 +235,36 @@ export class MeasurementHelper {
         rawData.vl = rawData.vl.reverse();
 
         //Create aggregate function from data (decompose and recompose {x,y}[])
+        let upper = [];
         let aggseries = [];
+        let lower = [];
         if (options.avgPeriod && options.avgPeriod > 0) {
             //just the values
             let source = rawData.vl.map((val) => val.y);
             //average and bollinger bands
-            let a = sma(source, options.avgPeriod, 3);
-            aggseries = a.map((v, index) => {
-                return { x: rawData.vl[index].x, y: v };
-            });
+            let a = boll(source, options.avgPeriod, 2);
+
+            for (let index = 0; index < rawData.vl.length; index++) {
+                const element = rawData.vl[index];
+
+                //same for all aggregate values (values lag real data)
+                if (!(index in a.upper)) {
+                    upper.push({ x: element.x, y: rawData.mx });
+                    aggseries.push({ x: element.x, y: element.y });
+                    lower.push({ x: element.x, y: rawData.mn });
+                } else {
+                    upper.push({ x: element.x, y: a.upper[index] });
+                    aggseries.push({ x: element.x, y: a.mid[index] });
+                    lower.push({ x: element.x, y: a.lower[index] });
+                }
+            }
         }
 
         let measurementList: MeasurementList = new MeasurementList(
             options,
+            upper,
             aggseries,
+            lower,
             rawData.vl,
             rawData.mx,
             rawData.mn,

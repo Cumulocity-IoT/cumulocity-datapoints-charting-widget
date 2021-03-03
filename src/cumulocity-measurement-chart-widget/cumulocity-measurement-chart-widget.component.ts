@@ -13,10 +13,8 @@ import {
 } from "./widget-measurements";
 import { MeasurementService, Realtime } from "@c8y/ngx-components/api";
 import { WidgetHelper } from "./widget-helper";
-//import { HttpClient } from "@angular/common/http";
-import { sma } from "moving-averages";
-//import * as Chart from "chart.js";
 import * as moment from "moment";
+import boll from "bollinger-bands";
 
 @Component({
     templateUrl: "./cumulocity-measurement-chart-widget.component.html",
@@ -115,24 +113,38 @@ export class CumulocityMeasurementChartWidget implements OnInit {
 
                     //just the values
                     source = source.map((val) => val.y);
-                    let a = sma(source, options.avgPeriod, 3);
+                    // let a = sma(source, options.avgPeriod, 3);
+                    let a = boll(source, options.avgPeriod, 3);
 
                     //aggregate needs x and y coordinates but we use only the last
+                    this.seriesData[key].upper.push({
+                        x: measurementDate,
+                        y: a.upper[a.upper.length - 1],
+                    });
                     this.seriesData[key].aggregate.push({
                         x: measurementDate,
-                        y: a[a.length - 1],
+                        y: a.mid[a.mid.length - 1],
+                    });
+                    this.seriesData[key].lower.push({
+                        x: measurementDate,
+                        y: a.lower[a.lower.length - 1],
                     });
                 }
             }
             if (this.chartElement) {
                 //range required...
                 let { from, to } = this.getDateRange();
+                //the series are empty at the beginning
+                let first = 0;
+
                 while (
                     moment(this.seriesData[key].aggregate[0].x).isBefore(
                         moment(from)
                     )
                 ) {
+                    this.seriesData[key].upper.shift();
                     this.seriesData[key].aggregate.shift();
+                    this.seriesData[key].lower.shift();
                 }
                 while (
                     moment(this.seriesData[key].valtimes[0].x).isBefore(
@@ -177,7 +189,7 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 measurement.name,
                 measurement.id.split(".")[1],
                 measurement.id.split(".")[2],
-                30
+                this.widgetHelper.getChartConfig().series[key].avgPeriod
             );
 
             //a period of time where quantity is the # of units,
@@ -220,24 +232,46 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 this.widgetHelper.getChartConfig().series[key].avgType !==
                 "None"
             ) {
-                let thisSeries2 = {
-                    data: [],
-                    label: `${options.name} - ${
-                        this.widgetHelper.getChartConfig().series[key].avgPeriod
-                    } ${
-                        this.widgetHelper.getChartConfig().series[key].avgType
-                    }`,
-                    fill: this.widgetHelper.getChartConfig().fillArea,
-                    spanGaps: true,
-                    backgroundColor: this.widgetHelper.getWidgetConfig().chart
-                        .series[key].avgColor,
-                    borderColor: this.widgetHelper.getWidgetConfig().chart
-                        .series[key].avgColor,
-                };
+                if (
+                    this.widgetHelper
+                        .getChartConfig()
+                        .series[key].avgType.indexOf("Moving Average") > -1
+                ) {
+                    let aggregateSeries: ChartDataSets = this.createSeries(
+                        key,
+                        `${options.name} - ${
+                            this.widgetHelper.getChartConfig().series[key]
+                                .avgPeriod
+                        } period`
+                    );
+                    //Need to apply the correct function in the series calculations
+                    aggregateSeries.data = this.seriesData[key].aggregate;
+                    localChartData.push(aggregateSeries);
+                }
 
-                //Need to apply the correct function in the series calculations
-                thisSeries2.data = this.seriesData[key].aggregate;
-                localChartData.push(thisSeries2);
+                if (
+                    this.widgetHelper
+                        .getChartConfig()
+                        .series[key].avgType.indexOf("Bollinger Bands") > -1
+                ) {
+                    let upperBoll: ChartDataSets = this.createSeries(
+                        key,
+                        `${options.name} - upper Bollinger Band`
+                    );
+
+                    //Need to apply the correct function in the series calculations
+                    upperBoll.data = this.seriesData[key].upper;
+                    localChartData.push(upperBoll);
+
+                    let lowerBoll: ChartDataSets = this.createSeries(
+                        key,
+                        `${options.name} - lower Bollinger Band`
+                    );
+
+                    //Need to apply the correct function in the series calculations
+                    lowerBoll.data = this.seriesData[key].lower;
+                    localChartData.push(lowerBoll);
+                }
             }
 
             //Update series as measurments come in.
@@ -255,6 +289,21 @@ export class CumulocityMeasurementChartWidget implements OnInit {
         }
         this.chartData = localChartData; //replace
         this.dataLoaded = true;
+    }
+
+    createSeries(key: string, label: string): ChartDataSets {
+        let series = {
+            data: [],
+            label: label,
+            fill: this.widgetHelper.getChartConfig().fillArea,
+            spanGaps: true,
+            backgroundColor: this.widgetHelper.getWidgetConfig().chart.series[
+                key
+            ].avgColor,
+            borderColor: this.widgetHelper.getWidgetConfig().chart.series[key]
+                .avgColor,
+        };
+        return series;
     }
 
     private getDateRange(): { from: Date; to: Date } {

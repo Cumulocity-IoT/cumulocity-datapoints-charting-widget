@@ -205,15 +205,6 @@
                                         (ngModelChange)="updateConfig()" />
                                 </div>
                             </div>
-                            <!-- <input [value]="widgetHelper.getChartConfig().series[seriesKey].color" [style.background]="
-                  widgetHelper.getChartConfig().series[seriesKey].color
-                " [(colorPicker)]="
-                  widgetHelper.getChartConfig().series[seriesKey].color
-                " (change)="updateConfig()" />
-                            <label translate>Show Advanced Options</label>
-                            <input type="checkbox" [ngModelOptions]="{ standalone: true }" [(ngModel)]="
-                  widgetHelper.getChartConfig().series[seriesKey].showAdvanced
-                " (ngModelChange)="updateConfig()" /> -->
 
                             <!-- 
                                 Per series settings here ?
@@ -259,15 +250,11 @@
                                                                             " (ngModelChange)="updateConfig()" />
                                             <label translate>display aggregate</label>
                                             <select name="avgSelector" [ngModelOptions]="{ standalone: true }"
-                                                [(ngModel)]="
-                                                                                widgetHelper.getChartConfig()
-                                                                                    .series[seriesKey].avgType
-                                                                            ">
+                                                [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgType">
                                                 <option>None</option>
-                                                <option>moving average</option>
-                                                <option>smoothed moving average</option>
-                                                <option>weighted moving average</option>
-                                                <option>Bollanger Bands</option>
+                                                <option>Moving Average</option>
+                                                <option>Bollinger Bands</option>
+                                                <option>Moving Average + Bollinger Bands</option>
                                             </select>
                                         </div>
                                     </div>

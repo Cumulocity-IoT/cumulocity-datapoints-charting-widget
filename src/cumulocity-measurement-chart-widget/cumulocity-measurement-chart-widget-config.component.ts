@@ -179,16 +179,6 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
                         this.avgColorList[i]
                     );
             });
-        //Debug
-        //console.log(
-        //     "Selected devices:",
-        //     this.widgetHelper.getWidgetConfig().selectedDevices
-        // );
-        // //console.log("available measurements:", this.supportedSeries);
-        //console.log(
-        //     "selected measurements:",
-        //     this.widgetHelper.getWidgetConfig().selectedMeasurements
-        // );
     }
 
     showSection(id) {
@@ -226,11 +216,6 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
                     index < conf.selectedMeasurements.length;
                     index++
                 ) {
-                    //console.log(
-                    //     `checking ${
-                    //         conf.selectedMeasurements[index].id.split(".")[0]
-                    //     }`
-                    // );
                     if (
                         checklist.has(
                             conf.selectedMeasurements[index].id.split(".")[0]
@@ -251,12 +236,6 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
                 this.widgetHelper.getChartConfig().rangeType.text
             ]
         );
-
-        // this.widgetHelper.getChartConfig().dateExample = formatDate(
-        //     new Date(),
-        //     this.widgetHelper.getChartConfig().dateFormat,
-        //     this.widgetHelper.getChartConfig().locale
-        // );
 
         this.widgetHelper.setWidgetConfig(this.config);
     }
