@@ -76,12 +76,11 @@
                     </select>
                 </div>
                 <!-- 
-                    The ng-container below is for Bar/Line graphs 
+                    The ng-container below is for Line graphs 
                     Other types will have different options. 
                 -->
-                <ng-container
-                    *ngIf="widgetHelper.getChartConfig().type === 'line' || widgetHelper.getChartConfig().type === 'bar' || widgetHelper.getChartConfig().type === 'horizontalBar'">
-                    <div class="col-layout col-lg-2">
+                <ng-container *ngIf="widgetHelper.getChartConfig().type === 'line' ">
+                    <div class=" col-layout col-lg-2">
                         <label for="showXAxis" translate>show X Axis</label>
                         <input type="checkbox" name="showXAxis" [(ngModel)]="widgetHelper.getChartConfig().showx"
                             (ngModelChange)="updateConfig()" />
@@ -122,8 +121,12 @@
 
                 </ng-container>
 
+                <!-- 
+                                    The ng-container below is for Bar graphs 
+                                    Other types will have different options. 
+                -->
                 <ng-container
-                    *ngIf="widgetHelper.getChartConfig().type === 'pie' || widgetHelper.getChartConfig().type === 'bar' || widgetHelper.getChartConfig().type === 'horizontalBar'">
+                    *ngIf="widgetHelper.getChartConfig().type === 'bar' || widgetHelper.getChartConfig().type === 'horizontalBar'">
                     <div class="col-layout col-lg-2">
                         <label for="showXAxis" translate>show X Axis</label>
                         <input type="checkbox" name="showXAxis" [(ngModel)]="widgetHelper.getChartConfig().showx"
@@ -142,27 +145,14 @@
                                                             " (ngModelChange)="updateConfig()" />
                         </div>
                     </div>
-                    <ng-container *ngIf="widgetHelper.getChartConfig().type === 'line'">
-                        <div class="col-layout col-lg-2">
-                            <label for="fillArea" translate>Fill Area</label>
-                            <input type="checkbox" name="fillArea" [(ngModel)]="widgetHelper.getChartConfig().fillArea"
-                                (ngModelChange)="updateConfig()" />
-                        </div>
-                    </ng-container>
-                    <ng-container *ngIf="
-                                                        widgetHelper.getChartConfig().type === 'bar' ||
-                                                        widgetHelper.getChartConfig().type === 'horizontalBar'
-                                                        
-                                                    ">
-                        <div class="col-layout col-lg-2">
-                            <label for="stackSeries" translate>Stack Series</label>
-                            <input [disabled]="widgetHelper.getWidgetConfig().selectedMeasurements
-                                                            .length < 2" type="checkbox" name="stackSeries" [(ngModel)]="
+                    <div class="col-layout col-lg-2">
+                        <label for="stackSeries" translate>Stack Series</label>
+                        <input [disabled]="widgetHelper.getWidgetConfig().selectedMeasurements
+                                                            .length < 2" type="checkbox" name="stackSeries"
+                            [(ngModel)]="
                                                                 widgetHelper.getChartConfig().stackSeries
                                                             " (ngModelChange)="updateConfig()" />
-                        </div>
-                    </ng-container>
-                
+                    </div>
                 </ng-container>
 
 
@@ -251,7 +241,7 @@
                                         (ngModelChange)="updateConfig()" />
 
                                     <label translate>Show Advanced Options</label>
-                                    <input [disabled]="widgetHelper.getChartConfig().type == 'line'" type="checkbox"
+                                    <input [disabled]="widgetHelper.getChartConfig().type !== 'line'" type="checkbox"
                                         [ngModelOptions]="{ standalone: true }"
                                         [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].showAdvanced"
                                         (ngModelChange)="updateConfig()" />
