@@ -4,7 +4,7 @@
         "dist\\bundle-src\\custom-widget.js": "cumulocity-measurement-chart-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-measurement-chart-CustomWidget"
     },
-    "version": "0.9.0",
+    "version": "0.9.8",
     "description": "Template widget for runtime loading in Cumulocity using the cumulocity-runtime-widget-loader (written by Software AG Global Presales)",
     "scripts": {
         "build": "gulp"

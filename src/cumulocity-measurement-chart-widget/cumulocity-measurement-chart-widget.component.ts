@@ -95,11 +95,22 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                     measurementUnit = ser.unit;
                 }
 
-                //Adjust series
-                this.seriesData[key].valtimes.push({
+                let datum = {
                     x: measurementDate,
                     y: measurementValue,
-                });
+                };
+
+                //swap axes if horizontal
+                if (
+                    this.widgetHelper.getChartConfig().type == "horizontalBar"
+                ) {
+                    datum = {
+                        y: measurementDate,
+                        x: measurementValue,
+                    };
+                }
+                //Adjust series
+                this.seriesData[key].valtimes.push(datum);
 
                 //Only take the last N values to create the average
                 if (options.avgPeriod > 0) {
@@ -189,7 +200,8 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 measurement.name,
                 measurement.id.split(".")[1],
                 measurement.id.split(".")[2],
-                this.widgetHelper.getChartConfig().series[key].avgPeriod
+                this.widgetHelper.getChartConfig().series[key].avgPeriod,
+                this.widgetHelper.getChartConfig().type
             );
 
             //a period of time where quantity is the # of units,
@@ -204,7 +216,8 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 options,
                 from,
                 to,
-                null
+                null,
+                this.widgetHelper.getChartConfig().type
             );
 
             //Normal plot
@@ -333,27 +346,53 @@ export class CumulocityMeasurementChartWidget implements OnInit {
             );
         }
 
-        //X axis
-        this.chartOptions.scales.xAxes.length = 0; //reset axes
-        this.chartOptions.scales.xAxes.push({
-            display: this.widgetHelper.getChartConfig().showx,
-            stacked: this.widgetHelper.getChartConfig().stackSeries,
-            type: "time",
-            time: {
-                displayFormats: this.widgetHelper.getChartConfig().rangeDisplay,
-                unit: this.widgetHelper.getChartConfig().rangeType.text,
-            },
-        });
+        if (this.widgetHelper.getChartConfig().type === "horizontalBar") {
+            //swapped x & y
+            this.chartOptions.scales.yAxes.length = 0; //reset axes
+            this.chartOptions.scales.yAxes.push({
+                display: this.widgetHelper.getChartConfig().showx,
+                stacked: this.widgetHelper.getChartConfig().stackSeries,
+                type: "time",
+                time: {
+                    displayFormats: this.widgetHelper.getChartConfig()
+                        .rangeDisplay,
+                    unit: this.widgetHelper.getChartConfig().rangeType.text,
+                },
+            });
 
-        //Y axis
-        this.chartOptions.scales.yAxes.length = 0; //reset axes
-        this.chartOptions.scales.yAxes.push({
-            display: this.widgetHelper.getChartConfig().showy,
-            stacked: this.widgetHelper.getChartConfig().stackSeries,
-            ticks: {
-                beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
-            },
-        });
+            //Y axis
+            this.chartOptions.scales.xAxes.length = 0; //reset axes
+            this.chartOptions.scales.xAxes.push({
+                display: this.widgetHelper.getChartConfig().showy,
+                stacked: this.widgetHelper.getChartConfig().stackSeries,
+                ticks: {
+                    beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
+                },
+            });
+        } else {
+            //X axis
+            this.chartOptions.scales.xAxes.length = 0; //reset axes
+            this.chartOptions.scales.xAxes.push({
+                display: this.widgetHelper.getChartConfig().showx,
+                stacked: this.widgetHelper.getChartConfig().stackSeries,
+                type: "time",
+                time: {
+                    displayFormats: this.widgetHelper.getChartConfig()
+                        .rangeDisplay,
+                    unit: this.widgetHelper.getChartConfig().rangeType.text,
+                },
+            });
+
+            //Y axis
+            this.chartOptions.scales.yAxes.length = 0; //reset axes
+            this.chartOptions.scales.yAxes.push({
+                display: this.widgetHelper.getChartConfig().showy,
+                stacked: this.widgetHelper.getChartConfig().stackSeries,
+                ticks: {
+                    beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
+                },
+            });
+        }
 
         //labels affect the plot greatly so allow the chart to naturally do that it's self.
         //console.log(`Chart Axes Set :`, this.chartOptions.scales);

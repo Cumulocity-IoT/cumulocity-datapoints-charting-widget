@@ -20,13 +20,15 @@ export class MeasurementOptions {
     avgPeriod: number;
     dateFrom?: Date;
     dateTo?: Date;
+    targetGraphType: string;
 
     constructor(
         deviceId: string,
         name: string,
         fragment: string,
         series: string,
-        averagePeriod?: number
+        averagePeriod: number,
+        targetGraphType: string
     ) {
         this.deviceId = deviceId;
         this.name = name;
@@ -36,9 +38,15 @@ export class MeasurementOptions {
         this.queryDateFormat = "yyyy-MM-ddTHH:mm:ssZ";
         this.locale = "en";
         this.avgPeriod = averagePeriod;
+        this.targetGraphType = targetGraphType;
     }
 
-    public setFilter(from: Date, to: Date, count: number) {
+    public setFilter(
+        from: Date,
+        to: Date,
+        count: number,
+        targetGraphType: string
+    ) {
         if (from) {
             _.set(this, "dateFrom", from);
         }
@@ -47,6 +55,7 @@ export class MeasurementOptions {
             _.set(this, "dateTo", to);
         }
         this.pageSize = count;
+        this.targetGraphType = targetGraphType;
     }
 
     public filter(): Object {
@@ -125,7 +134,14 @@ export class MeasurementList {
             this.mx = mx;
             this.mn = mn;
         } else {
-            this.sourceCriteria = new MeasurementOptions("", "", "", "");
+            this.sourceCriteria = new MeasurementOptions(
+                "",
+                "",
+                "",
+                "",
+                30,
+                "line"
+            );
             this.aggregate = [];
             this.valtimes = [];
             this.av = 0;
@@ -158,18 +174,19 @@ export class MeasurementHelper {
     public async getMeasurements(
         measurementService: MeasurementService,
         options: MeasurementOptions,
-        dateFrom?: Date,
-        dateTo?: Date,
-        count?: number
+        dateFrom: Date,
+        dateTo: Date,
+        count: number,
+        targetGraphType: string
     ): Promise<MeasurementList> {
-        options.setFilter(dateFrom, dateTo, count);
+        options.setFilter(dateFrom, dateTo, count, targetGraphType);
         let filter = options.filter();
 
         //get the first page
         _.set(filter, "currentPage", 1);
         let data = [];
         let page = 1;
-        let resp = await measurementService.list(options.filter());
+        let resp = await measurementService.list(filter);
         if (resp.res.status == 200) {
             data = [...resp.data];
             page = resp.paging.nextPage;
@@ -225,7 +242,19 @@ export class MeasurementHelper {
                     }
                 }
 
-                newArr.vl.push({ x: measurementDate, y: measurementValue });
+                //swap axes if horizontal
+                if (options.targetGraphType == "horizontalBar") {
+                    newArr.vl.push({
+                        y: measurementDate,
+                        x: measurementValue,
+                    });
+                } else {
+                    newArr.vl.push({
+                        x: measurementDate,
+                        y: measurementValue,
+                    });
+                }
+
                 return newArr;
             },
             { vl: [], mx: 0, mn: Number.MAX_VALUE, sm: 0 }
@@ -238,24 +267,27 @@ export class MeasurementHelper {
         let upper = [];
         let aggseries = [];
         let lower = [];
-        if (options.avgPeriod && options.avgPeriod > 0) {
-            //just the values
-            let source = rawData.vl.map((val) => val.y);
-            //average and bollinger bands
-            let a = boll(source, options.avgPeriod, 2);
+        //only line graphs need this
+        if (options.targetGraphType == "line") {
+            if (options.avgPeriod && options.avgPeriod > 0) {
+                //just the values
+                let source = rawData.vl.map((val) => val.y);
+                //average and bollinger bands
+                let a = boll(source, options.avgPeriod, 2);
 
-            for (let index = 0; index < rawData.vl.length; index++) {
-                const element = rawData.vl[index];
+                for (let index = 0; index < rawData.vl.length; index++) {
+                    const element = rawData.vl[index];
 
-                //same for all aggregate values (values lag real data)
-                if (!(index in a.upper)) {
-                    upper.push({ x: element.x, y: rawData.mx });
-                    aggseries.push({ x: element.x, y: element.y });
-                    lower.push({ x: element.x, y: rawData.mn });
-                } else {
-                    upper.push({ x: element.x, y: a.upper[index] });
-                    aggseries.push({ x: element.x, y: a.mid[index] });
-                    lower.push({ x: element.x, y: a.lower[index] });
+                    //same for all aggregate values (values lag real data)
+                    if (!(index in a.upper)) {
+                        upper.push({ x: element.x, y: rawData.mx });
+                        aggseries.push({ x: element.x, y: element.y });
+                        lower.push({ x: element.x, y: rawData.mn });
+                    } else {
+                        upper.push({ x: element.x, y: a.upper[index] });
+                        aggseries.push({ x: element.x, y: a.mid[index] });
+                        lower.push({ x: element.x, y: a.lower[index] });
+                    }
                 }
             }
         }
