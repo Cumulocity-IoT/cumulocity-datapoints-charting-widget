@@ -145,18 +145,20 @@ export class CumulocityMeasurementChartWidget implements OnInit {
             if (this.chartElement) {
                 //range required...
                 let { from, to } = this.getDateRange();
-                //the series are empty at the beginning
-                let first = 0;
 
-                while (
-                    moment(this.seriesData[key].aggregate[0].x).isBefore(
-                        moment(from)
-                    )
-                ) {
-                    this.seriesData[key].upper.shift();
-                    this.seriesData[key].aggregate.shift();
-                    this.seriesData[key].lower.shift();
+                if (this.widgetHelper.getChartConfig().type === "line") {
+                    while (
+                        moment(this.seriesData[key].aggregate[0].x).isBefore(
+                            moment(from)
+                        )
+                    ) {
+                        this.seriesData[key].upper.shift();
+                        this.seriesData[key].aggregate.shift();
+                        this.seriesData[key].lower.shift();
+                    }
                 }
+
+                //all graph types
                 while (
                     moment(this.seriesData[key].valtimes[0].x).isBefore(
                         moment(from)
