@@ -60,19 +60,6 @@ export class ChartConfig {
         { id: 3, text: "z" },
     ];
 
-    /**
-     * id = number of seconds in 1
-     * if 0 then we want the number of measurements
-     *  'millisecond'
-        'second'
-        'minute'
-        'hour'
-        'day'
-        'week'
-        'month'
-        'quarter'
-        'year'
-     */
     public rangeUnits: ListItem[] = [
         // { id: -1, text: "Dates" },
         // { id: 0, text: "Measurements" },

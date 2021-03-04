@@ -64,9 +64,19 @@ The widget configuration page contains a number of configuration attributes.
 
 **NOTE**: Once the **Target Assets or Devices** and **Measurement** information has been populated, you can click the 'Save' button to configure the widget with the default settings
 
--   **Series Settings** : Below the global settings you will see a row for each measurment series you selected. By clicking on the row you will expand options that can be set per series. Depending on the chart type there may be further options which can be exposed by clicking the
+-   **Series Settings** : Below the global settings you will see a row for each measurment series you selected. By clicking on the row you will expand options that can be set per series. Depending on the chart type there may be further options which can be exposed by clicking the show advanced options checkbox.
 
 ![series](/images/series.png)
+
+-   Change the series display name (reflected in the legend)
+-   Change the series plot colour.
+-   Currently the line chart has advanced options
+
+![series](/images/advanced.png)
+
+-   hide measurements will hide the plot of the source data
+-   choose an option from the _display aggregate_ drop down to show the colour and averaging period (number of measurements)
+-   display aggregate allows you to choose to plot a moving average and/or Bollinger Bands
 
 ---
 
