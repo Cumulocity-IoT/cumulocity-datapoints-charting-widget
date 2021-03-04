@@ -1,16 +1,16 @@
 {
-    "name": "cumulocity-runtime-widget",
+    "name": "cumulocity-measurement-chart-widget",
     "interleave": {
         "dist\\bundle-src\\custom-widget.js": "cumulocity-measurement-chart-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-measurement-chart-CustomWidget"
     },
-    "version": "0.9.12",
-    "description": "Template widget for runtime loading in Cumulocity using the cumulocity-runtime-widget-loader (written by Software AG Global Presales)",
+    "version": "0.9.13",
+    "description": "Widget for displaying realtime measurment data in graphs (written by Software AG Global Presales)",
     "scripts": {
         "build": "gulp"
     },
     "keywords": [],
-    "author": "Richard Peach - Software AG, Global Presales",
+    "author": "John Heath - Software AG, Global Presales",
     "license": "Apache 2.0",
     "dependencies": {
         "bollinger-bands": "^3.0.1",
