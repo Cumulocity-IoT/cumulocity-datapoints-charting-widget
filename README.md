@@ -60,13 +60,13 @@ The widget configuration page contains a number of configuration attributes.
 -   **Measurement** : Select the measurement fragment and series from the dropdown. You can deselect them in a similar way to the devices.
 -   **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurments.
 
-![devices and measurements](/images/global.png)
+![devices and measurements](/images/global.gif)
+
+**NOTE**: Once the **Target Assets or Devices** and **Measurement** information has been populated, you can click the 'Save' button to configure the widget with the default settings
 
 -   **Series Settings** : Below the global settings you will see a row for each measurment series you selected. By clicking on the row you will expand options that can be set per series. Depending on the chart type there may be further options which can be exposed by clicking the
 
 ![series](/images/series.png)
-
-**NOTE**: Once the **Target Assets or Devices** and **Measurement** information has been populated, you can click the 'Save' button to configure the widget with the default settings
 
 ---
 

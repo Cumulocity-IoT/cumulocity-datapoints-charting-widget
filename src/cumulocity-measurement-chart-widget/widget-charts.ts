@@ -36,12 +36,12 @@ export class ChartConfig {
         { id: 0, text: "line" },
         { id: 1, text: "bar" },
         { id: 2, text: "horizontalBar" },
-        { id: 3, text: "radar" },
-        { id: 4, text: "doughnut" },
-        { id: 5, text: "polarArea" },
-        { id: 6, text: "bubble" },
-        { id: 7, text: "pie" },
-        { id: 8, text: "scatter" },
+        // { id: 3, text: "radar" },
+        // { id: 4, text: "doughnut" },
+        // { id: 5, text: "polarArea" },
+        // { id: 6, text: "bubble" },
+        // { id: 7, text: "pie" },
+        // { id: 8, text: "scatter" },
     ];
 
     public chartPositions: ListItem[] = [
@@ -103,7 +103,7 @@ export class ChartConfig {
     type: string = "line";
     rangeType: ListItem = this.rangeUnits[1];
     rangeValue: number = 10;
-    rangeDisplay: TimeDisplayFormat ={...this.rangeDisplayTemplate };
+    rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
     position: string = "None";
     height: number = 100;
     aggregation: Aggregation = {
