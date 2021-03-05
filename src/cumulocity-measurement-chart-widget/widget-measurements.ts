@@ -114,7 +114,8 @@ export class MeasurementList {
     aggregate: { x: Date; y: any }[]; // can be empty
     lower: { x: Date; y: any }[]; // can be empty
     valtimes: { x: Date; y: any }[]; // this will contain the raw data
-    bucket: { [id: string]: number }; // populated by bucket template
+    bucket: number[];
+    labels: string[];
     mx: Number;
     mn: Number;
     sm: Number;
@@ -126,7 +127,8 @@ export class MeasurementList {
         aggregate: { x: Date; y: any }[],
         lower: { x: Date; y: any }[],
         valtimes: { x: Date; y: any }[],
-        bucket: { [id: string]: number },
+        bucket: number[],
+        labels: string[],
         mx: number,
         mn: number,
         sm: number
@@ -138,6 +140,7 @@ export class MeasurementList {
             this.lower = lower;
             this.valtimes = valtimes;
             this.bucket = bucket;
+            this.labels = labels;
             this.av = sm / valtimes.length;
             this.mx = mx;
             this.mn = mn;
@@ -152,7 +155,8 @@ export class MeasurementList {
             );
             this.aggregate = [];
             this.valtimes = [];
-            this.bucket = {};
+            this.bucket = [];
+            this.labels = [];
             this.av = 0;
             this.mx = 0;
             this.mn = 0;
@@ -241,10 +245,7 @@ export class MeasurementHelper {
 
         //only pie/doughnut/histogram graphs need this (Checked internally - noop if other)
         //histogram will be special type - need to add in handling for bucketing by value (stddev etc)
-        let bucketData: { [id: string]: number } = this.createBucketSeries(
-            options,
-            rawData
-        );
+        let rawBucketData = this.createBucketSeries(options, rawData);
 
         //instance of data for use
         let measurementList: MeasurementList = new MeasurementList(
@@ -253,7 +254,8 @@ export class MeasurementHelper {
             aggseries,
             lower,
             rawData.vl,
-            bucketData,
+            rawBucketData.data,
+            rawBucketData.labels,
             rawData.mx,
             rawData.mn,
             rawData.sm
@@ -339,7 +341,7 @@ export class MeasurementHelper {
     private createBucketSeries(
         options: MeasurementOptions,
         rawData: { vl: any[]; mx: number; mn: number; sm: number }
-    ): { [id: string]: number } {
+    ): { labels: string[]; data: number[] } {
         // Now we can turn this into the buckets and counts.
         let result: { [id: string]: number } = {};
         if (
@@ -360,11 +362,21 @@ export class MeasurementHelper {
                 }
             });
         }
-        console.log(result);
-        return result;
+
+        let bucketData: number[] = [];
+        let bucketLabels: string[] = [];
+        for (const bucketKey in result) {
+            if (Object.prototype.hasOwnProperty.call(result, bucketKey)) {
+                const bucket = result[bucketKey];
+                bucketData.push(bucket);
+                bucketLabels.push(bucketKey);
+            }
+        }
+
+        return { labels: bucketLabels, data: bucketData };
     }
 
-    private categorize(
+    public categorize(
         options: MeasurementOptions,
         val: { x: Date; y: number }
     ): string {

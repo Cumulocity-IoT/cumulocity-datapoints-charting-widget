@@ -118,46 +118,77 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     y: measurementValue,
                 };
 
-                //swap axes if horizontal
                 if (
+                    this.widgetHelper.getChartConfig().type == "pie" ||
+                    this.widgetHelper.getChartConfig().type == "doughnut"
+                ) {
+                    this.seriesData[key].valtimes.push(datum);
+
+                    let mapped = this.measurementHelper.categorize(
+                        options,
+                        datum
+                    );
+
+                    let index = -1;
+                    this.seriesData[key].labels.some((v, i) => {
+                        if (v === mapped) {
+                            index = i;
+                            return true;
+                        }
+                        return false;
+                    });
+
+                    if (index === -1) {
+                        this.seriesData[key].labels.push(mapped);
+                        this.seriesData[key].bucket.push(1);
+                    } else {
+                        this.seriesData[key].bucket[index] =
+                            this.seriesData[key].bucket[index] + 1;
+                    }
+
+                    console.log(this.seriesData[key].bucket);
+                } else if (
                     this.widgetHelper.getChartConfig().type == "horizontalBar"
                 ) {
                     datum = {
                         y: measurementDate,
                         x: measurementValue,
                     };
-                }
-                //Adjust series
-                this.seriesData[key].valtimes.push(datum);
+                    //Adjust series
+                    this.seriesData[key].valtimes.push(datum);
+                } else {
+                    //Adjust series
+                    this.seriesData[key].valtimes.push(datum);
 
-                //Only take the last N values to create the average
-                if (options.avgPeriod > 0) {
-                    let source = this.seriesData[key].valtimes.slice(
-                        Math.max(
-                            this.seriesData[key].valtimes.length -
-                                options.avgPeriod,
-                            0
-                        )
-                    );
+                    //Only take the last N values to create the average
+                    if (options.avgPeriod > 0) {
+                        let source = this.seriesData[key].valtimes.slice(
+                            Math.max(
+                                this.seriesData[key].valtimes.length -
+                                    options.avgPeriod,
+                                0
+                            )
+                        );
 
-                    //just the values
-                    source = source.map((val) => val.y);
-                    // let a = sma(source, options.avgPeriod, 3);
-                    let a = boll(source, options.avgPeriod, 3);
+                        //just the values
+                        source = source.map((val) => val.y);
+                        // let a = sma(source, options.avgPeriod, 3);
+                        let a = boll(source, options.avgPeriod, 3);
 
-                    //aggregate needs x and y coordinates but we use only the last
-                    this.seriesData[key].upper.push({
-                        x: measurementDate,
-                        y: a.upper[a.upper.length - 1],
-                    });
-                    this.seriesData[key].aggregate.push({
-                        x: measurementDate,
-                        y: a.mid[a.mid.length - 1],
-                    });
-                    this.seriesData[key].lower.push({
-                        x: measurementDate,
-                        y: a.lower[a.lower.length - 1],
-                    });
+                        //aggregate needs x and y coordinates but we use only the last
+                        this.seriesData[key].upper.push({
+                            x: measurementDate,
+                            y: a.upper[a.upper.length - 1],
+                        });
+                        this.seriesData[key].aggregate.push({
+                            x: measurementDate,
+                            y: a.mid[a.mid.length - 1],
+                        });
+                        this.seriesData[key].lower.push({
+                            x: measurementDate,
+                            y: a.lower[a.lower.length - 1],
+                        });
+                    }
                 }
             }
             if (this.chartElement) {
@@ -267,31 +298,15 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     options.targetGraphType == "pie" ||
                     options.targetGraphType == "doughnut"
                 ) {
-                    //Normal plot
+                    //different to line/bar type plots
                     let thisSeries: ChartDataSets = {
                         data: [],
                     };
 
                     this.chartLegend =
                         this.widgetHelper.getChartConfig().position !== "none";
-                    this.chartLabels = [];
-                    let bucketData: number[] = [];
-                    for (const bucketKey in this.seriesData[key].bucket) {
-                        if (
-                            Object.prototype.hasOwnProperty.call(
-                                this.seriesData[key].bucket,
-                                bucketKey
-                            )
-                        ) {
-                            const bucket = this.seriesData[key].bucket[
-                                bucketKey
-                            ];
-                            bucketData.push(bucket);
-                            this.chartLabels.push(bucketKey);
-                        }
-                    }
-
-                    thisSeries.data = bucketData;
+                    this.chartLabels = this.seriesData[key].labels;
+                    thisSeries.data = this.seriesData[key].bucket;
                     localChartData.push(thisSeries);
 
                     //Update series as measurments come in.
