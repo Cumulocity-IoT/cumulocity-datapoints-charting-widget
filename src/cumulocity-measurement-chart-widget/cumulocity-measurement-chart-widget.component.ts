@@ -1,10 +1,17 @@
 /** @format */
 
-import { Component, ElementRef, Input, OnInit, ViewChild } from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+} from "@angular/core";
 import { WidgetConfig } from "./widget-config";
 import * as _ from "lodash";
 import { ChartDataSets, ChartOptions, PositionType } from "chart.js";
-import { ThemeService, BaseChartDirective } from "ng2-charts";
+import { ThemeService, BaseChartDirective, Label } from "ng2-charts";
 import { DatePipe } from "@angular/common";
 import {
     MeasurementList,
@@ -15,13 +22,14 @@ import { MeasurementService, Realtime } from "@c8y/ngx-components/api";
 import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
+import * as Chart from "chart.js";
 
 @Component({
     templateUrl: "./cumulocity-measurement-chart-widget.component.html",
     styleUrls: ["./cumulocity-measurement-chart-widget.component.css"],
     providers: [DatePipe, ThemeService],
 })
-export class CumulocityMeasurementChartWidget implements OnInit {
+export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
     @Input() config;
     @ViewChild(BaseChartDirective, { static: false })
     chartElement: BaseChartDirective;
@@ -33,7 +41,7 @@ export class CumulocityMeasurementChartWidget implements OnInit {
     subscription: { [key: string]: Object } = {}; //record per device subscriptions
 
     chartData: ChartDataSets[];
-    //chartLabels: Label[];
+    chartLabels: Label[];
     chartOptions: ChartOptions = {
         maintainAspectRatio: false,
         events: ["click"],
@@ -57,6 +65,7 @@ export class CumulocityMeasurementChartWidget implements OnInit {
             yAxes: [],
         },
     };
+    chartLegend: boolean;
 
     verifyConfig(): boolean {
         return (
@@ -75,6 +84,15 @@ export class CumulocityMeasurementChartWidget implements OnInit {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default
         this.measurementHelper = new MeasurementHelper();
         this.seriesData = {};
+    }
+
+    ngOnDestroy(): void {
+        for (const sub in this.subscription) {
+            if (Object.prototype.hasOwnProperty.call(this.subscription, sub)) {
+                const tbd = this.subscription[sub];
+                this.realtimeService.unsubscribe(tbd);
+            }
+        }
     }
 
     handleRealtime(data: any, key: string, options: MeasurementOptions): void {
@@ -181,6 +199,19 @@ export class CumulocityMeasurementChartWidget implements OnInit {
         //temporary until below is done
         this.chartData = [];
 
+        let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
+        for (const subKey in this.subscription) {
+            if (
+                Object.prototype.hasOwnProperty.call(this.subscription, subKey)
+            ) {
+                const sub = this.subscription[subKey];
+                if (!(subKey in seriesKeys)) {
+                    this.realtimeService.unsubscribe(sub);
+                    delete this.subscription[subKey];
+                }
+            }
+        }
+
         //
         // Display Legend or not - needs logic for certain conditions
         // lhs display can cause issues if widget size is too small
@@ -194,111 +225,182 @@ export class CumulocityMeasurementChartWidget implements OnInit {
         for (let key of Object.keys(
             this.widgetHelper.getChartConfig().series
         )) {
-            const measurement = this.widgetHelper.getChartConfig().series[key];
-
-            //each series (aggregates and functions of raw data too) gets this
-            let options: MeasurementOptions = new MeasurementOptions(
-                measurement.id.split(".")[0],
-                measurement.name,
-                measurement.id.split(".")[1],
-                measurement.id.split(".")[2],
-                this.widgetHelper.getChartConfig().series[key].avgPeriod,
-                this.widgetHelper.getChartConfig().type
-            );
-
-            //a period of time where quantity is the # of units,
-            // and type(unit) has the # of seconds per unit in the id field
-            let { from, to } = this.getDateRange();
-
-            //
-            // WorkHorse Functionality - retrieve and calculate derived numbers
-            //
-            this.seriesData[key] = await this.measurementHelper.getMeasurements(
-                this.measurementService,
-                options,
-                from,
-                to,
-                null,
-                this.widgetHelper.getChartConfig().type
-            );
-
-            //Normal plot
             if (
-                this.widgetHelper.getChartConfig().series[key]
-                    .hideMeasurements !== true
+                Object.prototype.hasOwnProperty.call(
+                    this.widgetHelper.getChartConfig().series,
+                    key
+                )
             ) {
-                let thisSeries = {
-                    data: [],
-                    label: this.widgetHelper.getChartConfig().series[key].name,
-                    fill: this.widgetHelper.getChartConfig().fillArea,
-                    spanGaps: true,
-                    backgroundColor: this.widgetHelper.getWidgetConfig().chart
-                        .series[key].color,
-                    borderColor: this.widgetHelper.getWidgetConfig().chart
-                        .series[key].color,
-                };
+                const measurement = this.widgetHelper.getChartConfig().series[
+                    key
+                ];
 
-                thisSeries.data = this.seriesData[key].valtimes;
-                localChartData.push(thisSeries);
-            }
+                //each series (aggregates and functions of raw data too) gets this
+                let options: MeasurementOptions = new MeasurementOptions(
+                    measurement.id.split(".")[0],
+                    measurement.name,
+                    measurement.id.split(".")[1],
+                    measurement.id.split(".")[2],
+                    this.widgetHelper.getChartConfig().series[key].avgPeriod,
+                    this.widgetHelper.getChartConfig().type
+                );
 
-            //If average or other function then add series for that
-            if (
-                this.widgetHelper.getChartConfig().series[key].avgType !==
-                "None"
-            ) {
-                if (
-                    this.widgetHelper
-                        .getChartConfig()
-                        .series[key].avgType.indexOf("Moving Average") > -1
-                ) {
-                    let aggregateSeries: ChartDataSets = this.createSeries(
-                        key,
-                        `${options.name} - ${
-                            this.widgetHelper.getChartConfig().series[key]
-                                .avgPeriod
-                        } period`
-                    );
-                    //Need to apply the correct function in the series calculations
-                    aggregateSeries.data = this.seriesData[key].aggregate;
-                    localChartData.push(aggregateSeries);
-                }
+                //a period of time where quantity is the # of units,
+                // and type(unit) has the # of seconds per unit in the id field
+                let { from, to } = this.getDateRange();
+
+                //
+                // WorkHorse Functionality - retrieve and calculate derived numbers
+                //
+                this.seriesData[
+                    key
+                ] = await this.measurementHelper.getMeasurements(
+                    this.measurementService,
+                    options,
+                    from,
+                    to,
+                    null,
+                    this.widgetHelper.getChartConfig().type
+                );
 
                 if (
-                    this.widgetHelper
-                        .getChartConfig()
-                        .series[key].avgType.indexOf("Bollinger Bands") > -1
+                    options.targetGraphType == "pie" ||
+                    options.targetGraphType == "doughnut" ||
+                    options.targetGraphType == "histogram"
                 ) {
-                    let upperBoll: ChartDataSets = this.createSeries(
-                        key,
-                        `${options.name} - upper Bollinger Band`
-                    );
+                    //Normal plot
+                    let thisSeries: ChartDataSets = {
+                        data: [],
+                    };
 
-                    //Need to apply the correct function in the series calculations
-                    upperBoll.data = this.seriesData[key].upper;
-                    localChartData.push(upperBoll);
+                    this.chartLegend =
+                        this.widgetHelper.getChartConfig().position !== "none";
+                    this.chartLabels = [];
+                    let bucketData: number[] = [];
+                    for (const bucketKey in this.seriesData[key].bucket) {
+                        if (
+                            Object.prototype.hasOwnProperty.call(
+                                this.seriesData[key].bucket,
+                                bucketKey
+                            )
+                        ) {
+                            const bucket = this.seriesData[key].bucket[
+                                bucketKey
+                            ];
+                            bucketData.push(bucket);
+                            this.chartLabels.push(bucketKey);
+                        }
+                    }
 
-                    let lowerBoll: ChartDataSets = this.createSeries(
-                        key,
-                        `${options.name} - lower Bollinger Band`
-                    );
+                    thisSeries.data = bucketData;
+                    localChartData.push(thisSeries);
 
-                    //Need to apply the correct function in the series calculations
-                    lowerBoll.data = this.seriesData[key].lower;
-                    localChartData.push(lowerBoll);
-                }
-            }
+                    //Update series as measurments come in.
+                    if (
+                        this.widgetHelper.getChartConfig().series[key].realTime
+                    ) {
+                        //console.log(`Subscribing to ${options.name}`);
+                        if (!this.subscription[key]) {
+                            this.subscription[
+                                key
+                            ] = this.realtimeService.subscribe(
+                                "/measurements/" + options.deviceId,
+                                (data) =>
+                                    this.handleRealtime(data, key, options)
+                            );
+                        }
+                    }
+                } else {
+                    //Normal plot
+                    if (
+                        this.widgetHelper.getChartConfig().series[key]
+                            .hideMeasurements !== true
+                    ) {
+                        let thisSeries: ChartDataSets = this.createSeries(
+                            key,
+                            this.widgetHelper.getChartConfig().series[key].name,
+                            this.widgetHelper.getWidgetConfig().chart.series[
+                                key
+                            ].color
+                        );
+                        thisSeries.data = this.seriesData[key].valtimes;
+                        localChartData.push(thisSeries);
+                    }
 
-            //Update series as measurments come in.
-            if (this.widgetHelper.getChartConfig().series[key].realTime) {
-                //console.log(`Subscribing to ${options.name}`);
-                if (!this.subscription[key]) {
-                    this.subscription[
-                        options.deviceId
-                    ] = this.realtimeService.subscribe(
-                        "/measurements/" + options.deviceId,
-                        (data) => this.handleRealtime(data, key, options)
-                    );
+                    //If average or other function then add series for that
+                    if (
+                        this.widgetHelper.getChartConfig().series[key]
+                            .avgType !== "None"
+                    ) {
+                        if (
+                            this.widgetHelper
+                                .getChartConfig()
+                                .series[key].avgType.indexOf("Moving Average") >
+                            -1
+                        ) {
+                            let aggregateSeries: ChartDataSets = this.createSeries(
+                                key,
+                                `${options.name} - ${
+                                    this.widgetHelper.getChartConfig().series[
+                                        key
+                                    ].avgPeriod
+                                } period`,
+                                this.widgetHelper.getWidgetConfig().chart
+                                    .series[key].avgColor
+                            );
+                            //Need to apply the correct function in the series calculations
+                            aggregateSeries.data = this.seriesData[
+                                key
+                            ].aggregate;
+                            localChartData.push(aggregateSeries);
+                        }
+
+                        if (
+                            this.widgetHelper
+                                .getChartConfig()
+                                .series[key].avgType.indexOf(
+                                    "Bollinger Bands"
+                                ) > -1
+                        ) {
+                            let upperBoll: ChartDataSets = this.createSeries(
+                                key,
+                                `${options.name} - upper Bollinger Band`,
+                                this.widgetHelper.getWidgetConfig().chart
+                                    .series[key].avgColor
+                            );
+
+                            //Need to apply the correct function in the series calculations
+                            upperBoll.data = this.seriesData[key].upper;
+                            localChartData.push(upperBoll);
+
+                            let lowerBoll: ChartDataSets = this.createSeries(
+                                key,
+                                `${options.name} - lower Bollinger Band`,
+                                this.widgetHelper.getWidgetConfig().chart
+                                    .series[key].avgColor
+                            );
+
+                            //Need to apply the correct function in the series calculations
+                            lowerBoll.data = this.seriesData[key].lower;
+                            localChartData.push(lowerBoll);
+                        }
+                    }
+
+                    //Update series as measurments come in.
+                    if (
+                        this.widgetHelper.getChartConfig().series[key].realTime
+                    ) {
+                        //console.log(`Subscribing to ${options.name}`);
+                        if (!this.subscription[key]) {
+                            this.subscription[
+                                key
+                            ] = this.realtimeService.subscribe(
+                                "/measurements/" + options.deviceId,
+                                (data) =>
+                                    this.handleRealtime(data, key, options)
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -306,17 +408,14 @@ export class CumulocityMeasurementChartWidget implements OnInit {
         this.dataLoaded = true;
     }
 
-    createSeries(key: string, label: string): ChartDataSets {
+    createSeries(key: string, label: string, col: string): ChartDataSets {
         let series = {
             data: [],
             label: label,
             fill: this.widgetHelper.getChartConfig().fillArea,
             spanGaps: true,
-            backgroundColor: this.widgetHelper.getWidgetConfig().chart.series[
-                key
-            ].avgColor,
-            borderColor: this.widgetHelper.getWidgetConfig().chart.series[key]
-                .avgColor,
+            backgroundColor: col,
+            borderColor: col,
         };
         return series;
     }
@@ -370,6 +469,20 @@ export class CumulocityMeasurementChartWidget implements OnInit {
                 ticks: {
                     beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
                 },
+            });
+        } else if (
+            this.widgetHelper.getChartConfig().type == "pie" ||
+            this.widgetHelper.getChartConfig().type == "doughnut"
+        ) {
+            this.chartOptions.scales.yAxes.length = 0; //reset axes
+            this.chartOptions.scales.yAxes.push({
+                display: false,
+            });
+
+            //Y axis
+            this.chartOptions.scales.xAxes.length = 0; //reset axes
+            this.chartOptions.scales.xAxes.push({
+                display: false,
             });
         } else {
             //X axis

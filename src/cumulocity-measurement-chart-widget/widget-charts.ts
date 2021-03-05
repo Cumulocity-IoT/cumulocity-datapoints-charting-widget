@@ -37,11 +37,12 @@ export class ChartConfig {
         { id: 1, text: "bar" },
         { id: 2, text: "horizontalBar" },
         // { id: 3, text: "radar" },
-        // { id: 4, text: "doughnut" },
+        { id: 4, text: "doughnut" },
         // { id: 5, text: "polarArea" },
         // { id: 6, text: "bubble" },
-        // { id: 7, text: "pie" },
+        { id: 7, text: "pie" },
         // { id: 8, text: "scatter" },
+        { id: 9, text: "histogram" },
     ];
 
     public chartPositions: ListItem[] = [

@@ -4,6 +4,7 @@ import { formatDate } from "@angular/common";
 import _ from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
+import * as moment from "moment";
 
 /**
  * These elements can form the criteria
@@ -21,6 +22,8 @@ export class MeasurementOptions {
     dateFrom?: Date;
     dateTo?: Date;
     targetGraphType: string;
+    timeBucket: boolean;
+    bucketPeriod: string;
 
     constructor(
         deviceId: string,
@@ -39,6 +42,8 @@ export class MeasurementOptions {
         this.locale = "en";
         this.avgPeriod = averagePeriod;
         this.targetGraphType = targetGraphType;
+        this.timeBucket = true;
+        this.bucketPeriod = "minute";
     }
 
     public setFilter(
@@ -105,10 +110,11 @@ export class MeasurementOptions {
  */
 export class MeasurementList {
     sourceCriteria: MeasurementOptions;
-    upper: { x: Date; y: any }[];
-    aggregate: { x: Date; y: any }[];
-    lower: { x: Date; y: any }[];
-    valtimes: { x: Date; y: any }[];
+    upper: { x: Date; y: any }[]; // can be empty
+    aggregate: { x: Date; y: any }[]; // can be empty
+    lower: { x: Date; y: any }[]; // can be empty
+    valtimes: { x: Date; y: any }[]; // this will contain the raw data
+    bucket: { [id: string]: number }; // populated by bucket template
     mx: Number;
     mn: Number;
     sm: Number;
@@ -120,6 +126,7 @@ export class MeasurementList {
         aggregate: { x: Date; y: any }[],
         lower: { x: Date; y: any }[],
         valtimes: { x: Date; y: any }[],
+        bucket: { [id: string]: number },
         mx: number,
         mn: number,
         sm: number
@@ -130,6 +137,7 @@ export class MeasurementList {
             this.aggregate = aggregate;
             this.lower = lower;
             this.valtimes = valtimes;
+            this.bucket = bucket;
             this.av = sm / valtimes.length;
             this.mx = mx;
             this.mn = mn;
@@ -144,6 +152,7 @@ export class MeasurementList {
             );
             this.aggregate = [];
             this.valtimes = [];
+            this.bucket = {};
             this.av = 0;
             this.mx = 0;
             this.mn = 0;
@@ -216,11 +225,45 @@ export class MeasurementHelper {
         data: IMeasurement[],
         options: MeasurementOptions
     ): MeasurementList {
-        //We may get any fragment/series so use lowdash
-        //simplify
-        //console.log("RESPONSE");
-        //console.log(resp);
-        let rawData = data.reduce(
+        //get the data.
+        let rawData = this.retrieveData(data, options);
+
+        //display the data in reverse (earlier on left)
+        rawData.vl = rawData.vl.reverse();
+
+        //Create aggregate function from data (decompose and recompose {x,y}[])
+        let upper = [];
+        let aggseries = [];
+        let lower = [];
+
+        //only line graphs need this (Checked internally - noop if other)
+        this.createAggregateSeries(options, rawData, upper, aggseries, lower);
+
+        //only pie/doughnut/histogram graphs need this (Checked internally - noop if other)
+        //histogram will be special type - need to add in handling for bucketing by value (stddev etc)
+        let bucketData: { [id: string]: number } = this.createBucketSeries(
+            options,
+            rawData
+        );
+
+        //instance of data for use
+        let measurementList: MeasurementList = new MeasurementList(
+            options,
+            upper,
+            aggseries,
+            lower,
+            rawData.vl,
+            bucketData,
+            rawData.mx,
+            rawData.mn,
+            rawData.sm
+        );
+        ////console.log(measurementList);
+        return measurementList;
+    }
+
+    private retrieveData(data: IMeasurement[], options: MeasurementOptions) {
+        return data.reduce(
             (newArr, row) => {
                 //default
                 let measurementDate = new Date(row.time);
@@ -259,15 +302,15 @@ export class MeasurementHelper {
             },
             { vl: [], mx: 0, mn: Number.MAX_VALUE, sm: 0 }
         );
+    }
 
-        //display the data in reverse (earlier on left)
-        rawData.vl = rawData.vl.reverse();
-
-        //Create aggregate function from data (decompose and recompose {x,y}[])
-        let upper = [];
-        let aggseries = [];
-        let lower = [];
-        //only line graphs need this
+    private createAggregateSeries(
+        options: MeasurementOptions,
+        rawData: { vl: any[]; mx: number; mn: number; sm: number },
+        upper: any[],
+        aggseries: any[],
+        lower: any[]
+    ) {
         if (options.targetGraphType == "line") {
             if (options.avgPeriod && options.avgPeriod > 0) {
                 //just the values
@@ -291,18 +334,60 @@ export class MeasurementHelper {
                 }
             }
         }
+    }
 
-        let measurementList: MeasurementList = new MeasurementList(
-            options,
-            upper,
-            aggseries,
-            lower,
-            rawData.vl,
-            rawData.mx,
-            rawData.mn,
-            rawData.sm
-        );
-        ////console.log(measurementList);
-        return measurementList;
+    private createBucketSeries(
+        options: MeasurementOptions,
+        rawData: { vl: any[]; mx: number; mn: number; sm: number }
+    ): { [id: string]: number } {
+        // Now we can turn this into the buckets and counts.
+        let result: { [id: string]: number } = {};
+        if (
+            options.targetGraphType == "pie" ||
+            options.targetGraphType == "doughnut" ||
+            options.targetGraphType == "histogram"
+        ) {
+            //just the values
+            rawData.vl.map((val) => {
+                //we want to categorize and return the data
+                // same size as the input - but as labels
+                // simple 1 dim array
+                let mapped = this.categorize(options, val);
+                if (_.has(result, mapped)) {
+                    result[mapped] = result[mapped] + 1;
+                } else {
+                    result[mapped] = 1;
+                }
+            });
+        }
+        console.log(result);
+        return result;
+    }
+
+    private categorize(
+        options: MeasurementOptions,
+        val: { x: Date; y: number }
+    ): string {
+        if (options.timeBucket) {
+            // We will spread out the data in one of several ways
+            // time basis first - minute, hour, day, week, month, quarter
+            switch (options.bucketPeriod) {
+                case "minute":
+                    return moment(val.x).minute().toString();
+                case "hour":
+                    return moment(val.x).hour().toString();
+                case "day":
+                    return moment(val.x).day().toString();
+                case "week":
+                    return moment(val.x).week().toString();
+                case "month":
+                    return moment(val.x).month().toString();
+                case "quarter":
+                    return moment(val.x).quarter().toString();
+                default:
+                    return moment(val.x).year().toString();
+            }
+        }
+        return "None";
     }
 }
