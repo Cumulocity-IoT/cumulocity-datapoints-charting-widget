@@ -265,8 +265,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
 
                 if (
                     options.targetGraphType == "pie" ||
-                    options.targetGraphType == "doughnut" ||
-                    options.targetGraphType == "histogram"
+                    options.targetGraphType == "doughnut"
                 ) {
                     //Normal plot
                     let thisSeries: ChartDataSets = {

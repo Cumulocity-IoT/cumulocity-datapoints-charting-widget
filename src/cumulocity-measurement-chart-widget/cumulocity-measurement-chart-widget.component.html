@@ -2,7 +2,8 @@
     <!-- <div style="display: block; width: 500px; height: 400px;"> -->
     <!-- <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions" -->
     <ng-container *ngIf="chartData && chartData.length > 0 else waiting">
-        <ng-container *ngIf="widgetHelper.getWidgetConfig().chart.type == 'pie' else normal">
+        <ng-container
+            *ngIf="widgetHelper.getWidgetConfig().chart.type == 'pie' || widgetHelper.getWidgetConfig().chart.type == 'doughnut' else normal">
             <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
                 [chartType]="widgetHelper.getWidgetConfig().chart.type" [labels]="chartLabels" [legend]="chartLegend">
             </canvas>
