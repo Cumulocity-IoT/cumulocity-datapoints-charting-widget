@@ -61,6 +61,11 @@ export class ChartConfig {
         { id: 3, text: "z" },
     ];
 
+    public aggregationType: ListItem[] = [
+        { id: 0, text: "count" },
+        { id: 1, text: "average" },
+    ];
+
     public rangeUnits: ListItem[] = [
         // { id: -1, text: "Dates" },
         // { id: 0, text: "Measurements" },
@@ -123,11 +128,8 @@ export class ChartConfig {
     rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
     position: string = "None";
     height: number = 100;
-    aggregation: Aggregation = {
-        type: "none",
-        interval: "hourly",
-        count: 100,
-    };
+    aggregation: ListItem = this.aggregationType[0];
+    aggregationFreq: ListItem = this.rangeUnits[1];
 
     dateExample: string = "yyyy-MM-dd hh:mm";
     showx: boolean = true;

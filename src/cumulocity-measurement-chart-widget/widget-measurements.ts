@@ -24,6 +24,7 @@ export class MeasurementOptions {
     targetGraphType: string;
     timeBucket: boolean;
     bucketPeriod: string;
+    labelDateFormat: string;
 
     constructor(
         deviceId: string,
@@ -42,15 +43,19 @@ export class MeasurementOptions {
         this.locale = "en";
         this.avgPeriod = averagePeriod;
         this.targetGraphType = targetGraphType;
-        this.timeBucket = true;
+        this.timeBucket = false;
         this.bucketPeriod = "minute";
+        this.labelDateFormat = "HH:mm";
     }
 
     public setFilter(
         from: Date,
         to: Date,
         count: number,
-        targetGraphType: string
+        targetGraphType: string,
+        timeBucket: boolean,
+        bucketPeriod: string,
+        labelDateFormat: string
     ) {
         if (from) {
             _.set(this, "dateFrom", from);
@@ -61,6 +66,9 @@ export class MeasurementOptions {
         }
         this.pageSize = count;
         this.targetGraphType = targetGraphType;
+        this.timeBucket = timeBucket;
+        this.bucketPeriod = bucketPeriod;
+        this.labelDateFormat = labelDateFormat;
     }
 
     public filter(): Object {
@@ -190,9 +198,20 @@ export class MeasurementHelper {
         dateFrom: Date,
         dateTo: Date,
         count: number,
-        targetGraphType: string
+        targetGraphType: string,
+        timeBucket: boolean,
+        bucketPeriod: string,
+        labelDateFormat: string
     ): Promise<MeasurementList> {
-        options.setFilter(dateFrom, dateTo, count, targetGraphType);
+        options.setFilter(
+            dateFrom,
+            dateTo,
+            count,
+            targetGraphType,
+            timeBucket,
+            bucketPeriod,
+            labelDateFormat
+        );
         let filter = options.filter();
 
         //get the first page
@@ -381,24 +400,7 @@ export class MeasurementHelper {
         val: { x: Date; y: number }
     ): string {
         if (options.timeBucket) {
-            // We will spread out the data in one of several ways
-            // time basis first - minute, hour, day, week, month, quarter
-            switch (options.bucketPeriod) {
-                case "minute":
-                    return moment(val.x).minute().toString();
-                case "hour":
-                    return moment(val.x).hour().toString();
-                case "day":
-                    return moment(val.x).day().toString();
-                case "week":
-                    return moment(val.x).week().toString();
-                case "month":
-                    return moment(val.x).month().toString();
-                case "quarter":
-                    return moment(val.x).quarter().toString();
-                default:
-                    return moment(val.x).year().toString();
-            }
+            return moment(val.x).format(options.labelDateFormat);
         }
         return "None";
     }

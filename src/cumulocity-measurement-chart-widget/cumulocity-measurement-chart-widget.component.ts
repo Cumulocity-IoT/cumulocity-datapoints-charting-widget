@@ -1,13 +1,6 @@
 /** @format */
 
-import {
-    Component,
-    ElementRef,
-    Input,
-    OnDestroy,
-    OnInit,
-    ViewChild,
-} from "@angular/core";
+import { Component, Input, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { WidgetConfig } from "./widget-config";
 import * as _ from "lodash";
 import { ChartDataSets, ChartOptions, PositionType } from "chart.js";
@@ -22,7 +15,7 @@ import { MeasurementService, Realtime } from "@c8y/ngx-components/api";
 import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
-import * as Chart from "chart.js";
+import "chartjs-plugin-labels";
 
 @Component({
     templateUrl: "./cumulocity-measurement-chart-widget.component.html",
@@ -195,6 +188,9 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                 //range required...
                 let { from, to } = this.getDateRange();
 
+                //
+                // Line has the bollinger bands
+                //
                 if (this.widgetHelper.getChartConfig().type === "line") {
                     while (
                         moment(this.seriesData[key].aggregate[0].x).isBefore(
@@ -207,13 +203,68 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     }
                 }
 
-                //all graph types
-                while (
-                    moment(this.seriesData[key].valtimes[0].x).isBefore(
-                        moment(from)
-                    )
+                if (
+                    this.widgetHelper.getChartConfig().type === "pie" ||
+                    this.widgetHelper.getChartConfig().type === "doughnut"
                 ) {
-                    this.seriesData[key].valtimes.shift();
+                    //all graph types
+                    console.log(
+                        `checking ${this.seriesData[key].labels[0]} (${moment(
+                            this.seriesData[key].labels[0],
+                            this.widgetHelper.getChartConfig().rangeDisplay[
+                                this.widgetHelper.getChartConfig()
+                                    .aggregationFreq.text
+                            ] //time format
+                        ).format()} | ${moment(from).format()})`
+                    );
+                    while (
+                        moment(
+                            this.seriesData[key].labels[0],
+                            this.widgetHelper.getChartConfig().rangeDisplay[
+                                this.widgetHelper.getChartConfig()
+                                    .aggregationFreq.text
+                            ]
+                        ).isBefore(from)
+                    ) {
+                        this.seriesData[key].bucket.shift();
+                        this.seriesData[key].labels.shift();
+                        console.log(
+                            `checking ${
+                                this.seriesData[key].labels[0]
+                            } (${moment(
+                                this.seriesData[key].labels[0],
+                                this.widgetHelper.getChartConfig().rangeDisplay[
+                                    this.widgetHelper.getChartConfig()
+                                        .aggregationFreq.text
+                                ] //time format
+                            ).format()} | ${moment(from).format()})`
+                        );
+                    }
+                }
+                if (
+                    this.widgetHelper.getChartConfig().type === "line" ||
+                    this.widgetHelper.getChartConfig().type === "bar"
+                ) {
+                    //all graph types
+                    while (
+                        moment(this.seriesData[key].valtimes[0].x).isBefore(
+                            moment(from)
+                        )
+                    ) {
+                        this.seriesData[key].valtimes.shift();
+                    }
+                }
+                if (
+                    this.widgetHelper.getChartConfig().type === "horizontalBar"
+                ) {
+                    //all graph types
+                    while (
+                        moment(this.seriesData[key].valtimes[0].y).isBefore(
+                            moment(from)
+                        )
+                    ) {
+                        this.seriesData[key].valtimes.shift();
+                    }
                 }
                 this.setAxes();
                 this.chartElement.update();
@@ -291,7 +342,12 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     from,
                     to,
                     null,
-                    this.widgetHelper.getChartConfig().type
+                    this.widgetHelper.getChartConfig().type,
+                    this.widgetHelper.getChartConfig().aggregation.id == 0, //count = true
+                    this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
+                    this.widgetHelper.getChartConfig().rangeDisplay[
+                        this.widgetHelper.getChartConfig().aggregationFreq.text
+                    ] //time format
                 );
 
                 if (
@@ -303,7 +359,12 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                         data: [],
                         backgroundColor: [
                             ...this.widgetHelper.getChartConfig().colorList,
-                        ],
+                            ...this.widgetHelper.getChartConfig().colorList,
+                            ...this.widgetHelper.getChartConfig().colorList,
+                            ...this.widgetHelper.getChartConfig().colorList,
+                            ...this.widgetHelper.getChartConfig().colorList,
+                            ...this.widgetHelper.getChartConfig().colorList,
+                        ], //repeated so we can avoid having to update
                     };
 
                     this.chartLegend =
@@ -341,6 +402,8 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                             ].color
                         );
                         thisSeries.data = this.seriesData[key].valtimes;
+                        thisSeries.barPercentage = 0.9;
+                        thisSeries.categoryPercentage = 0.9;
                         localChartData.push(thisSeries);
                     }
 
@@ -425,18 +488,32 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         this.dataLoaded = true;
     }
 
+    /**
+     * This method returns a default line/bar dataset which can then have
+     * data added - no labels are set on this as a default so that they are retrieved
+     * from the data points themselves. data is co-ordinate pair {x,y}
+     * @param key
+     * @param label
+     * @param col
+     * @returns
+     */
     createSeries(key: string, label: string, col: string): ChartDataSets {
-        let series = {
+        let series: ChartDataSets = {
             data: [],
             label: label,
             fill: this.widgetHelper.getChartConfig().fillArea,
             spanGaps: true,
             backgroundColor: col,
             borderColor: col,
+            barThickness: "flex",
         };
         return series;
     }
 
+    /**
+     *
+     * @returns Pair of dates representing the from and to dates the range extends over
+     */
     private getDateRange(): { from: Date; to: Date } {
         let to = Date.now();
         let from = new Date(
@@ -448,13 +525,12 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         return { from, to: new Date(to) };
     }
 
+    /**
+     * Create the axes and set options
+     * begin at zero either starts the y axis at zero or nearer the range of values
+     * the x axis is a time axis for measurmeents so se this appropriately
+     */
     private setAxes() {
-        //
-        // Create the axes and set options
-        // begin at zero either starts the y axis at zero or nearer the range of values
-        // the x axis is a time axis for measurmeents so se this appropriately
-        //
-
         //Legend
         this.chartOptions.legend.display =
             this.widgetHelper.getChartConfig().position !== "None";
@@ -487,6 +563,10 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
                 },
             });
+
+            this.chartOptions.plugins = {
+                labels: [],
+            };
         } else if (
             this.widgetHelper.getChartConfig().type == "pie" ||
             this.widgetHelper.getChartConfig().type == "doughnut"
@@ -501,6 +581,20 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
             this.chartOptions.scales.xAxes.push({
                 display: false,
             });
+
+            this.chartOptions.plugins = {
+                labels: [
+                    {
+                        render: "label",
+                        position: "outside",
+                        fontColor: "#000",
+                    },
+                    {
+                        render: "percentage",
+                        fontColor: "#FFF",
+                    },
+                ],
+            };
         } else {
             //X axis
             this.chartOptions.scales.xAxes.length = 0; //reset axes
@@ -524,6 +618,10 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
                 },
             });
+
+            this.chartOptions.plugins = {
+                labels: [],
+            };
         }
 
         //labels affect the plot greatly so allow the chart to naturally do that it's self.

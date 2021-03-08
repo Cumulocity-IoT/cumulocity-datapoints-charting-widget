@@ -46,7 +46,7 @@
                 <ng-container *ngIf="widgetHelper.getWidgetConfig().selectedDevices.length>0">
                     <ng-container *ngIf="widgetHelper.getChartConfig().rangeType.id >= 0">
                         <div class="col-layout col-lg-12">
-                            Retrieve
+                            Retrieve {{widgetHelper.getChartConfig().rangeType | json}}
                             <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
                                 (ngModelChange)="updateConfig()" />
                             &nbsp;
@@ -105,19 +105,6 @@
                                 (ngModelChange)="updateConfig()" />
                         </div>
                     </ng-container>
-                    <ng-container *ngIf="
-                                        widgetHelper.getChartConfig().type === 'bar' ||
-                                        widgetHelper.getChartConfig().type === 'horizontalBar'
-                                        
-                                    ">
-                        <div class="col-layout col-lg-2">
-                            <label for="stackSeries" translate>Stack Series</label>
-                            <input [disabled]="widgetHelper.getWidgetConfig().selectedMeasurements
-                                            .length < 2" type="checkbox" name="stackSeries" [(ngModel)]="
-                                                widgetHelper.getChartConfig().stackSeries
-                                            " (ngModelChange)="updateConfig()" />
-                        </div>
-                    </ng-container>
 
                 </ng-container>
 
@@ -155,34 +142,76 @@
                     </div>
                 </ng-container>
 
+                <ng-container
+                    *ngIf="widgetHelper.getChartConfig().type === 'pie' || widgetHelper.getChartConfig().type === 'doughnut'">
+                    <div class="col-layout col-lg-2">
+                        <label for="aggregate" translate>aggregate By
+                            {{widgetHelper.getChartConfig().aggregation|json}}</label>
+                    </div>
+                    <div class="col-layout col-lg-4">
+                        <select name="aggSelector" [(ngModel)]="widgetHelper.getChartConfig().aggregation"
+                            (ngModelChange)="updateConfig()">
+                            <option *ngFor="let agg of widgetHelper.getChartConfig().aggregationType" [ngValue]="agg">
+                                {{ agg.text }}
+                            </option>
+                        </select>
+                    </div>
+                    <ng-container *ngIf="widgetHelper.getChartConfig().aggregation.id === 0">
+                        <div class="col-layout col-lg-4">
+                            <label for="aggfreqSelector" translate>aggregation frequency</label>
+                            <select name="aggfreqSelector" [(ngModel)]="widgetHelper.getChartConfig().aggregationFreq"
+                                (ngModelChange)="updateConfig()">
+                                <option *ngFor="let freq of widgetHelper.getChartConfig().rangeUnits
+                                                                                " [ngValue]="freq">
+                                    {{ freq.text }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-layout col-lg-4">
+                            <label for="dateFormat" translate>label Format</label>
+                            <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
+                                [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().aggregationFreq.text]"
+                                (ngModelChange)="updateConfig()" />
+                        </div>
+                        <div class="col-layout col-lg-4">
+                            <p>
+                                Example Output:
+                                {{ widgetHelper.getChartConfig().dateExample }}
+                            </p>
+                        </div>
+                    </ng-container>
+                </ng-container>
 
             </div>
+            <ng-container
+                *ngIf="widgetHelper.getChartConfig().type !== 'pie' && widgetHelper.getChartConfig().type !== 'doughnut'">
+                <div class="row">
+                    <div class="col-layout col-lg-6">
+                        <label for="dateFormat" translate>Date Format</label>
+                        <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
+                            [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeType.text]"
+                            (ngModelChange)="updateConfig()" />
+                    </div>
+                    <div class="col-layout col-lg-6">
+                        <p>
+                            Example Output:
+                            {{ widgetHelper.getChartConfig().dateExample }}
+                        </p>
+                    </div>
+                </div>
+            </ng-container>
             <div class="row">
                 <div class="col-layout col-lg-4">
                     <label for="positionSelector" translate>Legend Position</label>
                     <select name="positionSelector" [(ngModel)]="widgetHelper.getChartConfig().position"
                         (ngModelChange)="updateConfig()">
                         <option *ngFor="
-                                let pos of widgetHelper.getChartConfig()
-                                    .chartPositions
-                            " [ngValue]="pos.text">
+                                            let pos of widgetHelper.getChartConfig()
+                                                .chartPositions
+                                        " [ngValue]="pos.text">
                             {{ pos.text }}
                         </option>
                     </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-layout col-lg-6">
-                    <label for="dateFormat" translate>Date Format</label>
-                    <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
-                        [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeType.text]"
-                        (ngModelChange)="updateConfig()" />
-                </div>
-                <div class="col-layout col-lg-6">
-                    <p>
-                        Example Output:
-                        {{ widgetHelper.getChartConfig().dateExample }}
-                    </p>
                 </div>
             </div>
         </div>
