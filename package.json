@@ -4,7 +4,7 @@
         "dist\\bundle-src\\custom-widget.js": "cumulocity-measurement-chart-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-measurement-chart-CustomWidget"
     },
-    "version": "0.9.30",
+    "version": "0.9.31",
     "description": "Widget for displaying realtime measurment data in graphs (written by Software AG Global Presales)",
     "scripts": {
         "build": "gulp"

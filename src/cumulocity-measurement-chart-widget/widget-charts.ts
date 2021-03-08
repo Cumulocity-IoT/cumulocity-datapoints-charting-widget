@@ -86,6 +86,35 @@ export class ChartConfig {
         year: "YYYY",
     };
 
+    colorList: string[] = [
+        "#FF0000",
+        "#00FF00",
+        "#0000FF",
+        "#FF00FF",
+        "#00FFFF",
+        "#808000",
+        "#800000",
+        "#008000",
+        "#008080",
+        "#800080",
+        "#808080",
+        "#FFFF00",
+    ];
+    avgColorList: string[] = [
+        "#800000",
+        "#008000",
+        "#008080",
+        "#800080",
+        "#808080",
+        "#FFFF00",
+        "#FF0000",
+        "#00FF00",
+        "#0000FF",
+        "#FF00FF",
+        "#00FFFF",
+        "#808000",
+    ];
+
     //Global properties
     enabled: boolean = true;
     type: string = "line";

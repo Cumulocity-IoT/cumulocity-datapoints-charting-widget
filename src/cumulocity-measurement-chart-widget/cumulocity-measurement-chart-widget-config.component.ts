@@ -35,35 +35,7 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
     //
     devices: Observable<ListItem[]>;
     supportedSeries: ListItem[];
-    //widgetInfo: WidgetConfig = new WidgetConfig(); //default
-    colorList: string[] = [
-        "#FF0000",
-        "#00FF00",
-        "#0000FF",
-        "#FF00FF",
-        "#00FFFF",
-        "#808000",
-        "#800000",
-        "#008000",
-        "#008080",
-        "#800080",
-        "#808080",
-        "#FFFF00",
-    ];
-    avgColorList: string[] = [
-        "#800000",
-        "#008000",
-        "#008080",
-        "#800080",
-        "#808080",
-        "#FFFF00",
-        "#FF0000",
-        "#00FF00",
-        "#0000FF",
-        "#FF00FF",
-        "#00FFFF",
-        "#808000",
-    ];
+
     selectedSeries: string;
     getSelectedSeries(): string {
         return this.selectedSeries;
@@ -175,8 +147,8 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
                     .addSeries(
                         v.id,
                         v.text,
-                        this.colorList[i],
-                        this.avgColorList[i]
+                        this.widgetHelper.getChartConfig().colorList[i],
+                        this.widgetHelper.getChartConfig().avgColorList[i]
                     );
             });
     }

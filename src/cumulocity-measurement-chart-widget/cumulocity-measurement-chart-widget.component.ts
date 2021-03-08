@@ -301,6 +301,9 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     //different to line/bar type plots
                     let thisSeries: ChartDataSets = {
                         data: [],
+                        backgroundColor: [
+                            ...this.widgetHelper.getChartConfig().colorList,
+                        ],
                     };
 
                     this.chartLegend =
