@@ -16,6 +16,7 @@ import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
+import * as Chart from "chart.js";
 
 @Component({
     templateUrl: "./cumulocity-measurement-chart-widget.component.html",
@@ -297,7 +298,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
     async ngOnInit(): Promise<void> {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
 
-        //temporary until below is done
+        //Clean up
         this.chartData = [];
 
         let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
@@ -320,188 +321,299 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         this.setAxes();
 
         let localChartData = []; //build list locally because empty dataset is added by framework
-        //for each fragment/series to be plotted
-        //ChartSeries has most of the config for the series
-        //the MeasurementList contains the data (and its independent)
-        for (let key of Object.keys(
-            this.widgetHelper.getChartConfig().series
-        )) {
-            if (
-                Object.prototype.hasOwnProperty.call(
-                    this.widgetHelper.getChartConfig().series,
-                    key
-                )
-            ) {
-                const measurement = this.widgetHelper.getChartConfig().series[
-                    key
-                ];
 
-                //each series (aggregates and functions of raw data too) gets this
-                let options: MeasurementOptions = new MeasurementOptions(
-                    measurement.id.split(".")[0],
-                    measurement.name,
-                    measurement.id.split(".")[1],
-                    measurement.id.split(".")[2],
-                    this.widgetHelper.getChartConfig().series[key].avgPeriod,
-                    this.widgetHelper.getChartConfig().type
-                );
-
-                //a period of time where quantity is the # of units,
-                // and type(unit) has the # of seconds per unit in the id field
-                let { from, to } = this.getDateRange();
-
-                //
-                // WorkHorse Functionality - retrieve and calculate derived numbers
-                //
-                this.seriesData[
-                    key
-                ] = await this.measurementHelper.getMeasurements(
-                    this.measurementService,
-                    options,
-                    from,
-                    to,
-                    null,
-                    this.widgetHelper.getChartConfig().type,
-                    this.widgetHelper.getChartConfig().aggregation.id == 0, //count = true
-                    this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
-                    this.widgetHelper.getChartConfig().rangeDisplay[
-                        this.widgetHelper.getChartConfig().aggregationFreq.text
-                    ] //time format
-                );
-
+        if (!this.widgetHelper.getChartConfig().multivariateplot) {
+            //for each fragment/series to be plotted
+            //ChartSeries has most of the config for the series
+            //the MeasurementList contains the data (and its independent)
+            for (let key of Object.keys(
+                this.widgetHelper.getChartConfig().series
+            )) {
                 if (
-                    options.targetGraphType == "pie" ||
-                    options.targetGraphType == "doughnut"
+                    Object.prototype.hasOwnProperty.call(
+                        this.widgetHelper.getChartConfig().series,
+                        key
+                    )
                 ) {
-                    //different to line/bar type plots
-                    let thisSeries: ChartDataSets = {
-                        data: [],
-                        backgroundColor: [
-                            ...this.widgetHelper.getChartConfig().colorList,
-                            ...this.widgetHelper.getChartConfig().colorList,
-                            ...this.widgetHelper.getChartConfig().colorList,
-                            ...this.widgetHelper.getChartConfig().colorList,
-                            ...this.widgetHelper.getChartConfig().colorList,
-                            ...this.widgetHelper.getChartConfig().colorList,
-                        ], //repeated so we can avoid having to update
-                    };
+                    const measurement = this.widgetHelper.getChartConfig()
+                        .series[key];
 
-                    this.chartLegend =
-                        this.widgetHelper.getChartConfig().position !== "none";
-                    this.chartLabels = this.seriesData[key].labels;
-                    thisSeries.data = this.seriesData[key].bucket;
-                    localChartData.push(thisSeries);
+                    //each series (aggregates and functions of raw data too) gets this
+                    let options: MeasurementOptions = new MeasurementOptions(
+                        measurement.id.split(".")[0],
+                        measurement.name,
+                        measurement.id.split(".")[1],
+                        measurement.id.split(".")[2],
+                        this.widgetHelper.getChartConfig().series[
+                            key
+                        ].avgPeriod,
+                        this.widgetHelper.getChartConfig().type
+                    );
 
-                    //Update series as measurments come in.
+                    //a period of time where quantity is the # of units,
+                    // and type(unit) has the # of seconds per unit in the id field
+                    let { from, to } = this.getDateRange();
+
+                    //
+                    // WorkHorse Functionality - retrieve and calculate derived numbers
+                    //
+                    this.seriesData[
+                        key
+                    ] = await this.measurementHelper.getMeasurements(
+                        this.measurementService,
+                        options,
+                        from,
+                        to,
+                        null,
+                        this.widgetHelper.getChartConfig().type,
+                        this.widgetHelper.getChartConfig().aggregation.id == 0, //count = true
+                        this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
+                        this.widgetHelper.getChartConfig().rangeDisplay[
+                            this.widgetHelper.getChartConfig().aggregationFreq
+                                .text
+                        ] //time format
+                    );
+
                     if (
-                        this.widgetHelper.getChartConfig().series[key].realTime
+                        options.targetGraphType == "pie" ||
+                        options.targetGraphType == "doughnut"
                     ) {
-                        //console.log(`Subscribing to ${options.name}`);
-                        if (!this.subscription[key]) {
-                            this.subscription[
-                                key
-                            ] = this.realtimeService.subscribe(
-                                "/measurements/" + options.deviceId,
-                                (data) =>
-                                    this.handleRealtime(data, key, options)
-                            );
-                        }
-                    }
-                } else {
-                    //Normal plot
-                    if (
-                        this.widgetHelper.getChartConfig().series[key]
-                            .hideMeasurements !== true
-                    ) {
-                        let thisSeries: ChartDataSets = this.createSeries(
-                            key,
-                            this.widgetHelper.getChartConfig().series[key].name,
-                            this.widgetHelper.getWidgetConfig().chart.series[
-                                key
-                            ].color
-                        );
-                        thisSeries.data = this.seriesData[key].valtimes;
-                        thisSeries.barPercentage = 0.9;
-                        thisSeries.categoryPercentage = 0.9;
+                        //different to line/bar type plots
+                        let thisSeries: ChartDataSets = {
+                            data: [],
+                            backgroundColor: [
+                                ...this.widgetHelper.getChartConfig().colorList,
+                                ...this.widgetHelper.getChartConfig().colorList,
+                                ...this.widgetHelper.getChartConfig().colorList,
+                                ...this.widgetHelper.getChartConfig().colorList,
+                                ...this.widgetHelper.getChartConfig().colorList,
+                                ...this.widgetHelper.getChartConfig().colorList,
+                            ], //repeated so we can avoid having to update
+                        };
+
+                        this.chartLegend =
+                            this.widgetHelper.getChartConfig().position !==
+                            "none";
+                        this.chartLabels = this.seriesData[key].labels;
+                        thisSeries.data = this.seriesData[key].bucket;
                         localChartData.push(thisSeries);
-                    }
 
-                    //If average or other function then add series for that
-                    if (
-                        this.widgetHelper.getChartConfig().series[key]
-                            .avgType !== "None"
-                    ) {
+                        //Update series as measurments come in.
                         if (
-                            this.widgetHelper
-                                .getChartConfig()
-                                .series[key].avgType.indexOf("Moving Average") >
-                            -1
+                            this.widgetHelper.getChartConfig().series[key]
+                                .realTime
                         ) {
-                            let aggregateSeries: ChartDataSets = this.createSeries(
+                            //console.log(`Subscribing to ${options.name}`);
+                            if (!this.subscription[key]) {
+                                this.subscription[
+                                    key
+                                ] = this.realtimeService.subscribe(
+                                    "/measurements/" + options.deviceId,
+                                    (data) =>
+                                        this.handleRealtime(data, key, options)
+                                );
+                            }
+                        }
+                    } else {
+                        //Normal plot
+                        if (
+                            this.widgetHelper.getChartConfig().series[key]
+                                .hideMeasurements !== true
+                        ) {
+                            let thisSeries: ChartDataSets = this.createSeries(
                                 key,
-                                `${options.name} - ${
-                                    this.widgetHelper.getChartConfig().series[
-                                        key
-                                    ].avgPeriod
-                                } period`,
+                                this.widgetHelper.getChartConfig().series[key]
+                                    .name,
                                 this.widgetHelper.getWidgetConfig().chart
-                                    .series[key].avgColor
+                                    .series[key].color
                             );
-                            //Need to apply the correct function in the series calculations
-                            aggregateSeries.data = this.seriesData[
-                                key
-                            ].aggregate;
-                            localChartData.push(aggregateSeries);
+                            thisSeries.data = this.seriesData[key].valtimes;
+                            thisSeries.barPercentage = 0.9;
+                            thisSeries.categoryPercentage = 0.9;
+                            localChartData.push(thisSeries);
                         }
 
+                        //If average or other function then add series for that
                         if (
-                            this.widgetHelper
-                                .getChartConfig()
-                                .series[key].avgType.indexOf(
-                                    "Bollinger Bands"
-                                ) > -1
+                            this.widgetHelper.getChartConfig().series[key]
+                                .avgType !== "None"
                         ) {
-                            let upperBoll: ChartDataSets = this.createSeries(
-                                key,
-                                `${options.name} - upper Bollinger Band`,
-                                this.widgetHelper.getWidgetConfig().chart
-                                    .series[key].avgColor
-                            );
+                            if (
+                                this.widgetHelper
+                                    .getChartConfig()
+                                    .series[key].avgType.indexOf(
+                                        "Moving Average"
+                                    ) > -1
+                            ) {
+                                let aggregateSeries: ChartDataSets = this.createSeries(
+                                    key,
+                                    `${options.name} - ${
+                                        this.widgetHelper.getChartConfig()
+                                            .series[key].avgPeriod
+                                    } period`,
+                                    this.widgetHelper.getWidgetConfig().chart
+                                        .series[key].avgColor
+                                );
+                                //Need to apply the correct function in the series calculations
+                                aggregateSeries.data = this.seriesData[
+                                    key
+                                ].aggregate;
+                                localChartData.push(aggregateSeries);
+                            }
 
-                            //Need to apply the correct function in the series calculations
-                            upperBoll.data = this.seriesData[key].upper;
-                            localChartData.push(upperBoll);
+                            if (
+                                this.widgetHelper
+                                    .getChartConfig()
+                                    .series[key].avgType.indexOf(
+                                        "Bollinger Bands"
+                                    ) > -1
+                            ) {
+                                let upperBoll: ChartDataSets = this.createSeries(
+                                    key,
+                                    `${options.name} - upper Bollinger Band`,
+                                    this.widgetHelper.getWidgetConfig().chart
+                                        .series[key].avgColor
+                                );
 
-                            let lowerBoll: ChartDataSets = this.createSeries(
-                                key,
-                                `${options.name} - lower Bollinger Band`,
-                                this.widgetHelper.getWidgetConfig().chart
-                                    .series[key].avgColor
-                            );
+                                //Need to apply the correct function in the series calculations
+                                upperBoll.data = this.seriesData[key].upper;
+                                localChartData.push(upperBoll);
 
-                            //Need to apply the correct function in the series calculations
-                            lowerBoll.data = this.seriesData[key].lower;
-                            localChartData.push(lowerBoll);
+                                let lowerBoll: ChartDataSets = this.createSeries(
+                                    key,
+                                    `${options.name} - lower Bollinger Band`,
+                                    this.widgetHelper.getWidgetConfig().chart
+                                        .series[key].avgColor
+                                );
+
+                                //Need to apply the correct function in the series calculations
+                                lowerBoll.data = this.seriesData[key].lower;
+                                localChartData.push(lowerBoll);
+                            }
                         }
-                    }
 
-                    //Update series as measurments come in.
-                    if (
-                        this.widgetHelper.getChartConfig().series[key].realTime
-                    ) {
-                        //console.log(`Subscribing to ${options.name}`);
-                        if (!this.subscription[key]) {
-                            this.subscription[
-                                key
-                            ] = this.realtimeService.subscribe(
-                                "/measurements/" + options.deviceId,
-                                (data) =>
-                                    this.handleRealtime(data, key, options)
-                            );
+                        //Update series as measurments come in.
+                        if (
+                            this.widgetHelper.getChartConfig().series[key]
+                                .realTime
+                        ) {
+                            //console.log(`Subscribing to ${options.name}`);
+                            if (!this.subscription[key]) {
+                                this.subscription[
+                                    key
+                                ] = this.realtimeService.subscribe(
+                                    "/measurements/" + options.deviceId,
+                                    (data) =>
+                                        this.handleRealtime(data, key, options)
+                                );
+                            }
                         }
                     }
                 }
             }
+        } else {
+            let seriesList = [];
+            //
+            // Get the data - there will be 1-3 series that will get
+            // compressed into a single with x,y,x values
+            //
+            for (let key of Object.keys(
+                this.widgetHelper.getChartConfig().series
+            )) {
+                if (
+                    Object.prototype.hasOwnProperty.call(
+                        this.widgetHelper.getChartConfig().series,
+                        key
+                    )
+                ) {
+                    seriesList.push(key);
+
+                    //For each variable retrieve the measurements
+                    //we need to match up measurements to get the
+                    //graph - omit gaps - for real time we will
+                    const measurement = this.widgetHelper.getChartConfig()
+                        .series[key];
+
+                    //each series (aggregates and functions of raw data too) gets this
+                    let options: MeasurementOptions = new MeasurementOptions(
+                        measurement.id.split(".")[0],
+                        measurement.name,
+                        measurement.id.split(".")[1],
+                        measurement.id.split(".")[2],
+                        this.widgetHelper.getChartConfig().series[
+                            key
+                        ].avgPeriod,
+                        this.widgetHelper.getChartConfig().type
+                    );
+
+                    //a period of time where quantity is the # of units,
+                    // and type(unit) has the # of seconds per unit in the id field
+                    let { from, to } = this.getDateRange();
+
+                    //
+                    // WorkHorse Functionality - retrieve and calculate derived numbers
+                    //
+                    this.seriesData[
+                        key
+                    ] = await this.measurementHelper.getMeasurements(
+                        this.measurementService,
+                        options,
+                        from,
+                        to,
+                        null,
+                        this.widgetHelper.getChartConfig().type,
+                        this.widgetHelper.getChartConfig().aggregation.id == 0, //count = true
+                        this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
+                        this.widgetHelper.getChartConfig().rangeDisplay[
+                            this.widgetHelper.getChartConfig().aggregationFreq
+                                .text
+                        ] //time format
+                    );
+                }
+            }
+            //
+            // We have all the data, now we create the actual displayed data
+            //
+            let thisSeries: ChartDataSets = this.createSeries(
+                seriesList[0],
+                `${
+                    this.widgetHelper.getChartConfig().series[seriesList[0]]
+                        .name
+                } vs ${
+                    this.widgetHelper.getChartConfig().series[seriesList[1]]
+                        .name
+                }`,
+                this.widgetHelper.getWidgetConfig().chart.series[seriesList[0]]
+                    .color
+            );
+
+            //x/y series (!!Date Order!!) - make sure x/y values match timestamps
+            let result: { x: number; y: number }[] = [];
+            for (
+                let index = 0;
+                index < this.seriesData[seriesList[0]].valtimes.length;
+                index++
+            ) {
+                const xval = this.seriesData[seriesList[0]].valtimes[index];
+                let yval = this.seriesData[seriesList[1]].valtimes.filter(
+                    (val) => {
+                        return (
+                            //Match dates within a tollerence
+                            Math.abs(val.x.getTime() - xval.x.getTime()) < 400
+                        );
+                    }
+                );
+                console.log(yval);
+                if (0 in yval) {
+                    result.push({ x: xval.y, y: yval[0].y });
+                }
+            }
+
+            //x increasing - assume y function of x
+            result = result.sort((a, b) => a.x - b.x);
+
+            thisSeries.data = result;
+            localChartData.push(thisSeries);
         }
         this.chartData = localChartData; //replace
         this.dataLoaded = true;
@@ -558,7 +670,6 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                 this.widgetHelper.getChartConfig().position
             );
         }
-
         if (this.widgetHelper.getChartConfig().type === "horizontalBar") {
             //swapped x & y
             this.chartOptions.scales.yAxes.length = 0; //reset axes
@@ -617,16 +728,31 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         } else {
             //X axis
             this.chartOptions.scales.xAxes.length = 0; //reset axes
-            this.chartOptions.scales.xAxes.push({
-                display: this.widgetHelper.getChartConfig().showx,
-                stacked: this.widgetHelper.getChartConfig().stackSeries,
-                type: "time",
-                time: {
-                    displayFormats: this.widgetHelper.getChartConfig()
-                        .rangeDisplay,
-                    unit: this.widgetHelper.getChartConfig().rangeType.text,
-                },
-            });
+            if (this.widgetHelper.getChartConfig().multivariateplot) {
+                this.chartOptions.scales.xAxes.push({
+                    display: this.widgetHelper.getChartConfig().showx,
+                    stacked: this.widgetHelper.getChartConfig().stackSeries,
+                    type: "linear",
+                    ticks: {
+                        beginAtZero: !this.widgetHelper.getChartConfig()
+                            .fitAxis,
+                    },
+                });
+            } else {
+                this.chartOptions.scales.xAxes.push({
+                    display: this.widgetHelper.getChartConfig().showx,
+                    stacked: this.widgetHelper.getChartConfig().stackSeries,
+                    type: "time",
+                    time: {
+                        displayFormats: this.widgetHelper.getChartConfig()
+                            .rangeDisplay,
+                        unit: this.widgetHelper.getChartConfig().rangeType.text,
+                    },
+                });
+                this.chartOptions.plugins = {
+                    labels: [],
+                };
+            }
 
             //Y axis
             this.chartOptions.scales.yAxes.length = 0; //reset axes
@@ -637,10 +763,6 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
                 },
             });
-
-            this.chartOptions.plugins = {
-                labels: [],
-            };
         }
 
         //labels affect the plot greatly so allow the chart to naturally do that it's self.

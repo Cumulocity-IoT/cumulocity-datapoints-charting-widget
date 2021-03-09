@@ -223,6 +223,16 @@
             <div class="configsection">
                 <h4 translate>Series Settings</h4>
                 <div *ngIf="widgetHelper.getChartConfig().hasSeries()">
+                    <ng-container *ngIf="widgetHelper.getChartConfig().type == 'line'">
+
+                        <input [disabled]="widgetHelper
+                                .getChartConfig()
+                                .seriesKeys().length != 2 " type="checkbox" [ngModelOptions]="{ standalone: true }"
+                            [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
+                            (ngModelChange)="updateConfig()" />
+
+                    </ng-container>
+
                     <div *ngFor="
                             let seriesKey of widgetHelper
                                 .getChartConfig()
@@ -280,13 +290,8 @@
                             <!-- 
                                 Per series settings here ?
                             -->
-                            <ng-container *ngIf="
-                                    widgetHelper.getChartConfig().type ==
-                                        'scatter' ||
-                                        widgetHelper.getChartConfig().type ==
-                                            'bubble';
-                                    else nonComposite
-                                ">
+                            <ng-container *ngIf="widgetHelper.getChartConfig().multivariateplot == true
+                                    else nonComposite">
                                 <div class="row">
                                     <div class="col-layout col-lg-12">
                                         <label translate>Variable</label>

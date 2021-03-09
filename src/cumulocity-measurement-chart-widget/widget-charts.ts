@@ -123,6 +123,7 @@ export class ChartConfig {
     //Global properties
     enabled: boolean = true;
     type: string = "line";
+    multivariateplot: boolean = false;
     rangeType: ListItem = this.rangeUnits[1];
     rangeValue: number = 10;
     rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
