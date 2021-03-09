@@ -5,6 +5,7 @@ import _ from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
+import * as computeIQR from "compute-iqr";
 
 /**
  * These elements can form the criteria
@@ -212,6 +213,9 @@ export class MeasurementHelper {
             bucketPeriod,
             labelDateFormat
         );
+
+        console.log(timeBucket, bucketPeriod, labelDateFormat);
+
         let filter = options.filter();
 
         //get the first page
@@ -264,6 +268,7 @@ export class MeasurementHelper {
 
         //only pie/doughnut/histogram graphs need this (Checked internally - noop if other)
         //histogram will be special type - need to add in handling for bucketing by value (stddev etc)
+        console.log(options, rawData.mn, rawData.mx);
         let rawBucketData = this.createBucketSeries(options, rawData);
 
         //instance of data for use
@@ -337,7 +342,11 @@ export class MeasurementHelper {
                 //just the values
                 let source = rawData.vl.map((val) => val.y);
                 //average and bollinger bands
-                let a = boll(source, options.avgPeriod, 2);
+                let avper =
+                    options.avgPeriod > source.length
+                        ? source.length
+                        : options.avgPeriod;
+                let a = boll(source, avper, 2);
 
                 for (let index = 0; index < rawData.vl.length; index++) {
                     const element = rawData.vl[index];
@@ -368,18 +377,25 @@ export class MeasurementHelper {
             options.targetGraphType == "doughnut" ||
             options.targetGraphType == "histogram"
         ) {
-            //just the values
-            rawData.vl.map((val) => {
-                //we want to categorize and return the data
-                // same size as the input - but as labels
-                // simple 1 dim array
-                let mapped = this.categorize(options, val);
-                if (_.has(result, mapped)) {
-                    result[mapped] = result[mapped] + 1;
-                } else {
-                    result[mapped] = 1;
-                }
-            });
+            if (options.timeBucket) {
+                //just the counts over time
+                rawData.vl.map((val) => {
+                    //we want to categorize and return the data
+                    // same size as the input - but as labels
+                    // simple 1 dim array
+                    let mapped = this.categorize(options, val);
+                    if (_.has(result, mapped)) {
+                        result[mapped] = result[mapped] + 1;
+                    } else {
+                        result[mapped] = 1;
+                    }
+                });
+            } else {
+                //values buckets
+                let vals = rawData.vl.map((val) => val.y);
+                let hist = this.calculateHistogram(vals, 5);
+                return { labels: hist.labels, data: hist.counts };
+            }
         }
 
         let bucketData: number[] = [];
@@ -397,11 +413,76 @@ export class MeasurementHelper {
 
     public categorize(
         options: MeasurementOptions,
-        val: { x: Date; y: number }
+        val: { x: Date; y: number },
+        mn?: number,
+        mx?: number,
+        buckets?: number
     ): string {
         if (options.timeBucket) {
             return moment(val.x).format(options.labelDateFormat);
         }
-        return "None";
+
+        //histogram
+        let bin = Math.floor((val.y - mn) / buckets);
+        console.log(`BIN: ${bin}`);
+        return bin.toString();
+    }
+
+    calculateHistogram(
+        arr,
+        numBins,
+        trimTailPercentage = 0.0
+    ): { labels: string[]; counts: number[] } {
+        const bins: number[] = [];
+        const binLabels: string[] = [];
+
+        let dataCopy = arr.sort((a, b) => a - b);
+
+        // if (trimTailPercentage !== 0.0) {
+        //     const rightPercentile =
+        //         dataCopy[
+        //             Math.floor((1.0 - trimTailPercentage) * dataCopy.length - 1)
+        //         ];
+        //     const leftPercentile =
+        //         dataCopy[Math.ceil(trimTailPercentage * dataCopy.length - 1)];
+        //     dataCopy = dataCopy.filter(
+        //         (x) => x <= rightPercentile && x >= leftPercentile
+        //     );
+        // }
+
+        const min = dataCopy[0];
+        const max = dataCopy[dataCopy.length - 1];
+
+        // if (numBins === 0) {
+        //     const sturges = Math.ceil(Math.log2(dataCopy.length)) + 1;
+        //     const iqr = computeIQR(dataCopy);
+        //     // If IQR is 0, fd returns 1 bin. This is as per the NumPy implementation:
+        //     //   https://github.com/numpy/numpy/blob/master/numpy/lib/histograms.py#L138
+        //     let fdbins = 1;
+        //     if (iqr !== 0.0) {
+        //         const fd = 2.0 * (iqr / Math.pow(dataCopy.length, 1.0 / 3.0));
+        //         fdbins = Math.ceil((max - min) / fd);
+        //     }
+        //     numBins = Math.max(sturges, fdbins);
+        // }
+
+        const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
+
+        //initialise to 0 and labels
+        for (let i = 0; i < numBins; i++) {
+            bins.push(0);
+            binLabels.push((i * binSize).toString());
+        }
+
+        dataCopy.forEach((item) => {
+            let binIndex = Math.floor((item - min) / binSize);
+            // for values that lie exactly on last bin we need to subtract one
+            if (binIndex === numBins) {
+                binIndex--;
+            }
+            bins[binIndex]++;
+        });
+
+        return { labels: binLabels, counts: bins };
     }
 }

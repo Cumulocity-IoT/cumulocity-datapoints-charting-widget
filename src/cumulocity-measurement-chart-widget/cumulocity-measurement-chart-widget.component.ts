@@ -117,29 +117,50 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                 ) {
                     this.seriesData[key].valtimes.push(datum);
 
-                    let mapped = this.measurementHelper.categorize(
-                        options,
-                        datum
-                    );
+                    if (
+                        this.widgetHelper.getChartConfig().aggregation.id == 0
+                    ) {
+                        let mapped = this.measurementHelper.categorize(
+                            options,
+                            datum
+                        );
 
-                    let index = -1;
-                    this.seriesData[key].labels.some((v, i) => {
-                        if (v === mapped) {
-                            index = i;
-                            return true;
+                        let index = -1;
+                        this.seriesData[key].labels.some((v, i) => {
+                            if (v === mapped) {
+                                index = i;
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if (index === -1) {
+                            this.seriesData[key].labels.push(mapped);
+                            this.seriesData[key].bucket.push(1);
+                        } else {
+                            this.seriesData[key].bucket[index] =
+                                this.seriesData[key].bucket[index] + 1;
                         }
-                        return false;
-                    });
 
-                    if (index === -1) {
-                        this.seriesData[key].labels.push(mapped);
-                        this.seriesData[key].bucket.push(1);
+                        console.log(this.seriesData[key].bucket);
                     } else {
-                        this.seriesData[key].bucket[index] =
-                            this.seriesData[key].bucket[index] + 1;
+                        let vals = this.seriesData[key].valtimes.map(
+                            (val) => val.y
+                        );
+                        let hist = this.measurementHelper.calculateHistogram(
+                            vals,
+                            5
+                        );
+                        //
+                        // In this case we want to replace the data
+                        //
+                        this.seriesData[key].labels.length = 0;
+                        this.seriesData[key].bucket.length = 0;
+                        this.seriesData[key].labels.push(...hist.labels);
+                        this.seriesData[key].bucket.push(...hist.counts);
+                        console.log(this.seriesData[key].labels);
+                        console.log(this.seriesData[key].bucket);
                     }
-
-                    console.log(this.seriesData[key].bucket);
                 } else if (
                     this.widgetHelper.getChartConfig().type == "horizontalBar"
                 ) {
@@ -166,7 +187,11 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                         //just the values
                         source = source.map((val) => val.y);
                         // let a = sma(source, options.avgPeriod, 3);
-                        let a = boll(source, options.avgPeriod, 3);
+                        let avper =
+                            options.avgPeriod > source.length
+                                ? source.length
+                                : options.avgPeriod;
+                        let a = boll(source, avper, 2);
 
                         //aggregate needs x and y coordinates but we use only the last
                         this.seriesData[key].upper.push({
@@ -208,37 +233,31 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
                     this.widgetHelper.getChartConfig().type === "doughnut"
                 ) {
                     //all graph types
-                    console.log(
-                        `checking ${this.seriesData[key].labels[0]} (${moment(
-                            this.seriesData[key].labels[0],
-                            this.widgetHelper.getChartConfig().rangeDisplay[
-                                this.widgetHelper.getChartConfig()
-                                    .aggregationFreq.text
-                            ] //time format
-                        ).format()} | ${moment(from).format()})`
-                    );
-                    while (
-                        moment(
-                            this.seriesData[key].labels[0],
-                            this.widgetHelper.getChartConfig().rangeDisplay[
-                                this.widgetHelper.getChartConfig()
-                                    .aggregationFreq.text
-                            ]
-                        ).isBefore(from)
+                    // console.log(
+                    //     `checking ${this.seriesData[key].labels[0]} (${moment(
+                    //         this.seriesData[key].labels[0],
+                    //         this.widgetHelper.getChartConfig().rangeDisplay[
+                    //             this.widgetHelper.getChartConfig()
+                    //                 .aggregationFreq.text
+                    //         ] //time format
+                    //     ).format()} | ${moment(from).format()})`
+                    // );
+                    //only remove data when we deal with times...
+                    if (
+                        this.widgetHelper.getChartConfig().aggregation.id == 0
                     ) {
-                        this.seriesData[key].bucket.shift();
-                        this.seriesData[key].labels.shift();
-                        console.log(
-                            `checking ${
-                                this.seriesData[key].labels[0]
-                            } (${moment(
+                        while (
+                            moment(
                                 this.seriesData[key].labels[0],
                                 this.widgetHelper.getChartConfig().rangeDisplay[
                                     this.widgetHelper.getChartConfig()
                                         .aggregationFreq.text
-                                ] //time format
-                            ).format()} | ${moment(from).format()})`
-                        );
+                                ]
+                            ).isBefore(from)
+                        ) {
+                            this.seriesData[key].bucket.shift();
+                            this.seriesData[key].labels.shift();
+                        }
                     }
                 }
                 if (
