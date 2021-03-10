@@ -124,6 +124,7 @@ export class ChartConfig {
     enabled: boolean = true;
     type: string = "line";
     multivariateplot: boolean = false;
+    multivariateplotTolerence: number = 0.5; //seconds
     rangeType: ListItem = this.rangeUnits[1];
     rangeValue: number = 10;
     rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
@@ -135,6 +136,7 @@ export class ChartConfig {
     dateExample: string = "yyyy-MM-dd hh:mm";
     showx: boolean = true;
     showy: boolean = true;
+    showAxesLabels: boolean = true;
     showAdvanced: boolean = false;
     fitAxis: boolean = false;
     stackSeries: boolean = false;

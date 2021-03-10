@@ -46,7 +46,7 @@
                 <ng-container *ngIf="widgetHelper.getWidgetConfig().selectedDevices.length>0">
                     <ng-container *ngIf="widgetHelper.getChartConfig().rangeType.id >= 0">
                         <div class="col-layout col-lg-12">
-                            Retrieve {{widgetHelper.getChartConfig().rangeType | json}}
+                            Retrieve
                             <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
                                 (ngModelChange)="updateConfig()" />
                             &nbsp;
@@ -88,6 +88,11 @@
                     <div class="col-layout col-lg-2">
                         <label for="showYAxis" translate>Show Y Axis</label>
                         <input type="checkbox" name="showYAxis" [(ngModel)]="widgetHelper.getChartConfig().showy"
+                            (ngModelChange)="updateConfig()" />
+                    </div>
+                    <div class="col-layout col-lg-2">
+                        <label for="showYAxis" translate>Label Axes</label>
+                        <input type="checkbox" name="showYAxis" [(ngModel)]="widgetHelper.getChartConfig().showAxesLabels"
                             (ngModelChange)="updateConfig()" />
                     </div>
                     <div class="col-layout col-lg-2">
@@ -145,8 +150,7 @@
                 <ng-container
                     *ngIf="widgetHelper.getChartConfig().type === 'pie' || widgetHelper.getChartConfig().type === 'doughnut'">
                     <div class="col-layout col-lg-2">
-                        <label for="aggregate" translate>aggregate By
-                            {{widgetHelper.getChartConfig().aggregation|json}}</label>
+                        <label for="aggregate" translate>aggregate By</label>
                     </div>
                     <div class="col-layout col-lg-4">
                         <select name="aggSelector" [(ngModel)]="widgetHelper.getChartConfig().aggregation"
@@ -224,13 +228,24 @@
                 <h4 translate>Series Settings</h4>
                 <div *ngIf="widgetHelper.getChartConfig().hasSeries()">
                     <ng-container *ngIf="widgetHelper.getChartConfig().type == 'line'">
-
-                        <input [disabled]="widgetHelper
-                                .getChartConfig()
-                                .seriesKeys().length != 2 " type="checkbox" [ngModelOptions]="{ standalone: true }"
-                            [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
-                            (ngModelChange)="updateConfig()" />
-
+                        <div class="row">
+                            <div class="col-layout col-lg-6">
+                                <label translate>Plot datapoints against each other</label>
+                                <input [disabled]="widgetHelper
+                                        .getChartConfig()
+                                        .seriesKeys().length != 2 " type="checkbox"
+                                    [ngModelOptions]="{ standalone: true }"
+                                    [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
+                                    (ngModelChange)="updateConfig()" />
+                            </div>
+                            <div class="col-layout col-lg-6">
+                                <label translate>match datapoints within +/- </label>
+                                <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
+                                    [(ngModel)]="widgetHelper.getChartConfig().multivariateplotTolerence"
+                                    (ngModelChange)="updateConfig()" />
+                                <label translate> seconds </label>
+                            </div>
+                        </div>
                     </ng-container>
 
                     <div *ngFor="
