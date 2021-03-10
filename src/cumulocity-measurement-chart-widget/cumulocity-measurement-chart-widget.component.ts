@@ -614,6 +614,18 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
 
             thisSeries.data = result;
             localChartData.push(thisSeries);
+            this.chartOptions.scales.xAxes[0].scaleLabel = {
+                display: true,
+                labelString: this.widgetHelper.getChartConfig().series[
+                    seriesList[0]
+                ].name,
+            };
+            this.chartOptions.scales.yAxes[0].scaleLabel = {
+                display: true,
+                labelString: this.widgetHelper.getChartConfig().series[
+                    seriesList[1]
+                ].name,
+            };
         }
         this.chartData = localChartData; //replace
         this.dataLoaded = true;
