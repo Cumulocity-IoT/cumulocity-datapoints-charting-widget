@@ -543,20 +543,24 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
 
       thisSeries.data = result;
       localChartData.push(thisSeries);
-      this.chartOptions.scales.xAxes[0].scaleLabel = {
-        display: this.widgetHelper.getChartConfig().showAxesLabels,
-        labelString: this.widgetHelper.getChartConfig().series[seriesList[0]]
-          .name,
-      };
-      this.chartOptions.scales.yAxes[0].scaleLabel = {
-        display: this.widgetHelper.getChartConfig().showAxesLabels,
-        labelString: this.widgetHelper.getChartConfig().series[seriesList[1]]
-          .name,
-      };
+      this.setAxesLabels(seriesList[0],seriesList[1]);
     }
     this.chartData = localChartData; //replace
     this.dataLoaded = true;
   }
+
+    private setAxesLabels(xLabelKey:string, yLabelKey:string) {
+        this.chartOptions.scales.xAxes[0].scaleLabel = {
+            display: this.widgetHelper.getChartConfig().showAxesLabels,
+            labelString: this.widgetHelper.getChartConfig().series[xLabelKey]
+                .name,
+        };
+        this.chartOptions.scales.yAxes[0].scaleLabel = {
+            display: this.widgetHelper.getChartConfig().showAxesLabels,
+            labelString: this.widgetHelper.getChartConfig().series[yLabelKey]
+                .name,
+        };
+    }
 
   /**
    * This method returns a default line/bar dataset which can then have
