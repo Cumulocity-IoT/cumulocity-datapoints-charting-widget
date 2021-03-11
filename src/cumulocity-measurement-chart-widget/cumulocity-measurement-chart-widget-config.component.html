@@ -33,11 +33,6 @@
                     </ng-multiselect-dropdown>
                 </div>
             </ng-container>
-        </div>
-        <!-- 
-            Once we have measurements - how many/what period does the user want
-        -->
-        <div class="row">
             <ng-container *ngIf="
             widgetHelper.getWidgetConfig().selectedDevices.length > 0 &&
             widgetHelper.getWidgetConfig().selectedMeasurements.length > 0
@@ -63,6 +58,9 @@
                 </div>
             </ng-container>
         </div>
+        <!-- 
+            Once we have measurements - how many/what period does the user want
+        -->
     </div>
 
     <!-- 
@@ -75,7 +73,7 @@
         ">
         <!-- 
             Chart Type & global settings
-    -->
+        -->
         <div class="configsection">
             <h4 translate>Global Chart Settings</h4>
             <div class="row">
@@ -99,7 +97,11 @@
                     The ng-container below is for Line graphs 
                     Other types will have different options. 
                 -->
-                <ng-container *ngIf="widgetHelper.getChartConfig().type === 'line' ">
+                <ng-container *ngIf="
+                widgetHelper.getChartConfig().type === 'line' ||
+                widgetHelper.getChartConfig().type === 'bubble' ||
+                widgetHelper.getChartConfig().type === 'scatter'
+                ">
                     <div class=" col-layout col-lg-2">
                         <label for="showXAxis" translate>show X Axis</label>
                         <input type="checkbox" name="showXAxis" [(ngModel)]="widgetHelper.getChartConfig().showx"
@@ -110,6 +112,9 @@
                         <input type="checkbox" name="showYAxis" [(ngModel)]="widgetHelper.getChartConfig().showy"
                             (ngModelChange)="updateConfig()" />
                     </div>
+                    <!-- 
+                        Need to make this work in the case of a single dataset
+                    -->
                     <div class="col-layout col-lg-2">
                         <label for="showYAxis" translate>Label Axes</label>
                         <input type="checkbox" name="showYAxis"
@@ -209,8 +214,10 @@
                 </ng-container>
 
             </div>
-            <ng-container
-                *ngIf="widgetHelper.getChartConfig().type !== 'pie' && widgetHelper.getChartConfig().type !== 'doughnut'">
+            <ng-container *ngIf="
+                    !widgetHelper.getChartConfig().multivariateplot && 
+                    widgetHelper.getChartConfig().type !== 'pie' && 
+                    widgetHelper.getChartConfig().type !== 'doughnut'">
                 <div class="row">
                     <div class="col-layout col-lg-6">
                         <label for="dateFormat" translate>Date Format</label>
