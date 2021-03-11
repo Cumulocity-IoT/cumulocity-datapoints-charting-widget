@@ -16,6 +16,9 @@
                 </ng-multiselect-dropdown>
             </div>
 
+            <!--
+                Hide until device(s) selected to prompt a flow
+             -->
             <ng-container *ngIf="
                     widgetHelper.getWidgetConfig().selectedDevices.length > 0
                 ">
@@ -30,35 +33,42 @@
                     </ng-multiselect-dropdown>
                 </div>
             </ng-container>
-
-            <div class="row">
-                <ng-container *ngIf="
-                widgetHelper.getWidgetConfig().selectedDevices.length > 0 &&
-                widgetHelper.getWidgetConfig().selectedMeasurements.length > 0
-            ">
-                    <div class="col-layout col-lg-12">
-                        <label>Retrieve</label>
-                        <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
-                            (ngModelChange)="updateConfig()" />
-                        &nbsp;
-                        <select name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
-                            (ngModelChange)="updateConfig()">
-                            <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
-                                [ngValue]="i">
-                                {{ rType.text }}
-                            </option>
-                        </select>
-                        <label>(s) of measurments or a maximum of </label>
-                        <input type="text" name="rangemax" [(ngModel)]="widgetHelper.getChartConfig().rangeMax"
-                            (ngModelChange)="updateConfig()" />
-                        <label> measurments</label>
-                    </div>
-                </ng-container>
-            </div>
-
+        </div>
+        <!-- 
+            Once we have measurements - how many/what period does the user want
+        -->
+        <div class="row">
+            <ng-container *ngIf="
+            widgetHelper.getWidgetConfig().selectedDevices.length > 0 &&
+            widgetHelper.getWidgetConfig().selectedMeasurements.length > 0
+        ">
+                <div class="col-layout col-lg-6">
+                    <label>Retrieve</label>
+                    <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
+                        (ngModelChange)="updateConfig()" />
+                    &nbsp;
+                    <select name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
+                        (ngModelChange)="updateConfig()">
+                        <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
+                            [ngValue]="i">
+                            {{ rType.text }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-layout col-lg-6">
+                    <label>(s) of measurments or a maximum of </label>
+                    <input type="text" name="rangemax" [(ngModel)]="widgetHelper.getChartConfig().rangeMax"
+                        (ngModelChange)="updateConfig()" />
+                    <label> measurments</label>
+                </div>
+            </ng-container>
         </div>
     </div>
 
+    <!-- 
+        Once there are measurements we can select a chart and set globals
+        the overall chart type is fixed currently but could in the future be mixed
+    -->
     <ng-container *ngIf="
             widgetHelper.getWidgetConfig().selectedDevices.length > 0 &&
             widgetHelper.getWidgetConfig().selectedMeasurements.length > 0
@@ -71,11 +81,15 @@
             <div class="row">
                 <div class="col-layout col-lg-4">
                     <label for="chartSelector" translate>Chart Type</label>
+                    <!-- 
+                        TODO: will change to index so we can do easier comparisons
+                        and branching in the typescript - currently a string 
+                    -->
                     <select name="chartSelector" [(ngModel)]="widgetHelper.getChartConfig().type"
                         (ngModelChange)="updateConfig()">
                         <option *ngFor="
                                 let chart of widgetHelper.getChartConfig()
-                                    .chartTypes
+                                    .chartTypes; index as i;
                             " [ngValue]="chart.text">
                             {{ chart.text }}
                         </option>
