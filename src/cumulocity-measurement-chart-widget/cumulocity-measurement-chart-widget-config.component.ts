@@ -203,9 +203,10 @@ export class CumulocityMeasurementChartWidgetConfig implements OnInit {
             );
         }
 
+        //console.log(`range type: ${this.widgetHelper.getChartConfig().rangeType}`,this.widgetHelper.getChartConfig().rangeUnits);
         this.widgetHelper.getChartConfig().dateExample = moment().format(
             this.widgetHelper.getChartConfig().rangeDisplay[
-                this.widgetHelper.getChartConfig().rangeType.text
+                this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().rangeType].text
             ]
         );
 

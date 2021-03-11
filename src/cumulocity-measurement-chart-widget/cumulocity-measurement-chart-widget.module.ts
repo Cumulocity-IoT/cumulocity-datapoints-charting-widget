@@ -16,41 +16,40 @@ import "~styles/index.css";
 // import 'some-module/styles.css'
 
 @NgModule({
-    imports: [
-        CoreModule,
-        NgMultiSelectDropDownModule,
-        ColorPickerModule,
-        ChartsModule,
-        //HttpClientModule,
-    ],
-    declarations: [
-        CumulocityMeasurementChartWidget,
-        CumulocityMeasurementChartWidgetConfig,
-    ],
-    entryComponents: [
-        CumulocityMeasurementChartWidget,
-        CumulocityMeasurementChartWidgetConfig,
-    ],
-    providers: [
-        // Connect the widget to Cumulocity via the HOOK_COMPONENT injection token
-        {
-            provide: HOOK_COMPONENTS,
-            multi: true,
-            useValue: {
-                id: "global.presales.CumulocityMeasurementChart.widget",
-                label: "Cumulocity Measurement Chart",
-                description:
-                    "Graph measurements and statistics about measurements",
-                component: CumulocityMeasurementChartWidget,
-                configComponent: CumulocityMeasurementChartWidgetConfig,
-                previewImage: require("~styles/previewImage.png"),
-                data: {
-                    settings: {
-                        noDeviceTarget: true,
-                    },
-                },
-            },
+  imports: [
+    CoreModule,
+    NgMultiSelectDropDownModule,
+    ColorPickerModule,
+    ChartsModule,
+    //HttpClientModule,
+  ],
+  declarations: [
+    CumulocityMeasurementChartWidget,
+    CumulocityMeasurementChartWidgetConfig,
+  ],
+  entryComponents: [
+    CumulocityMeasurementChartWidget,
+    CumulocityMeasurementChartWidgetConfig,
+  ],
+  providers: [
+    // Connect the widget to Cumulocity via the HOOK_COMPONENT injection token
+    {
+      provide: HOOK_COMPONENTS,
+      multi: true,
+      useValue: {
+        id: "global.presales.CumulocityMeasurementChart.widget",
+        label: "Measurement Chart",
+        description: "Graph measurements and statistics about measurements",
+        component: CumulocityMeasurementChartWidget,
+        configComponent: CumulocityMeasurementChartWidgetConfig,
+        previewImage: require("~styles/previewImage.png"),
+        data: {
+          settings: {
+            noDeviceTarget: true,
+          },
         },
-    ],
+      },
+    },
+  ],
 })
 export class CumulocityMeasurementChartWidgetModule {}

@@ -202,7 +202,8 @@ export class MeasurementHelper {
         targetGraphType: string,
         timeBucket: boolean,
         bucketPeriod: string,
-        labelDateFormat: string
+        labelDateFormat: string,
+        maxMeasurements: number
     ): Promise<MeasurementList> {
         options.setFilter(
             dateFrom,
@@ -226,7 +227,7 @@ export class MeasurementHelper {
         if (resp.res.status == 200) {
             data = [...resp.data];
             page = resp.paging.nextPage;
-            while (page != null) {
+            while (page != null && data.length < maxMeasurements) {
                 console.log(`requesting page ${page}`);
                 // Need to handle errors here and also could there be
                 // other status codes to handle?
@@ -237,6 +238,9 @@ export class MeasurementHelper {
                 }
 
                 page = resp.paging.nextPage;
+            }
+            if( data.length > maxMeasurements) {
+                data.length = maxMeasurements;
             }
             console.log(`total of ${data.length} points`);
         }
@@ -469,9 +473,12 @@ export class MeasurementHelper {
         const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
 
         //initialise to 0 and labels
+        let previousLabel = "0.00";
         for (let i = 0; i < numBins; i++) {
             bins.push(0);
-            binLabels.push((i * binSize).toString());
+            let upper = (i * binSize).toFixed(2);
+            binLabels.push(`${previousLabel} - ${upper}`);
+            previousLabel = upper;
         }
 
         dataCopy.forEach((item) => {

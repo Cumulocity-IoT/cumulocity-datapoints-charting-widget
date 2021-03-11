@@ -16,7 +16,6 @@ import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
-import * as Chart from "chart.js";
 
 @Component({
   templateUrl: "./cumulocity-measurement-chart-widget.component.html",
@@ -118,7 +117,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         ) {
           this.seriesData[key].valtimes.push(datum);
 
-          if (this.widgetHelper.getChartConfig().aggregation.id == 0) {
+          if (this.widgetHelper.getChartConfig().aggregation == 0) {
             let mapped = this.measurementHelper.categorize(options, datum);
 
             let index = -1;
@@ -229,7 +228,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
           //     ).format()} | ${moment(from).format()})`
           // );
           //only remove data when we deal with times...
-          if (this.widgetHelper.getChartConfig().aggregation.id == 0) {
+          if (this.widgetHelper.getChartConfig().aggregation == 0) {
             while (
               moment(
                 this.seriesData[key].labels[0],
@@ -297,6 +296,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
     let localChartData = []; //build list locally because empty dataset is added by framework
 
     if (!this.widgetHelper.getChartConfig().multivariateplot) {
+      console.log("getting independent variables");
       //for each fragment/series to be plotted
       //ChartSeries has most of the config for the series
       //the MeasurementList contains the data (and its independent)
@@ -333,11 +333,12 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
             to,
             null,
             this.widgetHelper.getChartConfig().type,
-            this.widgetHelper.getChartConfig().aggregation.id == 0, //count = true
+            this.widgetHelper.getChartConfig().aggregation == 0, //count = true
             this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
             this.widgetHelper.getChartConfig().rangeDisplay[
               this.widgetHelper.getChartConfig().aggregationFreq.text
-            ] //time format
+            ], //time format
+            this.widgetHelper.getChartConfig().rangeMax
           );
 
           if (
@@ -390,6 +391,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
               thisSeries.barPercentage = 0.9;
               thisSeries.categoryPercentage = 0.9;
               localChartData.push(thisSeries);
+              console.log(thisSeries);
             }
 
             //If average or other function then add series for that
@@ -456,10 +458,14 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         }
       }
     } else {
+      console.log("generating composite series from sources");
+      console.log(
+        `for a chart of type ${this.widgetHelper.getChartConfig().type}`
+      );
       let seriesList = [];
       //
       // Get the data - there will be 1-3 series that will get
-      // compressed into a single with x,y,x values
+      // compressed into a single with x,y,r values
       //
       for (let key of Object.keys(this.widgetHelper.getChartConfig().series)) {
         if (
@@ -499,14 +505,16 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
             to,
             null,
             this.widgetHelper.getChartConfig().type,
-            this.widgetHelper.getChartConfig().aggregation.id == 0, //count = true
+            this.widgetHelper.getChartConfig().aggregation == 0, //count = true
             this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
             this.widgetHelper.getChartConfig().rangeDisplay[
               this.widgetHelper.getChartConfig().aggregationFreq.text
-            ] //time format
+            ], //time format
+            this.widgetHelper.getChartConfig().rangeMax
           );
         }
       }
+
       //
       // We have all the data, now we create the actual displayed data
       //
@@ -519,13 +527,13 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
       );
 
       //x/y series (!!Date Order!!) - make sure x/y values match timestamps
-      let result: { x: number; y: number }[] = [];
+      let result: { x: number; y: number; r?: number }[] = [];
       for (
         let index = 0;
         index < this.seriesData[seriesList[0]].valtimes.length;
         index++
       ) {
-        const xval = this.seriesData[seriesList[0]].valtimes[index];
+        let xval = this.seriesData[seriesList[0]].valtimes[index];
         let yval = this.seriesData[seriesList[1]].valtimes.filter((val) => {
           return (
             //Match dates within a tolerence
@@ -533,34 +541,64 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().multivariateplotTolerence * 1000
           );
         });
-        if (0 in yval) {
+        let zval = undefined;
+        if (2 in seriesList) {
+          zval = this.seriesData[seriesList[2]].valtimes.filter((val) => {
+            return (
+              //Match dates within a tolerence
+              Math.abs(val.x.getTime() - xval.x.getTime()) <
+              this.widgetHelper.getChartConfig().multivariateplotTolerence *
+                1000
+            );
+          });
+        }
+        console.log(zval);
+        if (0 in yval && zval && 0 in zval) {
+          result.push({ x: xval.y, y: yval[0].y, r: zval[0].y });
+        } else if (0 in yval) {
           result.push({ x: xval.y, y: yval[0].y });
+        } else {
+          result.push({ x: index, y: xval.y }); //sensible default
         }
       }
 
-      //x increasing - assume y function of x
+      //x increasing - assume  y(,r) function of x
       result = result.sort((a, b) => a.x - b.x);
 
-      thisSeries.data = result;
+      if (
+        this.widgetHelper.getChartConfig().type == "radar" ||
+        this.widgetHelper.getChartConfig().type == "polarArea"
+      ) {
+        //we need separate labels and values here
+        thisSeries.data = result.map((v) => v.y);
+        this.chartLabels = result.map((v) => v.x.toString());
+      } else {
+        console.log("Not radar");
+        console.log(result);
+        thisSeries.data = result;
+        thisSeries.pointRadius = 5;
+      }
       localChartData.push(thisSeries);
-      this.setAxesLabels(seriesList[0],seriesList[1]);
+      this.setAxesLabels(seriesList[0], seriesList[1]);
     }
     this.chartData = localChartData; //replace
     this.dataLoaded = true;
   }
 
-    private setAxesLabels(xLabelKey:string, yLabelKey:string) {
-        this.chartOptions.scales.xAxes[0].scaleLabel = {
-            display: this.widgetHelper.getChartConfig().showAxesLabels,
-            labelString: this.widgetHelper.getChartConfig().series[xLabelKey]
-                .name,
-        };
-        this.chartOptions.scales.yAxes[0].scaleLabel = {
-            display: this.widgetHelper.getChartConfig().showAxesLabels,
-            labelString: this.widgetHelper.getChartConfig().series[yLabelKey]
-                .name,
-        };
+  private setAxesLabels(xLabelKey: string, yLabelKey: string) {
+    if (this.chartOptions.scales.xAxes.length > 0) {
+      this.chartOptions.scales.xAxes[0].scaleLabel = {
+        display: this.widgetHelper.getChartConfig().showAxesLabels,
+        labelString: this.widgetHelper.getChartConfig().series[xLabelKey].name,
+      };
     }
+    if (this.chartOptions.scales.yAxes.length > 0) {
+      this.chartOptions.scales.yAxes[0].scaleLabel = {
+        display: this.widgetHelper.getChartConfig().showAxesLabels,
+        labelString: this.widgetHelper.getChartConfig().series[yLabelKey].name,
+      };
+    }
+  }
 
   /**
    * This method returns a default line/bar dataset which can then have
@@ -593,7 +631,9 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
     let from = new Date(
       to -
         this.widgetHelper.getChartConfig().rangeValue *
-          this.widgetHelper.getChartConfig().rangeType.id *
+          this.widgetHelper.getChartConfig().rangeUnits[
+            this.widgetHelper.getChartConfig().rangeType
+          ].id *
           1000
     );
     return { from, to: new Date(to) };
@@ -622,7 +662,9 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         type: "time",
         time: {
           displayFormats: this.widgetHelper.getChartConfig().rangeDisplay,
-          unit: this.widgetHelper.getChartConfig().rangeType.text,
+          unit: this.widgetHelper.getChartConfig().rangeUnits[
+            this.widgetHelper.getChartConfig().rangeType
+          ].text,
         },
       });
 
@@ -641,7 +683,9 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
       };
     } else if (
       this.widgetHelper.getChartConfig().type == "pie" ||
-      this.widgetHelper.getChartConfig().type == "doughnut"
+      this.widgetHelper.getChartConfig().type == "doughnut" ||
+      this.widgetHelper.getChartConfig().type == "radar" ||
+      this.widgetHelper.getChartConfig().type == "polarArea"
     ) {
       this.chartOptions.scales.yAxes.length = 0; //reset axes
       this.chartOptions.scales.yAxes.push({
@@ -653,32 +697,38 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
       this.chartOptions.scales.xAxes.push({
         display: false,
       });
-
-      this.chartOptions.plugins = {
-        labels: [
-          {
-            render: "label",
-            position: "outside",
-            fontColor: "#000",
-          },
-          {
-            render: "percentage",
-            fontColor: "#FFF",
-          },
-        ],
-      };
     } else {
       //X axis
       this.chartOptions.scales.xAxes.length = 0; //reset axes
       if (this.widgetHelper.getChartConfig().multivariateplot) {
-        this.chartOptions.scales.xAxes.push({
-          display: this.widgetHelper.getChartConfig().showx,
-          stacked: this.widgetHelper.getChartConfig().stackSeries,
-          type: "linear",
-          ticks: {
-            beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
-          },
-        });
+        if (
+          this.widgetHelper.getChartConfig().type == "line" ||
+          this.widgetHelper.getChartConfig().type == "scatter" ||
+          this.widgetHelper.getChartConfig().type == "bubble"
+        ) {
+          this.chartOptions.scales.yAxes.length = 0; //reset axes
+          this.chartOptions.scales.xAxes.length = 0; //reset axes
+
+          if (
+            this.widgetHelper.getChartConfig().type == "scatter" ||
+            this.widgetHelper.getChartConfig().type == "bubble"
+          ) {
+            this.widgetHelper.getChartConfig().fitAxis = true; //always fit data
+          }
+
+          this.chartOptions.scales.xAxes.push({
+            display: this.widgetHelper.getChartConfig().showx,
+            stacked: this.widgetHelper.getChartConfig().stackSeries,
+            type: "linear",
+            ticks: {
+              beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
+            },
+          });
+        } else {
+          this.chartOptions.scales.xAxes.push({
+            display: this.widgetHelper.getChartConfig().showx,
+          });
+        }
       } else {
         this.chartOptions.scales.xAxes.push({
           display: this.widgetHelper.getChartConfig().showx,
@@ -686,7 +736,9 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
           type: "time",
           time: {
             displayFormats: this.widgetHelper.getChartConfig().rangeDisplay,
-            unit: this.widgetHelper.getChartConfig().rangeType.text,
+            unit: this.widgetHelper.getChartConfig().rangeUnits[
+              this.widgetHelper.getChartConfig().rangeType
+            ].text,
           },
         });
         this.chartOptions.plugins = {
