@@ -125,6 +125,7 @@ export class ChartConfig {
   type: string = "line";
   multivariateplot: boolean = false;
   multivariateplotTolerence: number = 0.5; //seconds
+  multivariateColor: string = this.colorList[0];
   rangeType: number = 1;
   rangeValue: number = 10;
   rangeMax: number = 3000;

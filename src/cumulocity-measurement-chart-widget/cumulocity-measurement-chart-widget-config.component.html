@@ -10,7 +10,7 @@
             <div class="col-lg-6">
                 <label for="deviceSelector" translate>Select Device</label>
                 <ng-multiselect-dropdown name="deviceSelector" [placeholder]="'Select Device(s)'"
-                    [data]="devices | async" [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices" [settings]="
+                                         [data]="devices | async" [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices" [settings]="
                         widgetHelper.getWidgetConfig().multiDropdownSettings
                     " (ngModelChange)="updateConfig()">
                 </ng-multiselect-dropdown>
@@ -25,7 +25,7 @@
                 <div class="col-lg-6">
                     <label for="measurementSelector" translate>Select Measurement Series</label>
                     <ng-multiselect-dropdown name="measurementSelector" [placeholder]="'Select Measurements'"
-                        [data]="supportedSeries" [(ngModel)]="
+                                             [data]="supportedSeries" [(ngModel)]="
                             widgetHelper.getWidgetConfig().selectedMeasurements
                         " [settings]="
                             widgetHelper.getWidgetConfig().multiDropdownSettings
@@ -40,12 +40,12 @@
                 <div class="col-layout col-lg-6">
                     <label>Retrieve</label>
                     <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
-                        (ngModelChange)="updateConfig()" />
+                           (ngModelChange)="updateConfig()" />
                     &nbsp;
                     <select name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
-                        (ngModelChange)="updateConfig()">
+                            (ngModelChange)="updateConfig()">
                         <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
-                            [ngValue]="i">
+                                [ngValue]="i">
                             {{ rType.text }}
                         </option>
                     </select>
@@ -53,7 +53,7 @@
                 <div class="col-layout col-lg-6">
                     <label>(s) of measurments or a maximum of </label>
                     <input type="text" name="rangemax" [(ngModel)]="widgetHelper.getChartConfig().rangeMax"
-                        (ngModelChange)="updateConfig()" />
+                           (ngModelChange)="updateConfig()" />
                     <label> measurments</label>
                 </div>
             </ng-container>
@@ -84,7 +84,7 @@
                         and branching in the typescript - currently a string 
                     -->
                     <select name="chartSelector" [(ngModel)]="widgetHelper.getChartConfig().type"
-                        (ngModelChange)="updateConfig()">
+                            (ngModelChange)="updateConfig()">
                         <option *ngFor="
                                 let chart of widgetHelper.getChartConfig()
                                     .chartTypes; index as i;
@@ -105,12 +105,12 @@
                     <div class=" col-layout col-lg-2">
                         <label for="showXAxis" translate>show X Axis</label>
                         <input type="checkbox" name="showXAxis" [(ngModel)]="widgetHelper.getChartConfig().showx"
-                            (ngModelChange)="updateConfig()" />
+                               (ngModelChange)="updateConfig()" />
                     </div>
                     <div class="col-layout col-lg-2">
                         <label for="showYAxis" translate>Show Y Axis</label>
                         <input type="checkbox" name="showYAxis" [(ngModel)]="widgetHelper.getChartConfig().showy"
-                            (ngModelChange)="updateConfig()" />
+                               (ngModelChange)="updateConfig()" />
                     </div>
                     <!-- 
                         Need to make this work in the case of a single dataset
@@ -118,8 +118,8 @@
                     <div class="col-layout col-lg-2">
                         <label for="showYAxis" translate>Label Axes</label>
                         <input type="checkbox" name="showYAxis"
-                            [(ngModel)]="widgetHelper.getChartConfig().showAxesLabels"
-                            (ngModelChange)="updateConfig()" />
+                               [(ngModel)]="widgetHelper.getChartConfig().showAxesLabels"
+                               (ngModelChange)="updateConfig()" />
                     </div>
                     <div class="col-layout col-lg-2">
                         <div *ngIf="widgetHelper.getChartConfig().showy">
@@ -133,7 +133,7 @@
                         <div class="col-layout col-lg-2">
                             <label for="fillArea" translate>Fill Area</label>
                             <input type="checkbox" name="fillArea" [(ngModel)]="widgetHelper.getChartConfig().fillArea"
-                                (ngModelChange)="updateConfig()" />
+                                   (ngModelChange)="updateConfig()" />
                         </div>
                     </ng-container>
 
@@ -144,16 +144,16 @@
                                     Other types will have different options. 
                 -->
                 <ng-container
-                    *ngIf="widgetHelper.getChartConfig().type === 'bar' || widgetHelper.getChartConfig().type === 'horizontalBar'">
+                              *ngIf="widgetHelper.getChartConfig().type === 'bar' || widgetHelper.getChartConfig().type === 'horizontalBar'">
                     <div class="col-layout col-lg-2">
                         <label for="showXAxis" translate>show X Axis</label>
                         <input type="checkbox" name="showXAxis" [(ngModel)]="widgetHelper.getChartConfig().showx"
-                            (ngModelChange)="updateConfig()" />
+                               (ngModelChange)="updateConfig()" />
                     </div>
                     <div class="col-layout col-lg-2">
                         <label for="showYAxis" translate>Show Y Axis</label>
                         <input type="checkbox" name="showYAxis" [(ngModel)]="widgetHelper.getChartConfig().showy"
-                            (ngModelChange)="updateConfig()" />
+                               (ngModelChange)="updateConfig()" />
                     </div>
                     <div class="col-layout col-lg-2">
                         <div *ngIf="widgetHelper.getChartConfig().showy">
@@ -167,22 +167,22 @@
                         <label for="stackSeries" translate>Stack Series</label>
                         <input [disabled]="widgetHelper.getWidgetConfig().selectedMeasurements
                                                             .length < 2" type="checkbox" name="stackSeries"
-                            [(ngModel)]="
+                               [(ngModel)]="
                                                                 widgetHelper.getChartConfig().stackSeries
                                                             " (ngModelChange)="updateConfig()" />
                     </div>
                 </ng-container>
 
                 <ng-container
-                    *ngIf="widgetHelper.getChartConfig().type === 'pie' || widgetHelper.getChartConfig().type === 'doughnut'">
+                              *ngIf="widgetHelper.getChartConfig().type === 'pie' || widgetHelper.getChartConfig().type === 'doughnut'">
                     <div class="col-layout col-lg-2">
                         <label for="aggSelector" translate>aggregate </label>
                     </div>
                     <div class="col-layout col-lg-4">
                         <select name="aggSelector" [(ngModel)]="widgetHelper.getChartConfig().aggregation"
-                            (ngModelChange)="updateConfig()">
+                                (ngModelChange)="updateConfig()">
                             <option *ngFor="let agg of widgetHelper.getChartConfig().aggregationType"
-                                [ngValue]="agg.id">
+                                    [ngValue]="agg.id">
                                 {{ agg.text }}
                             </option>
                         </select>
@@ -191,7 +191,7 @@
                         <div class="col-layout col-lg-4">
                             <label for="aggfreqSelector" translate>aggregation frequency</label>
                             <select name="aggfreqSelector" [(ngModel)]="widgetHelper.getChartConfig().aggregationFreq"
-                                (ngModelChange)="updateConfig()">
+                                    (ngModelChange)="updateConfig()">
                                 <option *ngFor="let freq of widgetHelper.getChartConfig().rangeUnits
                                                                                 " [ngValue]="freq">
                                     {{ freq.text }}
@@ -201,8 +201,8 @@
                         <div class="col-layout col-lg-4">
                             <label for="dateFormat" translate>label Format</label>
                             <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
-                                [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().aggregationFreq.text]"
-                                (ngModelChange)="updateConfig()" />
+                                   [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().aggregationFreq.text]"
+                                   (ngModelChange)="updateConfig()" />
                         </div>
                         <div class="col-layout col-lg-4">
                             <p>
@@ -222,8 +222,8 @@
                     <div class="col-layout col-lg-6">
                         <label for="dateFormat" translate>Date Format</label>
                         <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
-                            [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeUnits[widgetHelper.getChartConfig().rangeType].text]"
-                            (ngModelChange)="updateConfig()" />
+                               [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeUnits[widgetHelper.getChartConfig().rangeType].text]"
+                               (ngModelChange)="updateConfig()" />
                     </div>
                     <div class="col-layout col-lg-6">
                         <p>
@@ -237,7 +237,7 @@
                 <div class="col-layout col-lg-4">
                     <label for="positionSelector" translate>Legend Position</label>
                     <select name="positionSelector" [(ngModel)]="widgetHelper.getChartConfig().position"
-                        (ngModelChange)="updateConfig()">
+                            (ngModelChange)="updateConfig()">
                         <option *ngFor="
                                             let pos of widgetHelper.getChartConfig()
                                                 .chartPositions
@@ -269,17 +269,25 @@
                                 <input [disabled]="widgetHelper
                                         .getChartConfig()
                                         .seriesKeys().length < 2 " type="checkbox"
-                                    [ngModelOptions]="{ standalone: true }"
-                                    [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
-                                    (ngModelChange)="updateConfig()" />
+                                       [ngModelOptions]="{ standalone: true }"
+                                       [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
+                                       (ngModelChange)="updateConfig()" />
                             </div>
-                            <div class="col-layout col-lg-6">
-                                <label translate>match datapoints within +/- </label>
-                                <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
-                                    [(ngModel)]="widgetHelper.getChartConfig().multivariateplotTolerence"
-                                    (ngModelChange)="updateConfig()" />
-                                <label translate> seconds </label>
-                            </div>
+                            <ng-container *ngIf="widgetHelper.getChartConfig().multivariateplot">
+                                <div class="col-layout col-lg-6">
+                                    <input type="color" [ngModelOptions]="{ standalone: true }"
+                                           [(ngModel)]="widgetHelper.getChartConfig().multivariateColor"
+                                           [value]="widgetHelper.getChartConfig().multivariateColor"
+                                           (ngModelChange)="updateConfig()" />
+                                </div>
+                                <div class="col-layout col-lg-6">
+                                    <label translate>match datapoints within +/- </label>
+                                    <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
+                                           [(ngModel)]="widgetHelper.getChartConfig().multivariateplotTolerence"
+                                           (ngModelChange)="updateConfig()" />
+                                    <label translate> seconds </label>
+                                </div>
+                            </ng-container>
                         </div>
                     </ng-container>
 
@@ -288,14 +296,36 @@
                                 .getChartConfig()
                                 .seriesKeys()
                         ">
-                        <button (click)="showSection(seriesKey)" class="seriesButton btn btn-primary">
-                            {{
-                            widgetHelper.getChartConfig().series[seriesKey]
-                            .name
-                            }}
-                        </button>
+                        <div class="row">
+                            <ng-container *ngIf="widgetHelper.getChartConfig().multivariateplot == false">
+                                <input class="col-lg-1" type="color" [ngModelOptions]="{ standalone: true }"
+                                       [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].color"
+                                       [value]="widgetHelper.getChartConfig().series[seriesKey].color"
+                                       (ngModelChange)="updateConfig()" />
+                            </ng-container>
+                            <input class="col-lg-3" size="30" type="text" [ngModelOptions]="{ standalone: true }"
+                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].name"
+                                   (ngModelChange)="updateConfig()" />
+
+
+                            <div class="col-layout col-lg-3" *ngIf="widgetHelper.getChartConfig().multivariateplot == true">
+                                <label translate>Variable</label>
+                                <select name="variableSelector" [ngModelOptions]="{ standalone: true }"
+                                        [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].variable"
+                                        (ngModelChange)="updateConfig()">
+                                    <option>Not Assigned</option>
+                                    <option>x</option>
+                                    <option>y</option>
+                                    <option>r</option>
+                                </select>
+                            </div>
+
+                            <button class="col-lg-1" (click)="showSection(seriesKey)" class="btn btn-primary">
+                                <i class="fa fa-angle-double-down"></i>
+                            </button>
+                        </div>
                         <!-- 
-                            The following is the hidden accordian sections for the 
+                            The following is the sections for the 
                             individual series settings when clicked the button will 
                             set the selectedSeries member and this will trigger display
                         -->
@@ -305,163 +335,49 @@
                                         ? 'none'
                                         : 'grid'
                             }">
-                            <div class="row">
-                                <div class="col-layout col-lg-8">
-                                    <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
-                                        [(ngModel)]="
-                                                                widgetHelper.getChartConfig().series[
-                                                                    seriesKey
-                                                                ].name
-                                                            " (ngModelChange)="updateConfig()" />
-                                </div>
-                                <div class="col-layout col-lg-4">
-                                    <label translate>Series Color {{widgetHelper.getChartConfig().series[
-                                        seriesKey
-                                        ].color}}</label>
-                                    <input type="color" [ngModelOptions]="{ standalone: true }" [(ngModel)]="
-                                                                                        widgetHelper.getChartConfig().series[
-                                                                                            seriesKey
-                                                                                        ].color
-                                                                                    " [value]="
-                                                                                        widgetHelper.getChartConfig().series[
-                                                                                            seriesKey
-                                                                                        ].color
-                                                                                    "
-                                        (ngModelChange)="updateConfig()" />
-
-                                    <label translate>Show Advanced Options</label>
-                                    <input [disabled]="widgetHelper.getChartConfig().type !== 'line'" type="checkbox"
-                                        [ngModelOptions]="{ standalone: true }"
-                                        [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].showAdvanced"
-                                        (ngModelChange)="updateConfig()" />
-                                </div>
-                            </div>
-
                             <!-- 
                                 Per series settings here ?
                             -->
-                            <ng-container *ngIf="widgetHelper.getChartConfig().multivariateplot == true
-                                    else nonComposite">
+                            <ng-container *ngIf="!widgetHelper.getChartConfig().multivariateplot == true">
                                 <div class="row">
                                     <div class="col-layout col-lg-12">
-                                        <label translate>Variable</label>
-                                        <select name="variableSelector" [ngModelOptions]="{ standalone: true }"
-                                            [(ngModel)]="
-                                                                        widgetHelper.getChartConfig().series[
-                                                                            seriesKey
-                                                                        ].variable
-                                                                    " (ngModelChange)="updateConfig()">
-                                            <option>Not Assigned</option>
-                                            <option>x</option>
-                                            <option>y</option>
-                                            <option>r</option>
+                                        <label translate>hide measurements</label>
+                                        <input type="checkbox"
+                                               [ngModelOptions]="{ standalone: true }"
+                                               [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].hideMeasurements"
+                                               (ngModelChange)="updateConfig()" />
+                                        <label translate>display aggregate</label>
+                                        <select name="avgSelector" [ngModelOptions]="{ standalone: true }"
+                                                [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgType">
+                                            <option>None</option>
+                                            <option>Moving Average</option>
+                                            <option>Bollinger Bands</option>
+                                            <option>Moving Average + Bollinger Bands</option>
                                         </select>
                                     </div>
                                 </div>
-
-                            </ng-container>
-                            <ng-template #nonComposite>
-                                <ng-container *ngIf="
-                                        widgetHelper.getChartConfig().series[
-                                            seriesKey
-                                        ].showAdvanced
-                                    ">
+                                <ng-container *ngIf="widgetHelper.getChartConfig().series[seriesKey].avgType !=='None'">
                                     <div class="row">
                                         <div class="col-layout col-lg-12">
-                                            <label translate>hide measurements</label>
-                                            <input type="checkbox" [ngModelOptions]="{ standalone: true }" [(ngModel)]="
-                                                                                widgetHelper.getChartConfig()
-                                                                                    .series[seriesKey]
-                                                                                    .hideMeasurements
-                                                                            " (ngModelChange)="updateConfig()" />
-                                            <label translate>display aggregate</label>
-                                            <select name="avgSelector" [ngModelOptions]="{ standalone: true }"
-                                                [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgType">
-                                                <option>None</option>
-                                                <option>Moving Average</option>
-                                                <option>Bollinger Bands</option>
-                                                <option>Moving Average + Bollinger Bands</option>
-                                            </select>
+                                            <label translate>aggregate plot colour</label>
+                                            <input type="color" [ngModelOptions]="{standalone: true}"
+                                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgColor"
+                                                   [value]="widgetHelper.getChartConfig().series[seriesKey].avgColor"
+                                                   (change)="updateConfig()" />
+                                            <label translate>period for average</label>
+                                            <input type="text"
+                                                   [ngModelOptions]="{standalone: true}"
+                                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgPeriod"
+                                                   (ngModelChange)="updateConfig()" />
                                         </div>
                                     </div>
-                                    <ng-container *ngIf="
-                                            widgetHelper.getChartConfig()
-                                                .series[seriesKey].avgType !==
-                                            'None'
-                                        ">
-                                        <div class="row">
-                                            <div class="col-layout col-lg-12">
-                                                <label translate>aggregate plot colour</label>
-                                                <input type="color" [ngModelOptions]="{
-                                                standalone: true
-                                            }" [(ngModel)]="
-                                                widgetHelper.getChartConfig()
-                                                    .series[seriesKey].avgColor
-                                            " [value]="
-                                                widgetHelper.getChartConfig()
-                                                    .series[seriesKey].avgColor
-                                            " (change)="updateConfig()" />
-                                                <label translate>period for average</label>
-                                                <input type="text" [ngModelOptions]="{
-                                                standalone: true
-                                            }" [(ngModel)]="
-                                                widgetHelper.getChartConfig()
-                                                    .series[seriesKey].avgPeriod
-                                            " (ngModelChange)="updateConfig()" />
-                                            </div>
-                                        </div>
-                                    </ng-container>
                                 </ng-container>
-                            </ng-template>
+                            </ng-container>
                         </div>
                     </div>
                 </div>
 
-                <!-- Chart aggregation type 
-            <div class=" configsection" style="margin-top: 1em;">
-                <div class="col-sm-4">
-                    <label for="chart-aggregation-type" translate>
-                        Chart aggregation type
-                    </label>
-                    <input type="radio" name="chart-aggregation-type" value="none"
-                        [(ngModel)]="widgetHelper.getChartConfig().aggregation.type" style="margin-right: 5px;"
-                        [disabled]="widgetHelper.getChartConfig().enabled === false" />None
-                    <input type="radio" name="chart-aggregation-type" value="interval"
-                        [(ngModel)]="widgetHelper.getChartConfig().aggregation.type" style="margin-right: 5px;"
-                        [disabled]="widgetHelper.getChartConfig().enabled === false" />Interval
-                    <input type="radio" name="chart-aggregation-type" value="count"
-                        [(ngModel)]="widgetHelper.getChartConfig().aggregation.type" style="margin-right: 5px;"
-                        [disabled]="widgetHelper.getChartConfig().enabled === false" />Count
-                </div>
-                <div  *ngIf="widgetHelper.getChartConfig().aggregation.type === 'interval'">
-                    <label for="chart-aggregation-interval" translate>
-                        Chart aggregation interval (max. 2000 measurements considered)
-                    </label>
-                    <select  name="chart-aggregation-interval"
-                        [(ngModel)]="widgetHelper.getChartConfig().aggregation.interval" (change)="updateConfig()"
-                        [disabled]="widgetHelper.getChartConfig().enabled === false">
-                        <option value="hourly" [selected]="widgetHelper.getChartConfig().aggregation.interval === 'hourly'">Hourly
-                        </option>
-                        <option value="daily" [selected]="widgetHelper.getChartConfig().aggregation.interval === 'daily'">Daily
-                        </option>
-                        <option value="weekly" [selected]="widgetHelper.getChartConfig().aggregation.interval === 'weekly'">Weekly
-                        </option>
-                    </select>
-                </div>
-
-                <div  *ngIf="widgetHelper.getChartConfig().aggregation.type === 'count'">
-                    <label for="chart-aggregation-count" translate>
-                        Chart aggregation count (max. 2000 measurements considered)
-                    </label>
-                    <input type="number" name="chart-aggregation-count" id="chart-aggregation-count"
-                         (change)="updateConfig()" [(ngModel)]="widgetHelper.getChartConfig().aggregation.count"
-                        [disabled]="widgetHelper.getChartConfig().enabled === false" />
-                </div>
-
-            </div>
--->
             </div>
         </div>
-        <!-- ngIf selected device and measurements -->
     </ng-container>
 </div>

@@ -462,7 +462,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
       console.log(
         `for a chart of type ${this.widgetHelper.getChartConfig().type}`
       );
-      let seriesList = [];
+      let seriesList: { [id: string]: string } = {};
       //
       // Get the data - there will be 1-3 series that will get
       // compressed into a single with x,y,r values
@@ -474,12 +474,16 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
             key
           )
         ) {
-          seriesList.push(key);
-
           //For each variable retrieve the measurements
           //we need to match up measurements to get the
           //graph - omit gaps - for real time we will
           const measurement = this.widgetHelper.getChartConfig().series[key];
+          const v = this.widgetHelper.getChartConfig().series[key].variable;
+
+          //store variable x, y, r with key
+          if (v !== "Not Assigned") {
+            seriesList[v] = key;
+          }
 
           //each series (aggregates and functions of raw data too) gets this
           let options: MeasurementOptions = new MeasurementOptions(
@@ -515,26 +519,42 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         }
       }
 
+      let seriesName = this.widgetHelper.getChartConfig().series[
+        seriesList["x"]
+      ].name;
+      if ("y" in seriesList) {
+        seriesName =
+          seriesName +
+          `vs ${
+            this.widgetHelper.getChartConfig().series[seriesList["y"]].name
+          }`;
+      }
+      if ("r" in seriesList) {
+        seriesName =
+          seriesName +
+          `vs ${
+            this.widgetHelper.getChartConfig().series[seriesList["r"]].name
+          }`;
+      }
+
       //
       // We have all the data, now we create the actual displayed data
       //
       let thisSeries: ChartDataSets = this.createSeries(
-        seriesList[0],
-        `${this.widgetHelper.getChartConfig().series[seriesList[0]].name} vs ${
-          this.widgetHelper.getChartConfig().series[seriesList[1]].name
-        }`,
-        this.widgetHelper.getWidgetConfig().chart.series[seriesList[0]].color
+        seriesList["x"],
+        seriesName,
+        this.widgetHelper.getChartConfig().multivariateColor
       );
 
       //x/y series (!!Date Order!!) - make sure x/y values match timestamps
       let result: { x: number; y: number; r?: number }[] = [];
       for (
         let index = 0;
-        index < this.seriesData[seriesList[0]].valtimes.length;
+        index < this.seriesData[seriesList["x"]].valtimes.length;
         index++
       ) {
-        let xval = this.seriesData[seriesList[0]].valtimes[index];
-        let yval = this.seriesData[seriesList[1]].valtimes.filter((val) => {
+        let xval = this.seriesData[seriesList["x"]].valtimes[index];
+        let yval = this.seriesData[seriesList["y"]].valtimes.filter((val) => {
           return (
             //Match dates within a tolerence
             Math.abs(val.x.getTime() - xval.x.getTime()) <
@@ -542,8 +562,8 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
           );
         });
         let zval = undefined;
-        if (2 in seriesList) {
-          zval = this.seriesData[seriesList[2]].valtimes.filter((val) => {
+        if ("r" in seriesList) {
+          zval = this.seriesData[seriesList["r"]].valtimes.filter((val) => {
             return (
               //Match dates within a tolerence
               Math.abs(val.x.getTime() - xval.x.getTime()) <
@@ -579,7 +599,7 @@ export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
         thisSeries.pointRadius = 5;
       }
       localChartData.push(thisSeries);
-      this.setAxesLabels(seriesList[0], seriesList[1]);
+      this.setAxesLabels(seriesList["x"], seriesList["y"]);
     }
     this.chartData = localChartData; //replace
     this.dataLoaded = true;

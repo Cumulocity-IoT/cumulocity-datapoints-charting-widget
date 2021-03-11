@@ -38,7 +38,7 @@ import "~styles/index.css";
       multi: true,
       useValue: {
         id: "global.presales.CumulocityMeasurementChart.widget",
-        label: "Measurement Chart",
+        label: "Data Points Charting",
         description: "Graph measurements and statistics about measurements",
         component: CumulocityMeasurementChartWidget,
         configComponent: CumulocityMeasurementChartWidgetConfig,
