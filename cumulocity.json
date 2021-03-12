@@ -1,5 +1,5 @@
 {
-    "name": "Measuement Charting Widget",
+    "name": "Data Points Charting Widget",
     "contextPath": "cumulocity-datapoints-charting",
     "key": "cumulocity-datapoints-charting-application-key",
     "contentSecurityPolicy": "default-src 'self'",
