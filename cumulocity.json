@@ -1,7 +1,7 @@
 {
     "name": "Measuement Charting Widget",
-    "contextPath": "cumulocity-measurement-chart",
-    "key": "cumulocity-measurement-chart-application-key",
+    "contextPath": "cumulocity-datapoints-charting",
+    "key": "cumulocity-datapoints-charting-application-key",
     "contentSecurityPolicy": "default-src 'self'",
     "icon": {
         "class": "fa fa-line-chart"

@@ -18,11 +18,11 @@ import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
 
 @Component({
-  templateUrl: "./cumulocity-measurement-chart-widget.component.html",
-  styleUrls: ["./cumulocity-measurement-chart-widget.component.css"],
+  templateUrl: "./cumulocity-datapoints-charting-widget.component.html",
+  styleUrls: ["./cumulocity-datapoints-charting-widget.component.css"],
   providers: [DatePipe, ThemeService],
 })
-export class CumulocityMeasurementChartWidget implements OnInit, OnDestroy {
+export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
   @Input() config;
   @ViewChild(BaseChartDirective, { static: false })
   chartElement: BaseChartDirective;

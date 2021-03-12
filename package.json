@@ -1,10 +1,10 @@
 {
-    "name": "cumulocity-measurement-chart-widget",
+    "name": "cumulocity-datapoints-chart-widget",
     "interleave": {
-        "dist\\bundle-src\\custom-widget.js": "cumulocity-measurement-chart-CustomWidget",
-        "dist/bundle-src/custom-widget.js": "cumulocity-measurement-chart-CustomWidget"
+        "dist\\bundle-src\\custom-widget.js": "cumulocity-datapoints-charting-CustomWidget",
+        "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
     },
-    "version": "0.9.173",
+    "version": "0.9.174",
     "description": "Widget for displaying realtime measurment data in graphs (written by Software AG Global Presales)",
     "scripts": {
         "build": "gulp"

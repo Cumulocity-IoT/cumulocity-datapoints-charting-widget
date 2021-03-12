@@ -1,8 +1,8 @@
 /** @format */
 
 import { CoreModule, HOOK_COMPONENTS } from "@c8y/ngx-components";
-import { CumulocityMeasurementChartWidgetConfig } from "./cumulocity-measurement-chart-widget-config.component";
-import { CumulocityMeasurementChartWidget } from "./cumulocity-measurement-chart-widget.component";
+import { CumulocityDataPointsChartingWidgetConfig as CumulocityDataPointsChartingWidgetConfig } from "./cumulocity-datapoints-charting-widget-config.component";
+import { CumulocityDataPointsChartingWidget as CumulocityDataPointsChartingWidget } from "./cumulocity-datapoints-charting-widget.component";
 import { NgModule } from "@angular/core";
 import { NgMultiSelectDropDownModule } from "ng-multiselect-dropdown";
 import { ColorPickerModule } from "ngx-color-picker";
@@ -24,12 +24,12 @@ import "~styles/index.css";
     //HttpClientModule,
   ],
   declarations: [
-    CumulocityMeasurementChartWidget,
-    CumulocityMeasurementChartWidgetConfig,
+    CumulocityDataPointsChartingWidget,
+    CumulocityDataPointsChartingWidgetConfig,
   ],
   entryComponents: [
-    CumulocityMeasurementChartWidget,
-    CumulocityMeasurementChartWidgetConfig,
+    CumulocityDataPointsChartingWidget,
+    CumulocityDataPointsChartingWidgetConfig,
   ],
   providers: [
     // Connect the widget to Cumulocity via the HOOK_COMPONENT injection token
@@ -37,11 +37,11 @@ import "~styles/index.css";
       provide: HOOK_COMPONENTS,
       multi: true,
       useValue: {
-        id: "global.presales.CumulocityMeasurementChart.widget",
+        id: "global.presales.CumulocityDataPointsCharting.widget",
         label: "Data Points Charting",
         description: "Graph measurements and statistics about measurements",
-        component: CumulocityMeasurementChartWidget,
-        configComponent: CumulocityMeasurementChartWidgetConfig,
+        component: CumulocityDataPointsChartingWidget,
+        configComponent: CumulocityDataPointsChartingWidgetConfig,
         previewImage: require("~styles/previewImage.png"),
         data: {
           settings: {
@@ -52,4 +52,4 @@ import "~styles/index.css";
     },
   ],
 })
-export class CumulocityMeasurementChartWidgetModule {}
+export class CumulocityDataPointsChartingWidgetModule {}

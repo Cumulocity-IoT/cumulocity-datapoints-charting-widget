@@ -18,10 +18,10 @@ import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 
 @Component({
-  templateUrl: "cumulocity-measurement-chart-widget-config.component.html",
-  styleUrls: ["cumulocity-measurement-chart-widget-config.component.css"],
+  templateUrl: "cumulocity-datapoints-charting-widget-config.component.html",
+  styleUrls: ["cumulocity-datapoints-charting-widget-config.component.css"],
 })
-export class CumulocityMeasurementChartWidgetConfig implements OnInit {
+export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
   //
   // All chosen options reside in the config
   //

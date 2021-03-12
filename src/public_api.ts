@@ -4,4 +4,4 @@
  * @format
  */
 
-export { CumulocityMeasurementChartWidgetModule } from "./cumulocity-measurement-chart-widget/cumulocity-measurement-chart-widget.module";
+export { CumulocityDataPointsChartingWidgetModule as CumulocityDataPointsChartingWidgetModule } from "./cumulocity-datapoints-charting-widget/cumulocity-datapoints-charting-widget.module";
