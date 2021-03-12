@@ -291,23 +291,25 @@
                         </div>
                     </ng-container>
 
-                    <div *ngFor="
-                            let seriesKey of widgetHelper
-                                .getChartConfig()
-                                .seriesKeys()
-                        ">
+                    <!-- 
+                        Each series is laid out here
+                    -->
+                    <ng-container *ngFor="let seriesKey of widgetHelper.getChartConfig().seriesKeys()">
                         <div class="row">
-                            <ng-container *ngIf="widgetHelper.getChartConfig().multivariateplot == false">
-                                <input class="col-lg-1" type="color" [ngModelOptions]="{ standalone: true }"
-                                       [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].color"
-                                       [value]="widgetHelper.getChartConfig().series[seriesKey].color"
+                            <div class="col-layout col-lg-1" *ngIf="!widgetHelper.getChartConfig().multivariateplot == true">
+                                <ng-container *ngIf="widgetHelper.getChartConfig().multivariateplot == false">
+                                    <input type="color" [ngModelOptions]="{ standalone: true }"
+                                           [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].color"
+                                           [value]="widgetHelper.getChartConfig().series[seriesKey].color"
+                                           (ngModelChange)="updateConfig()" />
+                                </ng-container>
+                            </div>
+                            <div class="col-layout col-lg-3">
+                                <input size="30" type="text" [ngModelOptions]="{ standalone: true }"
+                                       [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].name"
                                        (ngModelChange)="updateConfig()" />
-                            </ng-container>
-                            <input class="col-lg-3" size="30" type="text" [ngModelOptions]="{ standalone: true }"
-                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].name"
-                                   (ngModelChange)="updateConfig()" />
 
-
+                            </div>
                             <div class="col-layout col-lg-3" *ngIf="widgetHelper.getChartConfig().multivariateplot == true">
                                 <label translate>Variable</label>
                                 <select name="variableSelector" [ngModelOptions]="{ standalone: true }"
@@ -320,9 +322,11 @@
                                 </select>
                             </div>
 
-                            <button class="col-lg-1" (click)="showSection(seriesKey)" class="btn btn-primary">
-                                <i class="fa fa-angle-double-down"></i>
-                            </button>
+                            <div class="col-layout col-lg-1" *ngIf="widgetHelper.getChartConfig().multivariateplot == true">
+                                <button (click)="showSection(seriesKey)" class="btn btn-primary">
+                                    <i class="fa fa-angle-double-down"></i>
+                                </button>
+                            </div>
                         </div>
                         <!-- 
                             The following is the sections for the 
@@ -374,7 +378,7 @@
                                 </ng-container>
                             </ng-container>
                         </div>
-                    </div>
+                    </ng-container>
                 </div>
 
             </div>
