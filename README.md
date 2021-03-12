@@ -4,7 +4,7 @@
 
 The Data Points Charting Widget allows you to create real time graphs showing customizable amounts of data from one or more devices.
 
-![Line Graph](/images/linegraph.gif)
+![Charts](/styles/previewImage.png)
 
 ## Features
 
