@@ -471,6 +471,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         `for a chart of type ${this.widgetHelper.getChartConfig().type}`
       );
       let seriesList: { [id: string]: string } = {};
+      let assigned: number = 0;
       //
       // Get the data - there will be 1-3 series that will get
       // compressed into a single with x,y,r values
@@ -491,6 +492,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           //store variable x, y, r with key
           if (v !== "Not Assigned") {
             seriesList[v] = key;
+            assigned++;
           }
 
           //each series (aggregates and functions of raw data too) gets this
@@ -531,51 +533,45 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
       }
 
-      let seriesName = this.widgetHelper.getChartConfig().series[
-        seriesList["x"]
-      ].name;
-      if ("y" in seriesList) {
-        seriesName =
-          seriesName +
-          `vs ${
-            this.widgetHelper.getChartConfig().series[seriesList["y"]].name
-          }`;
-      }
-      if ("r" in seriesList) {
-        seriesName =
-          seriesName +
-          `vs ${
-            this.widgetHelper.getChartConfig().series[seriesList["r"]].name
-          }`;
-      }
-
-      //
-      // We have all the data, now we create the actual displayed data
-      //
-      let thisSeries: ChartDataSets = this.createSeries(
-        seriesList["x"],
-        seriesName,
-        this.widgetHelper.getChartConfig().multivariateColor
-      );
-
-      //x/y series (!!Date Order!!) - make sure x/y values match timestamps
-      let result: { x: number; y: number; r?: number }[] = [];
-      for (
-        let index = 0;
-        index < this.seriesData[seriesList["x"]].valtimes.length;
-        index++
-      ) {
-        let xval = this.seriesData[seriesList["x"]].valtimes[index];
-        let yval = this.seriesData[seriesList["y"]].valtimes.filter((val) => {
-          return (
-            //Match dates within a tolerence
-            Math.abs(val.x.getTime() - xval.x.getTime()) <
-            this.widgetHelper.getChartConfig().multivariateplotTolerence * 1000
-          );
-        });
-        let zval = undefined;
+      if (assigned < 2) {
+        //do something sensible - warn not assigned
+      } else {
+        let seriesName = this.widgetHelper.getChartConfig().series[
+          seriesList["x"]
+        ].name;
+        if ("y" in seriesList) {
+          seriesName =
+            seriesName +
+            `vs ${
+              this.widgetHelper.getChartConfig().series[seriesList["y"]].name
+            }`;
+        }
         if ("r" in seriesList) {
-          zval = this.seriesData[seriesList["r"]].valtimes.filter((val) => {
+          seriesName =
+            seriesName +
+            `vs ${
+              this.widgetHelper.getChartConfig().series[seriesList["r"]].name
+            }`;
+        }
+
+        //
+        // We have all the data, now we create the actual displayed data
+        //
+        let thisSeries: ChartDataSets = this.createSeries(
+          seriesList["x"],
+          seriesName,
+          this.widgetHelper.getChartConfig().multivariateColor
+        );
+
+        //x/y series (!!Date Order!!) - make sure x/y values match timestamps
+        let result: { x: number; y: number; r?: number }[] = [];
+        for (
+          let index = 0;
+          index < this.seriesData[seriesList["x"]].valtimes.length;
+          index++
+        ) {
+          let xval = this.seriesData[seriesList["x"]].valtimes[index];
+          let yval = this.seriesData[seriesList["y"]].valtimes.filter((val) => {
             return (
               //Match dates within a tolerence
               Math.abs(val.x.getTime() - xval.x.getTime()) <
@@ -583,35 +579,46 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 1000
             );
           });
-          //console.log(zval);
+          let zval = undefined;
+          if ("r" in seriesList) {
+            zval = this.seriesData[seriesList["r"]].valtimes.filter((val) => {
+              return (
+                //Match dates within a tolerence
+                Math.abs(val.x.getTime() - xval.x.getTime()) <
+                this.widgetHelper.getChartConfig().multivariateplotTolerence *
+                  1000
+              );
+            });
+            //console.log(zval);
+          }
+          if (0 in yval && zval && 0 in zval) {
+            result.push({ x: xval.y, y: yval[0].y, r: zval[0].y });
+          } else if (0 in yval) {
+            result.push({ x: xval.y, y: yval[0].y });
+          } else {
+            result.push({ x: index, y: xval.y }); //sensible default
+          }
         }
-        if (0 in yval && zval && 0 in zval) {
-          result.push({ x: xval.y, y: yval[0].y, r: zval[0].y });
-        } else if (0 in yval) {
-          result.push({ x: xval.y, y: yval[0].y });
+
+        //x increasing - assume  y(,r) function of x
+        result = result.sort((a, b) => a.x - b.x);
+
+        if (
+          this.widgetHelper.getChartConfig().type == "radar" ||
+          this.widgetHelper.getChartConfig().type == "polarArea"
+        ) {
+          //we need separate labels and values here
+          thisSeries.data = result.map((v) => v.y);
+          this.chartLabels = result.map((v) => v.x.toString());
         } else {
-          result.push({ x: index, y: xval.y }); //sensible default
+          console.log("Not radar");
+          console.log(result);
+          thisSeries.data = result;
+          thisSeries.pointRadius = 5;
         }
+        localChartData.push(thisSeries);
+        this.setAxesLabels(seriesList["x"], seriesList["y"]);
       }
-
-      //x increasing - assume  y(,r) function of x
-      result = result.sort((a, b) => a.x - b.x);
-
-      if (
-        this.widgetHelper.getChartConfig().type == "radar" ||
-        this.widgetHelper.getChartConfig().type == "polarArea"
-      ) {
-        //we need separate labels and values here
-        thisSeries.data = result.map((v) => v.y);
-        this.chartLabels = result.map((v) => v.x.toString());
-      } else {
-        console.log("Not radar");
-        console.log(result);
-        thisSeries.data = result;
-        thisSeries.pointRadius = 5;
-      }
-      localChartData.push(thisSeries);
-      this.setAxesLabels(seriesList["x"], seriesList["y"]);
     }
     this.chartData = localChartData; //replace
     this.dataLoaded = true;
