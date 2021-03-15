@@ -26,3 +26,28 @@ h4 {
   width: 100%;
   text-align: left !important;
 }
+
+.select-editable {
+  position: relative;
+  background-color: white;
+  border: solid grey 1px;
+  width: 100%;
+}
+.select-editable select {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border: none;
+  margin: 0;
+}
+.select-editable input {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  padding: 1px;
+  border: none;
+}
+.select-editable select:focus,
+.select-editable input:focus {
+  outline: none;
+}

@@ -46,7 +46,7 @@
                         <input type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
                                (ngModelChange)="updateConfig()" />
                     </div>
-                    <div class="col-layout col-lg-2">
+                    <div class="col-layout col-lg-3">
                         <select name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
                                 (ngModelChange)="updateConfig()">
                             <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
@@ -221,13 +221,23 @@
                     widgetHelper.getChartConfig().type !== 'pie' && 
                     widgetHelper.getChartConfig().type !== 'doughnut'">
                     <div class="row">
-                        <div class="col-layout col-lg-6">
+                        <div class="col-layout col-lg-2">
                             <label for="dateFormat" translate>Date Format</label>
-                            <input style="width: 100%" type="text" [ngModelOptions]="{ standalone: true }"
-                                   [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeUnits[widgetHelper.getChartConfig().rangeType].text]"
-                                   (ngModelChange)="updateConfig()" />
                         </div>
                         <div class="col-layout col-lg-6">
+                            <div class="select-editable">
+                                <select name="formatSelector" [(ngModel)]="widgetHelper.getChartConfig().timeFormatType" (ngModelChange)="updateConfig()">
+                                    <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
+                                            [ngValue]="i">
+                                        {{ rType.format }}
+                                </select>
+
+                                <input type="text" [ngModelOptions]="{ standalone: true }"
+                                       [(ngModel)]="widgetHelper.getChartConfig().rangeDisplay[widgetHelper.getChartConfig().rangeUnits[widgetHelper.getChartConfig().timeFormatType].text]"
+                                       (ngModelChange)="updateConfig()" />
+                            </div>
+                        </div>
+                        <div class="col-layout col-lg-4">
                             <p>
                                 Example Output:
                                 {{ widgetHelper.getChartConfig().dateExample }}

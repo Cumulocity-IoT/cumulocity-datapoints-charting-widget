@@ -186,20 +186,17 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
       );
     }
 
-    //measurements will pick up the "miliseconds" format
-    const timeUnitType = this.widgetHelper.getChartConfig().rangeUnits[
-      this.widgetHelper.getChartConfig().rangeType
-        ? this.widgetHelper.getChartConfig().rangeType
-        : 4
-    ].text;
-
     console.log(
-      `range type: ${this.widgetHelper.getChartConfig().rangeType}`,
-      timeUnitType
+      `range type: ${this.widgetHelper.getChartConfig().timeFormatType}`,
+      this.widgetHelper.getChartConfig().timeFormatType
     );
 
     this.widgetHelper.getChartConfig().dateExample = moment().format(
-      this.widgetHelper.getChartConfig().rangeDisplay[timeUnitType].text
+      this.widgetHelper.getChartConfig().rangeDisplay[
+        this.widgetHelper.getChartConfig().rangeUnits[
+          this.widgetHelper.getChartConfig().timeFormatType
+        ].text
+      ]
     );
 
     this.widgetHelper.setWidgetConfig(this.config);

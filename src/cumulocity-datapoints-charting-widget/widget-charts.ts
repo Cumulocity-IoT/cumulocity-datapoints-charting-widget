@@ -68,15 +68,15 @@ export class ChartConfig {
 
   public rangeUnits: ListItem[] = [
     // { id: -1, text: "Dates" },
-    { id: 0, text: "measurements" },
-    { id: 1, text: "second" },
-    { id: 60, text: "minute" },
-    { id: 3600, text: "hour" },
-    { id: 86400, text: "day" },
-    { id: 604800, text: "week" },
-    { id: 2592000, text: "month" },
-    { id: 7776000, text: "quarter" },
-    { id: 31536000, text: "year" },
+    { id: 0, text: "measurements", format: "h:mm:ss.SSS a" },
+    { id: 1, text: "second" , format: "h:mm:ss a" },
+    { id: 60, text: "minute" , format: "h:mm a" },
+    { id: 3600, text: "hour" , format: "hA" },
+    { id: 86400, text: "day" , format: "MMM D" },
+    { id: 604800, text: "week" , format: "week ll" },
+    { id: 2592000, text: "month" , format: "MMM YYYY" },
+    { id: 7776000, text: "quarter" , format: "[Q]Q - YYYY" },
+    { id: 31536000, text: "year" , format: "YYYY" },
   ];
 
   public rangeDisplayTemplate: TimeDisplayFormat = {
@@ -126,7 +126,8 @@ export class ChartConfig {
   multivariateplot: boolean = false;
   multivariateplotTolerence: number = 0.5; //seconds
   multivariateColor: string = this.colorList[0];
-  rangeType: number = 1; //default minutes
+  rangeType: number = 2; //default minutes
+  timeFormatType: number = 2; //default minutes
   rangeValue: number = 10;
   //rangeMax: number = 3000;
   rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
