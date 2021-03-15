@@ -68,7 +68,7 @@ export class ChartConfig {
 
   public rangeUnits: ListItem[] = [
     // { id: -1, text: "Dates" },
-    // { id: 0, text: "Measurements" },
+    { id: 0, text: "measurements" },
     { id: 1, text: "second" },
     { id: 60, text: "minute" },
     { id: 3600, text: "hour" },
@@ -80,7 +80,7 @@ export class ChartConfig {
   ];
 
   public rangeDisplayTemplate: TimeDisplayFormat = {
-    millisecond: "h:mm:ss.SSS a",
+    millisecond: "h:mm:ss a",
     second: "h:mm:ss a",
     minute: "h:mm a",
     hour: "hA",
@@ -126,9 +126,9 @@ export class ChartConfig {
   multivariateplot: boolean = false;
   multivariateplotTolerence: number = 0.5; //seconds
   multivariateColor: string = this.colorList[0];
-  rangeType: number = 1;
+  rangeType: number = 1; //default minutes
   rangeValue: number = 10;
-  rangeMax: number = 3000;
+  //rangeMax: number = 3000;
   rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
   position: string = "None";
   height: number = 100;

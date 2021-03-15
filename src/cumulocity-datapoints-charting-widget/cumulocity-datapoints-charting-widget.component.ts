@@ -35,9 +35,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
   chartData: ChartDataSets[];
   chartLabels: Label[];
+
+  //    events: ["click","hover"],
+
   chartOptions: ChartOptions = {
     maintainAspectRatio: false,
-    events: ["click"],
     legend: {
       display: false,
     },
@@ -322,7 +324,13 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           //a period of time where quantity is the # of units,
           // and type(unit) has the # of seconds per unit in the id field
           let { from, to } = this.getDateRange();
-
+          if (from.getTime() == to.getTime()) {
+            from = new Date(new Date(to).setFullYear(to.getFullYear() - 1));
+          }
+          let measurementLimit =
+            this.widgetHelper.getChartConfig().rangeType > 0
+              ? 0
+              : this.widgetHelper.getChartConfig().rangeValue;
           //
           // WorkHorse Functionality - retrieve and calculate derived numbers
           //
@@ -338,7 +346,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().rangeDisplay[
               this.widgetHelper.getChartConfig().aggregationFreq.text
             ], //time format
-            this.widgetHelper.getChartConfig().rangeMax
+            measurementLimit
           );
 
           if (
@@ -498,6 +506,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           //a period of time where quantity is the # of units,
           // and type(unit) has the # of seconds per unit in the id field
           let { from, to } = this.getDateRange();
+          let measurementLimit =
+            this.widgetHelper.getChartConfig().rangeType > 0
+              ? 0
+              : this.widgetHelper.getChartConfig().rangeValue;
 
           //
           // WorkHorse Functionality - retrieve and calculate derived numbers
@@ -514,7 +526,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().rangeDisplay[
               this.widgetHelper.getChartConfig().aggregationFreq.text
             ], //time format
-            this.widgetHelper.getChartConfig().rangeMax
+            measurementLimit
           );
         }
       }
@@ -571,8 +583,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 1000
             );
           });
+          //console.log(zval);
         }
-        console.log(zval);
         if (0 in yval && zval && 0 in zval) {
           result.push({ x: xval.y, y: yval[0].y, r: zval[0].y });
         } else if (0 in yval) {
@@ -648,14 +660,17 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
    */
   private getDateRange(): { from: Date; to: Date } {
     let to = Date.now();
+    //here default to a large type so we try to get a reasonable amount of data
+    const timeUnitVal: number = this.widgetHelper.getChartConfig().rangeUnits[
+      this.widgetHelper.getChartConfig().rangeType
+        ? this.widgetHelper.getChartConfig().rangeType
+        : 4
+    ].id;
+
     let from = new Date(
-      to -
-        this.widgetHelper.getChartConfig().rangeValue *
-          this.widgetHelper.getChartConfig().rangeUnits[
-            this.widgetHelper.getChartConfig().rangeType
-          ].id *
-          1000
+      to - this.widgetHelper.getChartConfig().rangeValue * timeUnitVal * 1000
     );
+    console.log(`range: ${from} ${new Date(to)}`);
     return { from, to: new Date(to) };
   }
 
@@ -675,6 +690,12 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     }
     if (this.widgetHelper.getChartConfig().type === "horizontalBar") {
       //swapped x & y
+      const timeUnitType = this.widgetHelper.getChartConfig().rangeUnits[
+        this.widgetHelper.getChartConfig().rangeType
+          ? this.widgetHelper.getChartConfig().rangeType
+          : 1
+      ].text;
+
       this.chartOptions.scales.yAxes.length = 0; //reset axes
       this.chartOptions.scales.yAxes.push({
         display: this.widgetHelper.getChartConfig().showx,
@@ -682,9 +703,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         type: "time",
         time: {
           displayFormats: this.widgetHelper.getChartConfig().rangeDisplay,
-          unit: this.widgetHelper.getChartConfig().rangeUnits[
-            this.widgetHelper.getChartConfig().rangeType
-          ].text,
+          unit: timeUnitType,
         },
       });
 
@@ -750,15 +769,19 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           });
         }
       } else {
+        //default timeUnit to minutes if we pick measurements
+        const timeUnitType = this.widgetHelper.getChartConfig().rangeUnits[
+          this.widgetHelper.getChartConfig().rangeType
+            ? this.widgetHelper.getChartConfig().rangeType
+            : 1
+        ].text;
         this.chartOptions.scales.xAxes.push({
           display: this.widgetHelper.getChartConfig().showx,
           stacked: this.widgetHelper.getChartConfig().stackSeries,
           type: "time",
           time: {
             displayFormats: this.widgetHelper.getChartConfig().rangeDisplay,
-            unit: this.widgetHelper.getChartConfig().rangeUnits[
-              this.widgetHelper.getChartConfig().rangeType
-            ].text,
+            unit: timeUnitType,
           },
         });
         this.chartOptions.plugins = {
