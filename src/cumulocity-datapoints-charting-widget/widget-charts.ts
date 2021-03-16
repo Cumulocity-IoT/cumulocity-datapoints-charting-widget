@@ -9,6 +9,11 @@ export interface Aggregation {
   count: number;
 }
 
+/**
+ * Each series chosen can have different properties
+ * This class represents the values and options
+ * chosen by the user. (and sensible defaults)
+ */
 export class ChartSeries {
   id: string = ""; //series id
   name: string = ""; //series name
@@ -28,6 +33,10 @@ export class ChartSeries {
   }
 }
 
+/**
+ * The ChartConfig class is the Main interface into the
+ * chart js settings
+ */
 export class ChartConfig {
   /**
    * Chart JS chart types
@@ -45,6 +54,9 @@ export class ChartConfig {
     // { id: 9, text: "histogram" },
   ];
 
+  /**
+   *  Legend position
+   */
   public chartPositions: ListItem[] = [
     { id: 0, text: "None" },
     { id: 1, text: "left" },
@@ -54,18 +66,23 @@ export class ChartConfig {
     { id: 5, text: "chartArea" },
   ];
 
-  public vars: ListItem[] = [
-    { id: 0, text: "-" },
-    { id: 1, text: "x" },
-    { id: 2, text: "y" },
-    { id: 3, text: "z" },
-  ];
-
+  /**
+   * Types of aggregation for the single series (Pie/Doughnut and later Histogram)
+   */
   public aggregationType: ListItem[] = [
     { id: 0, text: "By Time" },
     { id: 1, text: "Value Buckets" },
   ];
 
+  /**
+   * This structure is for selects and mapping of the
+   * values into our widget code
+   *
+   * Chart JS uses seconds-year as a way of getting
+   * formatting for the axes labels when they are time
+   * these are the defaults - we keep copies per chart
+   * so we can independently change them.
+   */
   public rangeUnits: ListItem[] = [
     // { id: -1, text: "Dates" },
     { id: 0, text: "measurements", format: "h:mm:ss.SSS a" },
@@ -79,6 +96,11 @@ export class ChartConfig {
     { id: 31536000, text: "year", format: "YYYY" },
   ];
 
+  /**
+   * This structure is the default options and formats
+   * for the chart js options - depending on the choice
+   * of units chosen for the axes it will pick the format.
+   */
   public rangeDisplayTemplate: TimeDisplayFormat = {
     millisecond: "h:mm:ss a",
     second: "h:mm:ss a",
@@ -91,6 +113,10 @@ export class ChartConfig {
     year: "YYYY",
   };
 
+  /**
+   * Default colours so we have a set of main
+   * and aggregate colors.
+   */
   colorList: string[] = [
     "#FF0000",
     "#00FF00",
@@ -122,20 +148,12 @@ export class ChartConfig {
 
   //Global properties
   enabled: boolean = true;
+
+  /**
+   * Most processing and chartjs uses these.
+   */
   type: string = "line";
-  multivariateplot: boolean = false;
-  multivariateplotTolerence: number = 0.5; //seconds
-  multivariateColor: string = this.colorList[0];
-  rangeType: number = 2; //default minutes
-  timeFormatType: number = 2; //default minutes
-  aggTimeFormatType: number = 2; //default minutes
-  rangeValue: number = 10;
-  //rangeMax: number = 3000;
-  rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
-  position: string = "None";
-  height: number = 100;
-  aggregation: number = this.aggregationType[0].id;
-  dateExample: string = "yyyy-MM-dd hh:mm";
+  position: string = "None"; //legend
   showx: boolean = true;
   showy: boolean = true;
   showAxesLabels: boolean = true;
@@ -144,17 +162,57 @@ export class ChartConfig {
   stackSeries: boolean = false;
   fillArea: boolean = false;
 
-  series: { [key: string]: ChartSeries } = {};
+  dateExample: string = "yyyy-MM-dd hh:mm"; //config display field only
 
   /**
-   * legend positions
+   * Scatter, Bubble, line and certain other charts are plotted
+   * using 2 or more series. This flag indictaes that the user
+   * has chosen that
    */
+  multivariateplot: boolean = false;
+  multivariateplotTolerence: number = 0.5; //seconds - match timestamps within tolerence
+  multivariateColor: string = this.colorList[0];
+
+  /**
+   * The extraction of measurements can be done using a time period
+   * or the number of measurements. Time based query undelies all
+   * measuremnt retrieval however.
+   *
+   * N.B. the time and agg format types may be different and reflect
+   * that the format of axes and bucket parameters can differ
+   */
+  rangeType: number = 2; //default minutes (index into rangeUnits)
+  timeFormatType: number = 2; //default minutes (index into rangeUnits)
+  aggregation: number = this.aggregationType[0].id; // conditionally applied default to time base counts
+  aggTimeFormatType: number = 2; //default minutes (index into rangeUnits)
+  rangeValue: number = 10;
+
+  /**
+   * Local copy of the options - values can be changed per chart
+   */
+  rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
+
+  /**
+   * The individual settings for each datapoint set
+   */
+  series: { [key: string]: ChartSeries } = {};
+
   constructor() {}
 
+  /**
+   *
+   * @returns true if series exist
+   */
   hasSeries() {
     return Object.keys(this.series).length > 0;
   }
 
+  /**
+   * Checks to see if series held are still valid,
+   * or if new series need to be added.
+   *
+   * @param l is the current list of series held
+   */
   clearSeries(l: ListItem[]) {
     if (Object.keys(this.series).length > 0) {
       let temp = this.series;
@@ -165,10 +223,24 @@ export class ChartConfig {
     }
   }
 
+  /**
+   * Used in the config form to display the
+   * series settings and allow them to be changed.
+   *
+   * @returns the series held for display
+   */
   seriesKeys(): Array<string> {
     return Object.keys(this.series);
   }
 
+  /**
+   * Add a new series to the list held.
+   *
+   * @param key is a composite of device, series and fragment
+   * @param seriesName is the display name
+   * @param seriesColor is the main color
+   * @param altColor is the aggregate color
+   */
   addSeries(
     key: string,
     seriesName: string,

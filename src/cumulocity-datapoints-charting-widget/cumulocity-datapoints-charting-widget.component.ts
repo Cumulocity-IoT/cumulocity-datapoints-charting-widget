@@ -23,18 +23,45 @@ import "chartjs-plugin-labels";
   providers: [DatePipe, ThemeService],
 })
 export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
+  /**
+   * Standard config element, access this via the widgetHelper
+   * rather than directly.
+   */
   @Input() config;
+
+  /**
+   * Gain access to chart object so we can call update
+   * under certain circumstance
+   */
   @ViewChild(BaseChartDirective, { static: false })
   chartElement: BaseChartDirective;
 
+  /**
+   * Finished loading?
+   */
   dataLoaded: boolean = false;
+
+  /**
+   * These are the main interfaces to the config
+   * and the measurments
+   */
   widgetHelper: WidgetHelper<WidgetConfig>;
   measurementHelper: MeasurementHelper;
+
+  /**
+   * This charts data, retrieved initially in init, and then
+   * updated as measurments are recieved. Realtime data is
+   * subscribed and so must be released on destroy
+   */
   seriesData: { [key: string]: MeasurementList };
   subscription: { [key: string]: Object } = {}; //record per device subscriptions
 
+  /**
+   * ng2-charts data members referenced by the element
+   */
   chartData: ChartDataSets[];
   chartLabels: Label[];
+  chartLegend: boolean;
 
   //    events: ["click","hover"],
 
@@ -60,8 +87,12 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
       yAxes: [],
     },
   };
-  chartLegend: boolean;
 
+  /**
+   * Used on the page
+   *
+   * @returns true if we have devices and measurments selected
+   */
   verifyConfig(): boolean {
     return (
       this.widgetHelper.getWidgetConfig() !== undefined &&
@@ -70,17 +101,29 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Initialise the Measurement service, Realtime service and date pipe.
+   * Sets the widgetHelper up and points it at config - initialises seriesData
+   * as empty.
+   *
+   * @param measurementService
+   * @param datepipe
+   * @param realtimeService
+   */
   constructor(
     //        private http: HttpClient,
     private measurementService: MeasurementService,
     public datepipe: DatePipe,
     private realtimeService: Realtime
   ) {
-    this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default
+    this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default access through here
     this.measurementHelper = new MeasurementHelper();
     this.seriesData = {};
   }
 
+  /**
+   * Remove subs
+   */
   ngOnDestroy(): void {
     for (const sub in this.subscription) {
       if (Object.prototype.hasOwnProperty.call(this.subscription, sub)) {
@@ -90,6 +133,15 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * As we process required series we create subscriptions to measuements.
+   * This method is the generic call back for these measurements as they
+   * arrive.
+   *
+   * @param data
+   * @param key
+   * @param options
+   */
   handleRealtime(data: any, key: string, options: MeasurementOptions): void {
     //get the values
     let measurementDate = data.data.data.time;
@@ -247,6 +299,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
           }
         }
+
         if (
           this.widgetHelper.getChartConfig().type === "line" ||
           this.widgetHelper.getChartConfig().type === "bar"
@@ -258,14 +311,15 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.seriesData[key].valtimes.shift();
           }
         }
+
         if (this.widgetHelper.getChartConfig().type === "horizontalBar") {
-          //all graph types
           while (
             moment(this.seriesData[key].valtimes[0].y).isBefore(moment(from))
           ) {
             this.seriesData[key].valtimes.shift();
           }
         }
+
         this.setAxes();
         this.chartElement.update();
       }
@@ -300,6 +354,12 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
     let localChartData = []; //build list locally because empty dataset is added by framework
 
+    /**
+     *  handle independent series.
+     *
+     *
+     *
+     */
     if (!this.widgetHelper.getChartConfig().multivariateplot) {
       console.log("getting independent variables");
       //for each fragment/series to be plotted
@@ -371,7 +431,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             options.targetGraphType == "pie" ||
             options.targetGraphType == "doughnut"
           ) {
-            //different to line/bar type plots
+            //different to line/bar type plots - potentially lots of colours req
+            //if lots of points added. If they run out you get grey...
             let thisSeries: ChartDataSets = {
               data: [],
               backgroundColor: [
@@ -484,6 +545,12 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
       }
     } else {
+    /**
+     *  handle dependent series (x,y|x,y,r).
+     *
+     *
+     *
+     */
       console.log("generating composite series from sources");
       console.log(
         `for a chart of type ${this.widgetHelper.getChartConfig().type}`
@@ -503,7 +570,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         ) {
           //For each variable retrieve the measurements
           //we need to match up measurements to get the
-          //graph - omit gaps - for real time we will
+          //graph - omit gaps - real time?
           const measurement = this.widgetHelper.getChartConfig().series[key];
           const v = this.widgetHelper.getChartConfig().series[key].variable;
 
@@ -523,8 +590,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().type
           );
 
-          //a period of time where quantity is the # of units,
+          // a period of time where quantity is the # of units,
           // and type(unit) has the # of seconds per unit in the id field
+          // *OR* we need # measurements => large date range short circuited
+          // once we have the right number
           let { from, to } = this.getDateRange();
           let measurementLimit =
             this.widgetHelper.getChartConfig().rangeType > 0
@@ -628,25 +697,24 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
         if (
           this.widgetHelper.getChartConfig().type == "radar" ||
-          this.widgetHelper.getChartConfig().type == "polarArea"
+          this.widgetHelper.getChartConfig().type == "polarArea" //not handled yet
         ) {
           //we need separate labels and values here
           thisSeries.data = result.map((v) => v.y);
           this.chartLabels = result.map((v) => v.x.toString());
         } else {
-          console.log("Not radar");
-          console.log(result);
           thisSeries.data = result;
-          thisSeries.pointRadius = 5;
+          thisSeries.pointRadius = 5; //TODO: add to config
         }
         localChartData.push(thisSeries);
         this.setAxesLabels(seriesList["x"], seriesList["y"]);
       }
     }
     this.chartData = localChartData; //replace
-    this.dataLoaded = true;
+    this.dataLoaded = true; //update
   }
 
+  // helper
   private setAxesLabels(xLabelKey: string, yLabelKey: string) {
     if (this.chartOptions.scales.xAxes.length > 0) {
       this.chartOptions.scales.xAxes[0].scaleLabel = {
