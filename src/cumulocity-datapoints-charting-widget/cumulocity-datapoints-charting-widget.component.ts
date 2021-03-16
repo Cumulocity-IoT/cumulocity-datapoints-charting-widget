@@ -679,6 +679,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
       spanGaps: true,
       backgroundColor: col,
       borderColor: col,
+      pointBackgroundColor: col,
       barThickness: "flex",
     };
     return series;
