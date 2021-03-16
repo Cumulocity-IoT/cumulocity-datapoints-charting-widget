@@ -508,7 +508,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           const v = this.widgetHelper.getChartConfig().series[key].variable;
 
           //store variable x, y, r with key
-          if (v !== "Not Assigned") {
+          if (v !== "Assign variable") {
             seriesList[v] = key;
             assigned++;
           }
@@ -565,14 +565,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         if ("y" in seriesList) {
           seriesName =
             seriesName +
-            `vs ${
+            ` vs ${
               this.widgetHelper.getChartConfig().series[seriesList["y"]].name
             }`;
         }
         if ("r" in seriesList) {
           seriesName =
             seriesName +
-            `vs ${
+            ` vs ${
               this.widgetHelper.getChartConfig().series[seriesList["r"]].name
             }`;
         }

@@ -21,11 +21,16 @@ h4 {
   display: inline-flex;
   align-content: baseline;
   align-items: center;
+}
+
+.col-layout-old {
+  display: inline-flex;
+  align-content: baseline;
+  align-items: center;
   justify-content: space-evenly;
   gap: 0.5em;
   padding-top: 0.25em;
 }
-
 .seriesButton {
   width: 100%;
   text-align: left !important;

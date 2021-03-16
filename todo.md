@@ -27,12 +27,12 @@
 - (done) "Truncate Y range" -> rename "Truncate Y Axis", and switch with "Show Legend" so that the legend and the position are together.
 - (Bug - fixed) Changing from a "Bar Chart" to "Pie/Radar" for a data set with lots of points ("Wind Direction Monitor" either measurements) causes crash "Uncaught (in promise): TypeError: Cannot read property 'vals' of undefined"
 - (Done) Alias for each series name
+- Date format live preview beside format, plus dropdown of common
 
 ## Todo
 
 - **Update readme doc**.
 - Colours: Would be nice if they were selectable from a predefined palette
-- Date format live preview beside format, plus dropdown of common
 - If the legend is on the right side, resizing to the smallest box causes the chart/axis to “invert” and then disappear. If you have the legend in any other position it seems to resize okay.
 - Legend Position -> "Chart Area" and "fill area under chart" will be hiding the text. Might need to consider a solid background colour for the legend.
 - "Scatterplot" - What was the "R"? weighting? relationship? probably a help/note is useful here.

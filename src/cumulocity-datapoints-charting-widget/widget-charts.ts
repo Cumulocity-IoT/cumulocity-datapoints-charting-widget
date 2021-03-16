@@ -12,7 +12,7 @@ export interface Aggregation {
 export class ChartSeries {
   id: string = ""; //series id
   name: string = ""; //series name
-  variable: string = "Not Assigned"; //part of composite co-ordinate (0 = no order, 1 = x, 2 = y...)
+  variable: string = "Assign variable"; //part of composite co-ordinate (0 = no order, 1 = x, 2 = y...)
   color: string = "#4ABBF0"; //display colour default just in case
   showAdvanced: boolean = false;
   hideMeasurements: boolean = false;
