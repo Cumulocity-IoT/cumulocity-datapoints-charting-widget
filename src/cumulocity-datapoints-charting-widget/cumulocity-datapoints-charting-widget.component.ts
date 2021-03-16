@@ -231,13 +231,16 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           // );
           //only remove data when we deal with times...
           if (this.widgetHelper.getChartConfig().aggregation == 0) {
+            let aggUnit = this.widgetHelper.getChartConfig().rangeUnits[
+              this.widgetHelper.getChartConfig().aggTimeFormatType
+            ].text;
+            let aggFormat = this.widgetHelper.getChartConfig().rangeDisplay[
+              aggUnit
+            ];
+            console.log("AGG3", aggUnit, aggFormat);
+
             while (
-              moment(
-                this.seriesData[key].labels[0],
-                this.widgetHelper.getChartConfig().rangeDisplay[
-                  this.widgetHelper.getChartConfig().aggregationFreq.text
-                ]
-              ).isBefore(from)
+              moment(this.seriesData[key].labels[0], aggFormat).isBefore(from)
             ) {
               this.seriesData[key].bucket.shift();
               this.seriesData[key].labels.shift();
@@ -331,6 +334,23 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().rangeType > 0
               ? 0
               : this.widgetHelper.getChartConfig().rangeValue;
+
+          let unitIndex = this.widgetHelper.getChartConfig().timeFormatType;
+          if (
+            this.widgetHelper.getChartConfig().type == "pie" ||
+            (this.widgetHelper.getChartConfig().type == "doughnut" &&
+              this.widgetHelper.getChartConfig().aggregation == 0)
+          ) {
+            unitIndex = this.widgetHelper.getChartConfig().aggTimeFormatType;
+          }
+
+          let aggUnit = this.widgetHelper.getChartConfig().rangeUnits[unitIndex]
+            .text;
+          let aggFormat = this.widgetHelper.getChartConfig().rangeDisplay[
+            aggUnit
+          ];
+          console.log("AGG2", aggUnit, aggFormat);
+
           //
           // WorkHorse Functionality - retrieve and calculate derived numbers
           //
@@ -342,10 +362,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             null,
             this.widgetHelper.getChartConfig().type,
             this.widgetHelper.getChartConfig().aggregation == 0, //count = true
-            this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
-            this.widgetHelper.getChartConfig().rangeDisplay[
-              this.widgetHelper.getChartConfig().aggregationFreq.text
-            ], //time format
+            aggUnit, //period of count (time)
+            aggFormat, //time format
             measurementLimit
           );
 
@@ -513,6 +531,13 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
               ? 0
               : this.widgetHelper.getChartConfig().rangeValue;
 
+          let unitIndex = this.widgetHelper.getChartConfig().timeFormatType;
+          let aggUnit = this.widgetHelper.getChartConfig().rangeUnits[unitIndex]
+            .text;
+          let aggFormat = this.widgetHelper.getChartConfig().rangeDisplay[
+            aggUnit
+          ];
+          console.log("AGG", aggUnit, aggFormat);
           //
           // WorkHorse Functionality - retrieve and calculate derived numbers
           //
@@ -524,10 +549,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             null,
             this.widgetHelper.getChartConfig().type,
             this.widgetHelper.getChartConfig().aggregation == 0, //count = true
-            this.widgetHelper.getChartConfig().aggregationFreq.text, //period of count (time)
-            this.widgetHelper.getChartConfig().rangeDisplay[
-              this.widgetHelper.getChartConfig().aggregationFreq.text
-            ], //time format
+            aggUnit, //period of count (time)
+            aggFormat, //time format
             measurementLimit
           );
         }
@@ -677,7 +700,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     let from = new Date(
       to - this.widgetHelper.getChartConfig().rangeValue * timeUnitVal * 1000
     );
-    console.log(`range: ${from} ${new Date(to)}`);
+    //console.log(`range: ${from} ${new Date(to)}`);
     return { from, to: new Date(to) };
   }
 

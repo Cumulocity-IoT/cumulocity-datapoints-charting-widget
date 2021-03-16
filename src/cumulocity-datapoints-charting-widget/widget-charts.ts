@@ -69,14 +69,14 @@ export class ChartConfig {
   public rangeUnits: ListItem[] = [
     // { id: -1, text: "Dates" },
     { id: 0, text: "measurements", format: "h:mm:ss.SSS a" },
-    { id: 1, text: "second" , format: "h:mm:ss a" },
-    { id: 60, text: "minute" , format: "h:mm a" },
-    { id: 3600, text: "hour" , format: "hA" },
-    { id: 86400, text: "day" , format: "MMM D" },
-    { id: 604800, text: "week" , format: "week ll" },
-    { id: 2592000, text: "month" , format: "MMM YYYY" },
-    { id: 7776000, text: "quarter" , format: "[Q]Q - YYYY" },
-    { id: 31536000, text: "year" , format: "YYYY" },
+    { id: 1, text: "second", format: "h:mm:ss a" },
+    { id: 60, text: "minute", format: "h:mm a" },
+    { id: 3600, text: "hour", format: "hA" },
+    { id: 86400, text: "day", format: "MMM D" },
+    { id: 604800, text: "week", format: "week ll" },
+    { id: 2592000, text: "month", format: "MMM YYYY" },
+    { id: 7776000, text: "quarter", format: "[Q]Q - YYYY" },
+    { id: 31536000, text: "year", format: "YYYY" },
   ];
 
   public rangeDisplayTemplate: TimeDisplayFormat = {
@@ -128,14 +128,13 @@ export class ChartConfig {
   multivariateColor: string = this.colorList[0];
   rangeType: number = 2; //default minutes
   timeFormatType: number = 2; //default minutes
+  aggTimeFormatType: number = 2; //default minutes
   rangeValue: number = 10;
   //rangeMax: number = 3000;
   rangeDisplay: TimeDisplayFormat = { ...this.rangeDisplayTemplate };
   position: string = "None";
   height: number = 100;
   aggregation: number = this.aggregationType[0].id;
-  aggregationFreq: ListItem = this.rangeUnits[1];
-
   dateExample: string = "yyyy-MM-dd hh:mm";
   showx: boolean = true;
   showy: boolean = true;

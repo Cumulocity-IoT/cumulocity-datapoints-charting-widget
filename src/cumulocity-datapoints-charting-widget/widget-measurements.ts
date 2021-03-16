@@ -200,7 +200,7 @@ export class MeasurementHelper {
       labelDateFormat
     );
 
-    //console.log(timeBucket, bucketPeriod, labelDateFormat);
+    console.log(timeBucket, bucketPeriod, labelDateFormat);
 
     let filter = options.filter();
 
