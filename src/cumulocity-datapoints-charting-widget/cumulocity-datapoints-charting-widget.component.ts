@@ -875,7 +875,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             ticks: {
               beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
               callback: function (value: number) {
-                return value.toPrecision(2);
+                return value.toFixed(2);
               },
             },
           });
@@ -913,7 +913,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         ticks: {
           beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
           callback: function (value: number) {
-            return value.toPrecision(2);
+            return value.toFixed(2);
           },
         },
       });
