@@ -63,8 +63,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
   chartLabels: Label[];
   chartLegend: boolean;
 
-  //    events: ["click","hover"],
-
+  //chart js options
   chartOptions: ChartOptions = {
     maintainAspectRatio: false,
     legend: {
@@ -545,12 +544,12 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
       }
     } else {
-    /**
-     *  handle dependent series (x,y|x,y,r).
-     *
-     *
-     *
-     */
+      /**
+       *  handle dependent series (x,y|x,y,r).
+       *
+       *
+       *
+       */
       console.log("generating composite series from sources");
       console.log(
         `for a chart of type ${this.widgetHelper.getChartConfig().type}`
