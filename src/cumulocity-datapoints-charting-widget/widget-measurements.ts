@@ -5,7 +5,6 @@ import _ from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
-import * as computeIQR from "compute-iqr";
 
 /**
  * These elements can form the criteria
@@ -314,6 +313,7 @@ export class MeasurementHelper {
           if (_.has(frag, options.series)) {
             let ser = _.get(frag, options.series);
             ////console.log(ser);
+            // TODO: The precision here can be added to the config page.
             measurementValue = parseFloat(parseFloat(ser.value).toFixed(2));
             if (measurementValue > newArr.mx) {
               newArr.mx = measurementValue;

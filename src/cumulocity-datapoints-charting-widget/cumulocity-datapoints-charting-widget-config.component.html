@@ -143,7 +143,6 @@
                                        (ngModelChange)="updateConfig()" /> Fill Area</label>
                         </div>
                     </ng-container>
-
                 </div>
             </ng-container>
 
@@ -271,6 +270,16 @@
                 </div>
             </ng-container>
             <div class="row form-group">
+                <ng-container *ngIf="
+                widgetHelper.getChartConfig().type !== 'pie' && 
+                widgetHelper.getChartConfig().type !== 'doughnut'">
+                    <div class="col-lg-2">
+                        <label translate>Point size</label>
+                        <input class="form-control" type="text" [ngModelOptions]="{ standalone: true }"
+                               [(ngModel)]="widgetHelper.getChartConfig().showPoints"
+                               (ngModelChange)="updateConfig()" />
+                    </div>
+                </ng-container>
                 <div class="col-lg-9">
                     <label for="positionSelector" translate> Legend Position </label>
                     <select class="form-control" name="positionSelector"

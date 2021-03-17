@@ -161,6 +161,7 @@ export class ChartConfig {
   fitAxis: boolean = false;
   stackSeries: boolean = false;
   fillArea: boolean = false;
+  showPoints: number = 0; //default radius = 0 == no show
 
   dateExample: string = "yyyy-MM-dd hh:mm"; //config display field only
 

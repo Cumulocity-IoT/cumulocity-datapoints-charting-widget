@@ -717,7 +717,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           this.chartLabels = result.map((v) => v.x.toString());
         } else {
           thisSeries.data = result;
-          thisSeries.pointRadius = 5; //TODO: add to config
+          thisSeries.pointRadius = this.widgetHelper.getChartConfig().showPoints;
         }
         localChartData.push(thisSeries);
         this.setAxesLabels(seriesList["x"], seriesList["y"]);
@@ -762,6 +762,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
       borderColor: col,
       pointBackgroundColor: col,
       barThickness: "flex",
+      pointRadius: this.widgetHelper.getChartConfig().showPoints,
     };
     return series;
   }
