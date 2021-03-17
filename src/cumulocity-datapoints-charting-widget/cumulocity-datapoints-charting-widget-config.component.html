@@ -41,29 +41,28 @@
             widgetHelper.getWidgetConfig().selectedDevices.length > 0 &&
             widgetHelper.getWidgetConfig().selectedMeasurements.length > 0
         ">
-                <div class="col-lg-6">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">Amount of data points </span>
-                        </div>
-                        <input class="form-control" type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
-                               (ngModelChange)="updateConfig()" />
-                    </div>
+                <div class="col-lg-4">
+                    <label translate>Amount</label>
+                    <input class="form-control" type="text" name="rangeval" [(ngModel)]="widgetHelper.getChartConfig().rangeValue"
+                           (ngModelChange)="updateConfig()" />
                 </div>
-                <div class="col-lg-6">
-                    <div class="input-group">
-                        <select class="form-control" name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
-                                (ngModelChange)="updateConfig()">
-                            <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
-                                    [ngValue]="i">
-                                {{ rType.text }}
-                            </option>
-                        </select>
-                        <div class="input-group-append">
-                            <span class="input-group-text"> (s)</span>
-                        </div>
-                    </div>
+                <div class="col-lg-4">
+                    <label translate>Unit</label>
+                    <select class="form-control" name="rangeSelector" [(ngModel)]="widgetHelper.getChartConfig().rangeType"
+                            (ngModelChange)="updateConfig()">
+                        <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
+                                [ngValue]="i">
+                            {{ rType.text }}
+                        </option>
+                    </select>
                 </div>
+                <div class=" col-lg-4">
+                    <label translate>decimal points</label>
+                    <input class="form-control" type="text" [ngModelOptions]="{ standalone: true }"
+                           [(ngModel)]="widgetHelper.getChartConfig().numdp"
+                           (ngModelChange)="updateConfig()" />
+                </div>
+
             </ng-container>
             <!-- 
             Once we have measurements - how many/what period does the user want
@@ -194,7 +193,7 @@
                             </option>
                         </select>
                     </div>
-                    <ng-container *ngIf="widgetHelper.getChartConfig().aggregation === 0">
+                    <ng-container *ngIf="widgetHelper.getChartConfig().aggregation === 0 else aggvalues">
                         <div class="  col-lg-6">
                             <label for="aggfreqSelector" translate>aggregation frequency</label>
                             <select class="form-control" name="aggfreqSelector" [(ngModel)]="widgetHelper.getChartConfig().aggTimeFormatType"
@@ -233,6 +232,14 @@
                             </p>
                         </div>
                     </ng-container>
+                    <ng-template #aggvalues>
+                        <div class=" col-lg-4">
+                            <label translate>Number of Value Buckets</label>
+                            <input class="form-control" type="text" [ngModelOptions]="{ standalone: true }"
+                                   [(ngModel)]="widgetHelper.getChartConfig().numBuckets"
+                                   (ngModelChange)="updateConfig()" />
+                        </div>
+                    </ng-template>
                 </div>
             </ng-container>
 

@@ -26,6 +26,7 @@ export class MeasurementOptions {
   bucketPeriod: string;
   labelDateFormat: string;
   numdp: number;
+  numBuckets: number;
 
   constructor(
     deviceId: string,
@@ -34,7 +35,8 @@ export class MeasurementOptions {
     series: string,
     averagePeriod: number,
     targetGraphType: string,
-    numdp: number
+    numdp: number,
+    numBuckets: number
   ) {
     this.deviceId = deviceId;
     this.name = name;
@@ -49,6 +51,7 @@ export class MeasurementOptions {
     this.bucketPeriod = "minute";
     this.labelDateFormat = "HH:mm";
     this.numdp = numdp;
+    this.numBuckets = numBuckets;
   }
 
   public setFilter(
@@ -155,7 +158,8 @@ export class MeasurementList {
         "",
         30,
         "line",
-        2
+        2,
+        5
       );
       this.aggregate = [];
       this.valtimes = [];
@@ -436,7 +440,11 @@ export class MeasurementHelper {
       } else {
         //values buckets
         let vals = rawData.vl.map((val) => val.y);
-        let hist = this.calculateHistogram(vals, 5);
+        let hist = this.calculateHistogram(
+          vals,
+          options.numBuckets,
+          options.numdp
+        );
         return { labels: hist.labels, data: hist.counts };
       }
     }
@@ -490,7 +498,8 @@ export class MeasurementHelper {
    */
   calculateHistogram(
     arr: number[],
-    numBins: number
+    numBins: number,
+    dp: number
   ): { labels: string[]; counts: number[] } {
     const bins: number[] = [];
     const binLabels: string[] = [];
@@ -505,7 +514,7 @@ export class MeasurementHelper {
     let previousLabel = "0.00";
     for (let i = 0; i < numBins; i++) {
       bins.push(0);
-      let upper = (i * binSize).toFixed(2);
+      let upper = (i * binSize).toFixed(dp);
       binLabels.push(`${previousLabel} - ${upper}`);
       previousLabel = upper;
     }

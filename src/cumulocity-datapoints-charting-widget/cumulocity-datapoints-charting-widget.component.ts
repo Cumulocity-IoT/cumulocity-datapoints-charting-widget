@@ -207,7 +207,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             console.log(this.seriesData[key].bucket);
           } else {
             let vals = this.seriesData[key].valtimes.map((val) => val.y);
-            let hist = this.measurementHelper.calculateHistogram(vals, 5);
+            let hist = this.measurementHelper.calculateHistogram(
+              vals,
+              this.widgetHelper.getChartConfig().numBuckets,
+              this.widgetHelper.getChartConfig().numdp
+            );
             //
             // In this case we want to replace the data
             //
@@ -394,7 +398,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             measurement.id.split(".")[1],
             measurement.id.split(".")[2],
             this.widgetHelper.getChartConfig().series[key].avgPeriod,
-            this.widgetHelper.getChartConfig().type
+            this.widgetHelper.getChartConfig().type,
+            this.widgetHelper.getChartConfig().numdp,
+            this.widgetHelper.getChartConfig().numBuckets
           );
 
           //a period of time where quantity is the # of units,
@@ -600,7 +606,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             measurement.id.split(".")[1],
             measurement.id.split(".")[2],
             this.widgetHelper.getChartConfig().series[key].avgPeriod,
-            this.widgetHelper.getChartConfig().type
+            this.widgetHelper.getChartConfig().type,
+            this.widgetHelper.getChartConfig().numdp,
+            this.widgetHelper.getChartConfig().numBuckets
           );
 
           // a period of time where quantity is the # of units,
@@ -868,6 +876,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().fitAxis = true; //always fit data
           }
 
+          let dp = this.widgetHelper.getChartConfig().numdp
+            ? this.widgetHelper.getChartConfig().numdp
+            : 2;
           this.chartOptions.scales.xAxes.push({
             display: this.widgetHelper.getChartConfig().showx,
             stacked: this.widgetHelper.getChartConfig().stackSeries,
@@ -875,7 +886,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             ticks: {
               beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
               callback: function (value: number) {
-                return value.toFixed(2);
+                return value.toFixed(dp);
               },
             },
           });
@@ -904,6 +915,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           labels: [],
         };
       }
+      let dp = this.widgetHelper.getChartConfig().numdp
+        ? this.widgetHelper.getChartConfig().numdp
+        : 2;
 
       //Y axis
       this.chartOptions.scales.yAxes.length = 0; //reset axes
@@ -913,7 +927,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         ticks: {
           beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
           callback: function (value: number) {
-            return value.toFixed(2);
+            return value.toFixed(dp);
           },
         },
       });

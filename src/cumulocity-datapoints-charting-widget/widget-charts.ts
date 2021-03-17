@@ -163,6 +163,7 @@ export class ChartConfig {
   fillArea: boolean = false;
   showPoints: number = 0; //default radius = 0 == no show
   numdp: number = 2; //2 decimal points numeric by default, can be set in config
+  numBuckets: number = 5; //Make default 5 buckets for value agg
 
   dateExample: string = "yyyy-MM-dd hh:mm"; //config display field only
 
