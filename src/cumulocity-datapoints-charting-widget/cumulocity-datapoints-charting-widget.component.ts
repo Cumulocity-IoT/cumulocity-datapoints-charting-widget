@@ -3,7 +3,12 @@
 import { Component, Input, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { WidgetConfig } from "./widget-config";
 import * as _ from "lodash";
-import { ChartDataSets, ChartOptions, PositionType } from "chart.js";
+import {
+  ChartDataSets,
+  ChartOptions,
+  ChartTooltipItem,
+  PositionType,
+} from "chart.js";
 import { ThemeService, BaseChartDirective, Label } from "ng2-charts";
 import { DatePipe } from "@angular/common";
 import {
@@ -79,6 +84,15 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     },
     tooltips: {
       enabled: true,
+      // callbacks: {
+      //   label: (tooltipItem: ChartTooltipItem, data) => {
+      //     console.log("TOOLTIP", tooltipItem);
+      //     let label = data.labels[tooltipItem.index];
+      //     let value =
+      //       data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+      //     return " " + label + ": " + value + " %";
+      //   },
+      // },
     },
     responsive: true,
     scales: {
@@ -805,7 +819,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         },
       });
 
-      //Y axis
+      //X axis
       this.chartOptions.scales.xAxes.length = 0; //reset axes
       this.chartOptions.scales.xAxes.push({
         display: this.widgetHelper.getChartConfig().showy,
@@ -859,6 +873,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             type: "linear",
             ticks: {
               beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
+              callback: function (value: number) {
+                return value.toPrecision(2);
+              },
             },
           });
         } else {
@@ -894,6 +911,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         stacked: this.widgetHelper.getChartConfig().stackSeries,
         ticks: {
           beginAtZero: !this.widgetHelper.getChartConfig().fitAxis,
+          callback: function (value: number) {
+            return value.toPrecision(2);
+          },
         },
       });
     }

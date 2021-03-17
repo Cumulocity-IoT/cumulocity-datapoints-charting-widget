@@ -314,7 +314,7 @@ export class MeasurementHelper {
           if (_.has(frag, options.series)) {
             let ser = _.get(frag, options.series);
             ////console.log(ser);
-            measurementValue = ser.value;
+            measurementValue = parseFloat(parseFloat(ser.value).toFixed(2));
             if (measurementValue > newArr.mx) {
               newArr.mx = measurementValue;
             }
