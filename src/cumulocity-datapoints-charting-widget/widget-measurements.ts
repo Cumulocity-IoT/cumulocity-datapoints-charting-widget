@@ -158,6 +158,13 @@ export class MeasurementList {
   }
 }
 
+type RawData = {
+  vl: any[];
+  mx: number;
+  mn: number;
+  sm: number;
+};
+
 /**
  * extract the retrieval and storage of
  * measurement values
@@ -173,10 +180,15 @@ export class MeasurementHelper {
    * There may be many pages of measurements, we
    * can return them all
    *
-   * @param options
-   * @param from
-   * @param to
-   * @param count
+   * @param options query options and params
+   * @param from date
+   * @param to (usually now)
+   * @param count pagesize
+   * @param targetGraphType: some processing differs for types
+   * @param timeBucket: are we aggregating counts in time (true/false)
+   * @param bucketPeriod: bucket size (min, hour, day etc)
+   * @param labelDateFormat: string dtermining date format (bucket labels based on this)
+   * @param maxMeasurements: limit the measurements (used when #measurements required)
    */
   public async getMeasurements(
     measurementService: MeasurementService,
@@ -244,7 +256,7 @@ export class MeasurementHelper {
     options: MeasurementOptions
   ): MeasurementList {
     //get the data.
-    let rawData = this.retrieveData(data, options);
+    let rawData: RawData = this.retrieveData(data, options);
 
     //display the data in reverse (earlier on left)
     rawData.vl = rawData.vl.reverse();
@@ -259,7 +271,6 @@ export class MeasurementHelper {
 
     //only pie/doughnut/histogram graphs need this (Checked internally - noop if other)
     //histogram will be special type - need to add in handling for bucketing by value (stddev etc)
-    console.log(options, rawData.mn, rawData.mx);
     let rawBucketData = this.createBucketSeries(options, rawData);
 
     //instance of data for use
@@ -279,7 +290,19 @@ export class MeasurementHelper {
     return measurementList;
   }
 
-  private retrieveData(data: IMeasurement[], options: MeasurementOptions) {
+  /**
+   * Internal method for simplifying getMeasurements. Reduce the
+   * data recieved into an intermediate structure that has various
+   * stats
+   *
+   * @param data unprocessed IMeasurement array from measurement service
+   * @param options chart options and params
+   * @returns RawData structure
+   */
+  private retrieveData(
+    data: IMeasurement[],
+    options: MeasurementOptions
+  ): RawData {
     return data.reduce(
       (newArr, row) => {
         //default
@@ -321,9 +344,18 @@ export class MeasurementHelper {
     );
   }
 
+  /**
+   * Generate the ma/bollinger bands for a series if required.
+   *
+   * @param options options and params
+   * @param rawData the results of retireve data
+   * @param upper target array for boll band series
+   * @param aggseries target for moving average
+   * @param lower target array for boll band series
+   */
   private createAggregateSeries(
     options: MeasurementOptions,
-    rawData: { vl: any[]; mx: number; mn: number; sm: number },
+    rawData: RawData,
     upper: any[],
     aggseries: any[],
     lower: any[]
@@ -355,9 +387,18 @@ export class MeasurementHelper {
     }
   }
 
+  /**
+   * Generate the series and labels for bucketed data. Unlike
+   * "normal" we are using separate labels rather than the
+   * ChartPoint structure of chartjs.
+   *
+   * @param options chaty options and params
+   * @param rawData the results of retireve data
+   * @returns object with the 2 arrays within it.
+   */
   private createBucketSeries(
     options: MeasurementOptions,
-    rawData: { vl: any[]; mx: number; mn: number; sm: number }
+    rawData: RawData
   ): { labels: string[]; data: number[] } {
     // Now we can turn this into the buckets and counts.
     let result: { [id: string]: number } = {};
@@ -400,6 +441,16 @@ export class MeasurementHelper {
     return { labels: bucketLabels, data: bucketData };
   }
 
+  /**
+   * return a "bucket" for the point passed
+   *
+   * @param options chart options and params
+   * @param val Point to be examined
+   * @param mn optional
+   * @param mx optional
+   * @param buckets optional
+   * @returns
+   */
   public categorize(
     options: MeasurementOptions,
     val: { x: Date; y: number },
@@ -417,43 +468,23 @@ export class MeasurementHelper {
     return bin.toString();
   }
 
+  /**
+   * From the values passed calculate a histogram of
+   * values (used in createBucketSeries)
+   * @param arr input array
+   * @param numBins number of buckets
+   * @returns data and labels in object
+   */
   calculateHistogram(
-    arr,
-    numBins,
-    trimTailPercentage = 0.0
+    arr: number[],
+    numBins: number
   ): { labels: string[]; counts: number[] } {
     const bins: number[] = [];
     const binLabels: string[] = [];
 
     let dataCopy = arr.sort((a, b) => a - b);
-
-    // if (trimTailPercentage !== 0.0) {
-    //     const rightPercentile =
-    //         dataCopy[
-    //             Math.floor((1.0 - trimTailPercentage) * dataCopy.length - 1)
-    //         ];
-    //     const leftPercentile =
-    //         dataCopy[Math.ceil(trimTailPercentage * dataCopy.length - 1)];
-    //     dataCopy = dataCopy.filter(
-    //         (x) => x <= rightPercentile && x >= leftPercentile
-    //     );
-    // }
-
     const min = dataCopy[0];
     const max = dataCopy[dataCopy.length - 1];
-
-    // if (numBins === 0) {
-    //     const sturges = Math.ceil(Math.log2(dataCopy.length)) + 1;
-    //     const iqr = computeIQR(dataCopy);
-    //     // If IQR is 0, fd returns 1 bin. This is as per the NumPy implementation:
-    //     //   https://github.com/numpy/numpy/blob/master/numpy/lib/histograms.py#L138
-    //     let fdbins = 1;
-    //     if (iqr !== 0.0) {
-    //         const fd = 2.0 * (iqr / Math.pow(dataCopy.length, 1.0 / 3.0));
-    //         fdbins = Math.ceil((max - min) / fd);
-    //     }
-    //     numBins = Math.max(sturges, fdbins);
-    // }
 
     const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
 
