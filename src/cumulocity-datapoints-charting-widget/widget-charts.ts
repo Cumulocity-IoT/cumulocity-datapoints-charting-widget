@@ -162,6 +162,7 @@ export class ChartConfig {
   stackSeries: boolean = false;
   fillArea: boolean = false;
   showPoints: number = 0; //default radius = 0 == no show
+  numdp: number = 2; //2 decimal points numeric by default, can be set in config
 
   dateExample: string = "yyyy-MM-dd hh:mm"; //config display field only
 

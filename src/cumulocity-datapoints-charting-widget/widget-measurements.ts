@@ -25,6 +25,7 @@ export class MeasurementOptions {
   timeBucket: boolean;
   bucketPeriod: string;
   labelDateFormat: string;
+  numdp: number;
 
   constructor(
     deviceId: string,
@@ -32,7 +33,8 @@ export class MeasurementOptions {
     fragment: string,
     series: string,
     averagePeriod: number,
-    targetGraphType: string
+    targetGraphType: string,
+    numdp: number
   ) {
     this.deviceId = deviceId;
     this.name = name;
@@ -46,6 +48,7 @@ export class MeasurementOptions {
     this.timeBucket = false;
     this.bucketPeriod = "minute";
     this.labelDateFormat = "HH:mm";
+    this.numdp = numdp;
   }
 
   public setFilter(
@@ -145,7 +148,15 @@ export class MeasurementList {
       this.mx = mx;
       this.mn = mn;
     } else {
-      this.sourceCriteria = new MeasurementOptions("", "", "", "", 30, "line");
+      this.sourceCriteria = new MeasurementOptions(
+        "",
+        "",
+        "",
+        "",
+        30,
+        "line",
+        2
+      );
       this.aggregate = [];
       this.valtimes = [];
       this.bucket = [];
@@ -314,7 +325,9 @@ export class MeasurementHelper {
             let ser = _.get(frag, options.series);
             ////console.log(ser);
             // TODO: The precision here can be added to the config page.
-            measurementValue = parseFloat(parseFloat(ser.value).toFixed(2));
+            measurementValue = parseFloat(
+              parseFloat(ser.value).toFixed(options.numdp)
+            );
             if (measurementValue > newArr.mx) {
               newArr.mx = measurementValue;
             }
