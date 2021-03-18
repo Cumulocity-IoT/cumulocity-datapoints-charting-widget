@@ -39,6 +39,7 @@
 - Would be nice to have some context help/tooltips for the options (e.g. Silo Widget)
 - More hiding of the config based on current selections (If pie chart hide averages etc)
 - Use “Title case” for configuration option names.
+- Stacked Bar chart - need to match up measurements in this case too 
 
 UI:
 

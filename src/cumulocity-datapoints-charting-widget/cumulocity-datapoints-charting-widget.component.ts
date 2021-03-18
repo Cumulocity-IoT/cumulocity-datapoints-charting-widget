@@ -428,7 +428,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           let aggFormat = this.widgetHelper.getChartConfig().rangeDisplay[
             aggUnit
           ];
-          console.log("AGG2", aggUnit, aggFormat);
+          //console.log("AGG2", aggUnit, aggFormat, measurementLimit);
 
           //
           // WorkHorse Functionality - retrieve and calculate derived numbers
@@ -627,7 +627,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
           let aggFormat = this.widgetHelper.getChartConfig().rangeDisplay[
             aggUnit
           ];
-          console.log("AGG", aggUnit, aggFormat);
+          //console.log("AGG", aggUnit, aggFormat, measurementLimit);
+
           //
           // WorkHorse Functionality - retrieve and calculate derived numbers
           //

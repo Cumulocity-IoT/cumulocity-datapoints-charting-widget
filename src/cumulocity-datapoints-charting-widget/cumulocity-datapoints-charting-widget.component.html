@@ -7,12 +7,12 @@
             widgetHelper.getWidgetConfig().chart.type == 'radar' || 
             widgetHelper.getWidgetConfig().chart.type == 'doughnut' else normal">
             <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
-                [chartType]="widgetHelper.getWidgetConfig().chart.type" [labels]="chartLabels" [legend]="chartLegend">
+                    [chartType]="widgetHelper.getWidgetConfig().chart.type" [labels]="chartLabels" [legend]="chartLegend">
             </canvas>
         </ng-container>
         <ng-template #normal>
             <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
-                [chartType]="widgetHelper.getWidgetConfig().chart.type">
+                    [chartType]="widgetHelper.getWidgetConfig().chart.type">
             </canvas>
         </ng-template>
 
@@ -20,7 +20,7 @@
 
     </ng-container>
     <ng-template #waiting>
-        <h1>loading...</h1>
+        <div class="loader">Loading...</div>
     </ng-template>
 </div>
 <ng-template #message>

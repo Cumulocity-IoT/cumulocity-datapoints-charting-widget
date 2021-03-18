@@ -240,7 +240,11 @@ export class MeasurementHelper {
     if (resp.res.status == 200) {
       data = [...resp.data];
       page = resp.paging.nextPage;
-      while (page != null && data.length < maxMeasurements) {
+      console.log(`page ${page} : ${data.length} ${maxMeasurements}`);
+      while (
+        page != null &&
+        (maxMeasurements == 0 || data.length < maxMeasurements)
+      ) {
         console.log(`requesting page ${page}`);
         // Need to handle errors here and also could there be
         // other status codes to handle?
