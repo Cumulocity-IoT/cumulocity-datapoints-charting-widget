@@ -13,18 +13,25 @@ The Data Points Charting Widget allows you to create real time graphs showing cu
 The widget currently supports the following chart types
 
 - line
-- bar
-- horizontal bar
+  - supporting multple plots on the same graph
+- bar & horizontal bar
+  - supporting stacked
+- pie & doughnut
+  - aggregated by time or value range buckets
+- radar
+- scatter and bubble
 
-_There will be more added in the future (pie, doughnut, radar, scatter and bubble are planned)_
+_There will be more added in the future (histogram)_
 
 ### Customization
 
-- Choose which Axes are displayed
+- Selected data ranges confgiurable (# of measurements, time range)
+- precision of data configurable
+- Choose which Axes are displayed and scaled
 - Show Aggregate data (Moving avearge, Bollinger Bands, or both)
-- Choose colours for plotted data
+- Choose colours for plotted data, data point visibility
 - configurable legend
-- show and hide data by clicking legend items
+- show and hide data by clicking legend items, tool tips
 - configurable label format for times
 
 ![Options](/images/options.png)
@@ -58,6 +65,10 @@ The widget configuration page contains a number of configuration attributes.
 ![devices and measurements](/images/devandmeas.png)
 
 - **Measurement** : Select the measurement fragment and series from the dropdown. You can deselect them in a similar way to the devices.
+
+  - define the range of data points to use by changing the Amount, Unit
+  - define the accuracy and sisplay of data values by changing the number of decimal points to show.
+
 - **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurments.
 
 ![devices and measurements](/images/global.gif)

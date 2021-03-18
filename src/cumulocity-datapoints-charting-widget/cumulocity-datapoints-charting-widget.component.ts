@@ -306,7 +306,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             let aggFormat = this.widgetHelper.getChartConfig().rangeDisplay[
               aggUnit
             ];
-            console.log("AGG3", aggUnit, aggFormat);
+            //console.log("AGG3", aggUnit, aggFormat);
 
             while (
               moment(this.seriesData[key].labels[0], aggFormat).isBefore(from)
