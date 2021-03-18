@@ -12,27 +12,27 @@ The Data Points Charting Widget allows you to create real time graphs showing cu
 
 The widget currently supports the following chart types
 
-- line
-  - supporting multple plots on the same graph
-- bar & horizontal bar
-  - supporting stacked
-- pie & doughnut
-  - aggregated by time or value range buckets
-- radar
-- scatter and bubble
+-   line
+    -   supporting multiple plots on the same graph
+-   bar & horizontal bar
+    -   supporting stacked
+-   pie & doughnut
+    -   aggregated by time or value range buckets
+-   radar
+-   scatter and bubble
 
 _There will be more added in the future (histogram)_
 
 ### Customization
 
-- Selected data ranges confgiurable (# of measurements, time range)
-- precision of data configurable
-- Choose which Axes are displayed and scaled
-- Show Aggregate data (Moving avearge, Bollinger Bands, or both)
-- Choose colours for plotted data, data point visibility
-- configurable legend
-- show and hide data by clicking legend items, tool tips
-- configurable label format for times
+-   Selected data ranges configurable (# of measurements, time range)
+-   precision of data configurable
+-   Choose which Axes are displayed and scaled
+-   Show Aggregate data (Moving average, Bollinger Bands, or both)
+-   Choose colours for plotted data, data point visibility
+-   configurable legend
+-   show and hide data by clicking legend items, tool tips
+-   configurable label format for times
 
 ![Options](/images/options.png)
 
@@ -40,7 +40,7 @@ _There will be more added in the future (histogram)_
 
 ### Runtime Widget Deployment?
 
-- This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-silo-capacity-widget/releases/download/1.0.2/silo-capacity-widget_v1.0.2.zip) and follow runtime deployment instructions from [here](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader).
+-   This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-silo-capacity-widget/releases/download/1.0.2/silo-capacity-widget_v1.0.2.zip) and follow runtime deployment instructions from [here](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader).
 
 ## Userguide
 
@@ -56,83 +56,78 @@ NOTE: This guide assumes that you have followed the [installation](https://githu
 
 The widget configuration page contains a number of configuration attributes.
 
-- **Title** : Enter the title which will display at the top of your widget
+-   **Title** : Enter the title which will display at the top of your widget
 
 **Device and Measurement Configuration** section
 
-- **Device** : Select one or more devices, once you do you will then be able to select measurements. Deselect options in the dropdown or click the 'x' to remove them.
+-   **Device** : Select one or more devices, once you do you will then be able to select measurements. Deselect options in the dropdown or click the 'x' to remove them.
 
 ![devices and measurements](/images/devandmeas.png)
 
-- **Measurement** : Select the measurement fragment and series from the dropdown. You can deselect them in a similar way to the devices.
+-   **Measurement** : Select the measurement fragment and series from the dropdown. You can deselect them in a similar way to the devices.
 
-  - define the range of data points to use by changing the Amount, Unit
-  - define the accuracy and sisplay of data values by changing the number of decimal points to show.
+    -   define the range of data points to use by changing the Amount, Unit
+    -   define the accuracy and display of data values by changing the number of decimal points to show.
 
-- **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurments.
+-   **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurments.
 
 ![devices and measurements](/images/global.gif)
 
 **NOTE**: Once the **Target Assets or Devices** and **Measurement** information has been populated, you can click the 'Save' button to configure the widget with the default settings
 
-- **Series Settings** : Below the global settings you will see a row for each measurment series you selected. By clicking on the row you will expand options that can be set per series. Depending on the chart type there may be further options which can be exposed by clicking the show advanced options checkbox.
+-   **Series Settings** : Below the global settings you will see a row for each measurement series you selected. By clicking on the row you will expand options that can be set per series. Depending on the chart type there may be further options which can be exposed by clicking the show advanced options checkbox.
 
 ![series](/images/series.gif)
 
-- Change the series display name (reflected in the legend)
-- Change the series plot colour.
-- Currently the line chart has advanced options
+-   Change the series display name (reflected in the legend)
+-   Change the series plot colour.
+-   Currently the line chart has advanced options
 
 ![series](/images/advanced.gif)
 
-- hide measurements will hide the plot of the source data
-- choose an option from the _display aggregate_ drop down to show the colour and averaging period (number of measurements)
-- display aggregate allows you to choose to plot a moving average and/or Bollinger Bands
+-   hide measurements will hide the plot of the source data
+-   choose an option from the _display aggregate_ drop down to show the colour and averaging period (number of measurements)
+-   display aggregate allows you to choose to plot a moving average and/or Bollinger Bands
 
 ### Pie & Doughnut Charts
 
-When plotting a single series you have the option of choosing a *pie* or *doughnut* chart. If you do then you need to aggregate or
-bucket the data to allow it to be displayed. 
+When plotting a single series you have the option of choosing a _pie_ or _doughnut_ chart. If you do then you need to aggregate or
+bucket the data to allow it to be displayed.
 
-- After choosing your series, change the chart type to *pie* or *doughnut*
-- The Amount of data chosen and it's unit will determine the time buckets (categories) in the chart. 
-- The following is a pie chart showing counts of measurements within time periods
+-   After choosing your series, change the chart type to _pie_ or _doughnut_
+-   The Amount of data chosen and it's unit will determine the time buckets (categories) in the chart.
+-   The following is a pie chart showing counts of measurements within time periods
 
 ![series](/images/pie.gif)
 
-- We can allso create a chart showing the number of measurements within value ranges
-- The number of buckets will determine the bucket ranges when aggregating by value. 
+-   We can also create a chart showing the number of measurements within value ranges
+-   The number of buckets will determine the bucket ranges when aggregating by value.
 
 ![series](/images/value.gif)
 
 ### Plotting one series against another
 
-The example shown here is a plot of the PH measured against a measure of PO4 (Phosphate) in a boiler. The relationship in this made up example is linear and so we should see a straight line when they are plotted against each other. 
+The example shown here is a plot of the PH measured against a measure of PO4 (Phosphate) in a boiler. The relationship in this made up example is linear and so we should see a straight line when they are plotted against each other.
 
-It is important to make sure that the data you wish to plot will match. The tolerance (t) allows the data to have some variation in timings. 
+It is important to make sure that the data you wish to plot will match. The tolerance (t) allows the data to have some variation in timings.
 
-The matching works through the 'x' datapoints selecting the first datapoint in the 'y' series that has a time stamp +/- the tolerance. If there is no match then it will omit that point. 
+The matching works through the 'x' data points selecting the first data point in the 'y' series that has a time stamp +/- the tolerance. If there is no match then it will omit that point.
 
-- After choosing your series, check the *Plot data points from one series against another* 
-- This will change the display so you can choose the x and y of the chart. 
-- Select the color and tolerance of what time stamps should match.
+-   After choosing your series, check the _Plot data points from one series against another_
+-   This will change the display so you can choose the x and y of the chart.
+-   Select the color and tolerance of what time stamps should match.
 
 ![series](/images/multivariate.gif)
 
-
 The above chart is a basic line chart, but you can use the ability to plot data against another series in other types:
 
-- radar
-![series](/images/radar.png)
+-   radar
+    ![series](/images/radar.png)
 
-- scatter
-![series](/images/scatter.png)
+-   scatter
+    ![series](/images/scatter.png)
 
-- bubble (x,y,r) r = diameter of plotted point 
-
-
-
-
+-   bubble (x,y,r) r = diameter of plotted point
 
 ---
 
