@@ -91,48 +91,44 @@ The widget configuration page contains a number of configuration attributes.
 
 ### Pie & Doughnut Charts
 
-When plotting a single series you have the option of choosing a *pie* or *doughnut* chart. If you do then you need to aggregate or
-bucket the data to allow it to be displayed. 
+When plotting a single series you have the option of choosing a _pie_ or _doughnut_ chart. If you do then you need to aggregate or
+bucket the data to allow it to be displayed.
 
-- After choosing your series, change the chart type to *pie* or *doughnut*
-- The Amount of data chosen and it's unit will determine the time buckets (categories) in the chart. 
+- After choosing your series, change the chart type to _pie_ or _doughnut_
+- The Amount of data chosen and it's unit will determine the time buckets (categories) in the chart.
 - The following is a pie chart showing counts of measurements within time periods
 
 ![series](/images/pie.gif)
 
 - We can allso create a chart showing the number of measurements within value ranges
-- The number of buckets will determine the bucket ranges when aggregating by value. 
+- The number of buckets will determine the bucket ranges when aggregating by value.
 
 ![series](/images/value.gif)
 
 ### Plotting one series against another
 
-The example shown here is a plot of the PH measured against a measure of PO4 (Phosphate) in a boiler. The relationship in this made up example is linear and so we should see a straight line when they are plotted against each other. 
+The example shown here is a plot of the PH measured against a measure of PO4 (Phosphate) in a boiler. The relationship in this made up example is linear and so we should see a straight line when they are plotted against each other.
 
-It is important to make sure that the data you wish to plot will match. The tolerance (t) allows the data to have some variation in timings. 
+It is important to make sure that the data you wish to plot will match. The tolerance (t) allows the data to have some variation in timings.
 
-The matching works through the 'x' datapoints selecting the first datapoint in the 'y' series that has a time stamp +/- the tolerance. If there is no match then it will omit that point. 
+The matching works through the 'x' datapoints selecting the first datapoint in the 'y' series that has a time stamp +/- the tolerance. If there is no match then it will omit that point.
 
-- After choosing your series, check the *Plot data points from one series against another* 
-- This will change the display so you can choose the x and y of the chart. 
+- After choosing your series, check the _Plot data points from one series against another_
+- This will change the display so you can choose the x and y of the chart.
 - Select the color and tolerance of what time stamps should match.
 
 ![series](/images/multivariate.gif)
 
-
 The above chart is a basic line chart, but you can use the ability to plot data against another series in other types:
 
 - radar
-![series](/images/radar.png)
+  ![series](/images/radar.png)
 
 - scatter
-![series](/images/scatter.png)
+  ![series](/images/scatter.png)
 
-- bubble (x,y,r) r = diameter of plotted point 
-
-
-
-
+- bubble (x,y,r) r = diameter of plotted point
+  ![series](/images/bubble.png)
 
 ---
 
