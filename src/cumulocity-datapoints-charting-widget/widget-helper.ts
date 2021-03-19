@@ -7,7 +7,7 @@
  *
  * Widgets have config in cumulocity which gets updated when you
  * invoke the config page for the widget. This class wraps that
- * and provides useful common functionalty on top.
+ * and provides useful common functionally on top.
  *
  * @format
  */
@@ -95,7 +95,7 @@ export class WidgetHelper<CONFIGTYPE> {
      * If an object exists it will be returned with the correct prototype
      * If it doesn't it will be created and a default returned.
      *
-     * @returns Chart config object attached to the general configutaion
+     * @returns Chart config object attached to the general configuration
      */
     getChartConfig(): ChartConfig {
         let chartConfig: ChartConfig;
