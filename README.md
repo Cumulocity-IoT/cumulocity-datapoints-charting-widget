@@ -42,7 +42,7 @@ _There will be more added in the future (histogram)_
 
 -   This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-silo-capacity-widget/releases/download/1.0.2/silo-capacity-widget_v1.0.2.zip) and follow runtime deployment instructions from [here](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader).
 
-## Userguide
+## User guide
 
 This guide will teach you how to add the widget in your existing or new dashboard.
 
@@ -69,7 +69,7 @@ The widget configuration page contains a number of configuration attributes.
     -   define the range of data points to use by changing the Amount, Unit
     -   define the accuracy and display of data values by changing the number of decimal points to show.
 
--   **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurments.
+-   **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurements.
 
 ![devices and measurements](/images/global.gif)
 
@@ -128,6 +128,7 @@ The above chart is a basic line chart, but you can use the ability to plot data 
     ![series](/images/scatter.png)
 
 -   bubble (x,y,r) r = diameter of plotted point
+    ![series](/images/bubble.png)
 
 ---
 
@@ -135,6 +136,6 @@ These tools are provided as-is and without warranty or support. They do not cons
 
 ---
 
-For more information you can Ask a Question in the [TECHcommunity Forums](http://tech.forums.softwareag.com/techjforum/forums/list.page?product=cumulocity).
+For more information you can Ask a Question in the [TECH community Forums](http://tech.forums.softwareag.com/techjforum/forums/list.page?product=cumulocity).
 
-You can find additional information in the [Software AG TECHcommunity](http://techcommunity.softwareag.com/home/-/product/name/cumulocity).
+You can find additional information in the [Software AG TECH community](http://techcommunity.softwareag.com/home/-/product/name/cumulocity).
