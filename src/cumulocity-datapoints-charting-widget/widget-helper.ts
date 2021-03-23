@@ -110,11 +110,9 @@ export class WidgetHelper<CONFIGTYPE> {
                     Object.getPrototypeOf(this.chartRef)
                 );
             }
-            ////console.log(chartConfig);
         } else {
             //add new ? or perhaps throw if we get more serious
             chartConfig = _.set(this.config, "chart", new ChartConfig());
-            //console.log("new chartConfig");
         }
         return chartConfig;
     }

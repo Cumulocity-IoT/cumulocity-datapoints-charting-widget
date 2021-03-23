@@ -5,6 +5,7 @@ import _ from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
+import * as Chart from "chart.js";
 
 /**
  * These elements can form the criteria
@@ -27,6 +28,8 @@ export class MeasurementOptions {
     labelDateFormat: string;
     numdp: number;
     numBuckets: number;
+    groupby: boolean;
+    cumulative: boolean;
 
     constructor(
         deviceId: string,
@@ -36,7 +39,9 @@ export class MeasurementOptions {
         averagePeriod: number,
         targetGraphType: string,
         numdp: number,
-        numBuckets: number
+        numBuckets: number,
+        groupby: boolean,
+        cumulative: boolean
     ) {
         this.deviceId = deviceId;
         this.name = name;
@@ -52,6 +57,8 @@ export class MeasurementOptions {
         this.labelDateFormat = "HH:mm";
         this.numdp = numdp;
         this.numBuckets = numBuckets;
+        this.groupby = groupby;
+        this.cumulative = cumulative;
     }
 
     public setFilter(
@@ -88,32 +95,14 @@ export class MeasurementOptions {
 
         //dates are strings in the filter
         if (_.has(this, "dateFrom")) {
-            _.set(
-                filter,
-                "dateFrom",
-                formatDate(
-                    _.get(this, "dateFrom"),
-                    this.queryDateFormat,
-                    this.locale
-                )
-            );
+            _.set(filter, "dateFrom", formatDate(_.get(this, "dateFrom"), this.queryDateFormat, this.locale));
         }
 
         //this should always be "now" for the moment it can't be entered manually
         if (_.has(this, "dateTo")) {
-            _.set(
-                filter,
-                "dateTo",
-                formatDate(
-                    _.get(this, "dateTo"),
-                    this.queryDateFormat,
-                    this.locale
-                )
-            );
+            _.set(filter, "dateTo", formatDate(_.get(this, "dateTo"), this.queryDateFormat, this.locale));
         }
 
-        // //console.log("FILTER");
-        // //console.log(filter);
         return filter;
     }
 }
@@ -124,12 +113,13 @@ export class MeasurementOptions {
  */
 export class MeasurementList {
     sourceCriteria: MeasurementOptions;
-    upper: { x: Date; y: any }[]; // can be empty
-    aggregate: { x: Date; y: any }[]; // can be empty
-    lower: { x: Date; y: any }[]; // can be empty
-    valtimes: { x: Date; y: any }[]; // this will contain the raw data
-    bucket: number[];
-    labels: string[];
+    upper: Chart.ChartPoint[]; // can be empty
+    aggregate: Chart.ChartPoint[]; // can be empty
+    lower: Chart.ChartPoint[]; // can be empty
+    valtimes: Chart.ChartPoint[]; // this will contain the raw data
+    valCount: number; // this will contain the raw data
+    bucket: number[]; // pie/doughnut mainly
+    labels: string[]; // pie/doughnut mainly
     mx: Number;
     mn: Number;
     sm: Number;
@@ -141,6 +131,7 @@ export class MeasurementList {
         aggregate: { x: Date; y: any }[],
         lower: { x: Date; y: any }[],
         valtimes: { x: Date; y: any }[],
+        valCount,
         bucket: number[],
         labels: string[],
         mx: number,
@@ -153,24 +144,17 @@ export class MeasurementList {
             this.aggregate = aggregate;
             this.lower = lower;
             this.valtimes = valtimes;
+            this.valCount = valCount;
             this.bucket = bucket;
             this.labels = labels;
             this.av = sm / valtimes.length;
             this.mx = mx;
             this.mn = mn;
         } else {
-            this.sourceCriteria = new MeasurementOptions(
-                "",
-                "",
-                "",
-                "",
-                30,
-                "line",
-                2,
-                5
-            );
+            this.sourceCriteria = new MeasurementOptions("", "", "", "", 30, "line", 2, 5, false, false);
             this.aggregate = [];
             this.valtimes = [];
+            this.valCount = 0;
             this.bucket = [];
             this.labels = [];
             this.av = 0;
@@ -180,12 +164,23 @@ export class MeasurementList {
     }
 }
 
-type RawData = {
+class RawData {
     vl: any[];
+    vlCounts: number[];
     mx: number;
     mn: number;
     sm: number;
-};
+    lastBucket = "";
+
+    constructor() {
+        this.vl = [];
+        this.vlCounts = [];
+        this.mx = 0;
+        this.mn = Number.MAX_VALUE;
+        this.sm = 0;
+        this.lastBucket = "";
+    }
+}
 
 /**
  * extract the retrieval and storage of
@@ -224,17 +219,7 @@ export class MeasurementHelper {
         labelDateFormat: string,
         maxMeasurements: number
     ): Promise<MeasurementList> {
-        options.setFilter(
-            dateFrom,
-            dateTo,
-            count,
-            targetGraphType,
-            timeBucket,
-            bucketPeriod,
-            labelDateFormat
-        );
-
-        console.log(timeBucket, bucketPeriod, labelDateFormat);
+        options.setFilter(dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
 
         let filter = options.filter();
 
@@ -242,17 +227,11 @@ export class MeasurementHelper {
         _.set(filter, "currentPage", 1);
         let data = [];
         let page = 1;
-        console.log(filter);
         let resp = await measurementService.list(filter);
-        console.log(resp);
         if (resp.res.status == 200) {
             data = [...resp.data];
             page = resp.paging.nextPage;
-            console.log(`page ${page} : ${data.length} ${maxMeasurements}`);
-            while (
-                page != null &&
-                (maxMeasurements == 0 || data.length < maxMeasurements)
-            ) {
+            while (page != null && (maxMeasurements == 0 || data.length < maxMeasurements)) {
                 console.log(`requesting page ${page}`);
                 // Need to handle errors here and also could there be
                 // other status codes to handle?
@@ -277,10 +256,7 @@ export class MeasurementHelper {
      *
      * @param data the array of measurements
      */
-    private processData(
-        data: IMeasurement[],
-        options: MeasurementOptions
-    ): MeasurementList {
+    private processData(data: IMeasurement[], options: MeasurementOptions): MeasurementList {
         //get the data.
         let rawData: RawData = this.retrieveData(data, options);
 
@@ -306,13 +282,13 @@ export class MeasurementHelper {
             aggseries,
             lower,
             rawData.vl,
+            rawData.vlCounts[rawData.vlCounts.length - 1], //last count so we can continue
             rawBucketData.data,
             rawBucketData.labels,
             rawData.mx,
             rawData.mn,
             rawData.sm
         );
-        ////console.log(measurementList);
         return measurementList;
     }
 
@@ -325,52 +301,119 @@ export class MeasurementHelper {
      * @param options chart options and params
      * @returns RawData structure
      */
-    private retrieveData(
-        data: IMeasurement[],
-        options: MeasurementOptions
-    ): RawData {
-        return data.reduce(
-            (newArr, row) => {
-                //default
-                let measurementDate = new Date(row.time);
-                let measurementValue = 0;
-                //need the fragment, series
-                if (_.has(row, options.fragment)) {
-                    let frag = _.get(row, options.fragment);
-                    if (_.has(frag, options.series)) {
-                        let ser = _.get(frag, options.series);
-                        ////console.log(ser);
-                        // TODO: The precision here can be added to the config page.
-                        measurementValue = parseFloat(
-                            parseFloat(ser.value).toFixed(options.numdp)
-                        );
-                        if (measurementValue > newArr.mx) {
-                            newArr.mx = measurementValue;
-                        }
-                        if (measurementValue < newArr.mn) {
-                            newArr.mn = measurementValue;
-                        }
-                        newArr.sm = newArr.sm + measurementValue;
+    private retrieveData(data: IMeasurement[], options: MeasurementOptions): RawData {
+        let d = data.reduce((newArr, row) => {
+            //default
+            let measurementDate = new Date(row.time);
+            if (options.groupby === true) {
+                switch (options.bucketPeriod) {
+                    case "second": {
+                        measurementDate.setMilliseconds(0);
+                        break;
+                    }
+                    case "minute": {
+                        measurementDate.setMilliseconds(0);
+                        measurementDate.setSeconds(0);
+                        break;
+                    }
+                    case "hour": {
+                        measurementDate.setMilliseconds(0);
+                        measurementDate.setSeconds(0);
+                        measurementDate.setMinutes(0);
+                        break;
+                    }
+                    default: {
+                        measurementDate.setMilliseconds(0);
+                        measurementDate.setSeconds(0);
+                        measurementDate.setMinutes(0);
+                        measurementDate.setHours(0);
+                        break;
                     }
                 }
+            }
 
-                //swap axes if horizontal
-                if (options.targetGraphType == "horizontalBar") {
-                    newArr.vl.push({
-                        y: measurementDate,
-                        x: measurementValue,
-                    });
+            let measurementValue = 0;
+            //need the fragment, series
+            if (_.has(row, options.fragment)) {
+                let frag = _.get(row, options.fragment);
+                if (_.has(frag, options.series)) {
+                    let ser = _.get(frag, options.series);
+
+                    //if there is a group by we need to either sum or average the
+                    //value for the current set of measurements
+                    measurementValue = parseFloat(parseFloat(ser.value).toFixed(options.numdp));
+                    if (measurementValue > newArr.mx) {
+                        newArr.mx = measurementValue;
+                    }
+                    if (measurementValue < newArr.mn) {
+                        newArr.mn = measurementValue;
+                    }
+                    newArr.sm = newArr.sm + measurementValue;
+                }
+            }
+
+            //t is the count of measurements in this Chart point.
+            let v: Chart.ChartPoint = {
+                x: measurementDate,
+                y: measurementValue,
+            };
+
+            if (options.targetGraphType == "horizontalBar") {
+                v = {
+                    y: measurementDate,
+                    x: measurementValue,
+                };
+            }
+
+            if (options.groupby === true) {
+                let lst = this.categorize(options, v);
+
+                //new data point needed - deal with the last values
+                if (newArr.lastBucket != lst) {
+                    //average over period
+                    // if (!options.cumulative && newArr.vl.length > 0 && newArr.counted > 0) {
+                    //     if (options.targetGraphType == "horizontalBar") {
+                    //         newArr.vl[newArr.vl.length - 1].x = newArr.vl[newArr.vl.length - 1].x / newArr.counted;
+                    //     } else {
+                    //         newArr.vl[newArr.vl.length - 1].y = newArr.vl[newArr.vl.length - 1].y / newArr.counted;
+                    //     }
+                    // }
+                    // newArr.counted = 0;
+                    newArr.vl.push(v);
+                    newArr.vlCounts.push(1);
                 } else {
-                    newArr.vl.push({
-                        x: measurementDate,
-                        y: measurementValue,
-                    });
+                    if (options.targetGraphType == "horizontalBar") {
+                        newArr.vl[newArr.vl.length - 1].x = newArr.vl[newArr.vl.length - 1].x + v.x;
+                    } else {
+                        newArr.vl[newArr.vl.length - 1].y = newArr.vl[newArr.vl.length - 1].y + v.y;
+                    }
+                    newArr.vlCounts[newArr.vlCounts.length - 1] += 1; //increment
                 }
 
-                return newArr;
-            },
-            { vl: [], mx: 0, mn: Number.MAX_VALUE, sm: 0 }
-        );
+                newArr.lastBucket = lst;
+            } else {
+                newArr.vl.push(v); //store raw
+            }
+            return newArr;
+        }, new RawData());
+
+        //if grouping, and iff !cumulative we need to average the last element
+        let result: RawData = d;
+        if (options.groupby === true) {
+            if (!options.cumulative) {
+                result.vl = d.vl.map((val, index) => {
+                    if (options.targetGraphType == "horizontalBar") {
+                        val.x = parseFloat((val.x / d.vlCounts[index]).toFixed(options.numdp));
+                    } else {
+                        val.y = parseFloat((val.y / d.vlCounts[index]).toFixed(options.numdp));
+                    }
+                    return val;
+                });
+            }
+        }
+
+        //console.log("RawData", result);
+        return result;
     }
 
     /**
@@ -382,22 +425,16 @@ export class MeasurementHelper {
      * @param aggseries target for moving average
      * @param lower target array for boll band series
      */
-    private createAggregateSeries(
-        options: MeasurementOptions,
-        rawData: RawData,
-        upper: any[],
-        aggseries: any[],
-        lower: any[]
-    ) {
+    private createAggregateSeries(options: MeasurementOptions, rawData: RawData, upper: any[], aggseries: any[], lower: any[]) {
         if (options.targetGraphType == "line") {
             if (options.avgPeriod && options.avgPeriod > 0) {
                 //just the values
                 let source = rawData.vl.map((val) => val.y);
+                if (!source.length) {
+                    return;
+                }
                 //average and bollinger bands
-                let avper =
-                    options.avgPeriod > source.length
-                        ? source.length
-                        : options.avgPeriod;
+                let avper = options.avgPeriod > source.length ? source.length : options.avgPeriod;
                 let a = boll(source, avper, 2);
 
                 for (let index = 0; index < rawData.vl.length; index++) {
@@ -427,17 +464,10 @@ export class MeasurementHelper {
      * @param rawData the results of retrieve data
      * @returns object with the 2 arrays within it.
      */
-    private createBucketSeries(
-        options: MeasurementOptions,
-        rawData: RawData
-    ): { labels: string[]; data: number[] } {
+    private createBucketSeries(options: MeasurementOptions, rawData: RawData): { labels: string[]; data: number[] } {
         // Now we can turn this into the buckets and counts.
         let result: { [id: string]: number } = {};
-        if (
-            options.targetGraphType == "pie" ||
-            options.targetGraphType == "doughnut" ||
-            options.targetGraphType == "histogram"
-        ) {
+        if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut" || options.targetGraphType == "histogram") {
             if (options.timeBucket) {
                 //just the counts over time
                 rawData.vl.map((val) => {
@@ -454,11 +484,7 @@ export class MeasurementHelper {
             } else {
                 //values buckets
                 let vals = rawData.vl.map((val) => val.y);
-                let hist = this.calculateHistogram(
-                    vals,
-                    options.numBuckets,
-                    options.numdp
-                );
+                let hist = this.calculateHistogram(vals, options.numBuckets, options.numdp);
                 return { labels: hist.labels, data: hist.counts };
             }
         }
@@ -486,21 +512,23 @@ export class MeasurementHelper {
      * @param buckets optional
      * @returns
      */
-    public categorize(
-        options: MeasurementOptions,
-        val: { x: Date; y: number },
-        mn?: number,
-        mx?: number,
-        buckets?: number
-    ): string {
-        if (options.timeBucket) {
+    public categorize(options: MeasurementOptions, val: Chart.ChartPoint, mn?: number, mx?: number, buckets?: number): string {
+        //are we aggregating by time unit
+        if (options.timeBucket || options.groupby) {
             return moment(val.x).format(options.labelDateFormat);
         }
 
         //histogram
-        let bin = Math.floor((val.y - mn) / buckets);
-        console.log(`BIN: ${bin}`);
-        return bin.toString();
+        let bin: string = "";
+
+        if (typeof val.y !== "number") {
+            bin = val.y.toString();
+        } else {
+            bin = Math.floor((val.y - mn) / buckets).toString();
+        }
+
+        //console.log(`BIN: ${bin}`);
+        return bin;
     }
 
     /**
@@ -510,11 +538,7 @@ export class MeasurementHelper {
      * @param numBins number of buckets
      * @returns data and labels in object
      */
-    calculateHistogram(
-        arr: number[],
-        numBins: number,
-        dp: number
-    ): { labels: string[]; counts: number[] } {
+    calculateHistogram(arr: number[], numBins: number, dp: number): { labels: string[]; counts: number[] } {
         const bins: number[] = [];
         const binLabels: string[] = [];
 

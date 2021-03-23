@@ -3,13 +3,7 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from "@angular/core";
 import { Observable, of } from "rxjs";
 import { FetchClient, InventoryService } from "@c8y/ngx-components/api";
-import {
-    IResultList,
-    IManagedObject,
-    IdReference,
-    IResult,
-    IFetchResponse,
-} from "@c8y/client";
+import { IResultList, IManagedObject, IdReference, IResult, IFetchResponse } from "@c8y/client";
 
 import { ListItem, WidgetConfig } from "./widget-config";
 
@@ -44,7 +38,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     // Helper methods
     //
     async getDeviceList(): Promise<IResultList<IManagedObject>> {
-        //    //console.log(`getting devices`);
         let devs = this.inventory.list({
             pageSize: 100,
             fragmentType: "c8y_IsDevice",
@@ -57,9 +50,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     }
 
     async fetchSeries(id): Promise<string[]> {
-        let resp: IFetchResponse = await this.fetchclient.fetch(
-            "/inventory/managedObjects/" + id + "/supportedSeries"
-        );
+        let resp: IFetchResponse = await this.fetchclient.fetch("/inventory/managedObjects/" + id + "/supportedSeries");
         let body = await resp.json();
         return body.c8y_SupportedSeries;
     }
@@ -70,10 +61,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
      * @param inventory
      * @param fetchclient
      */
-    constructor(
-        private inventory: InventoryService,
-        private fetchclient: FetchClient
-    ) {
+    constructor(private inventory: InventoryService, private fetchclient: FetchClient) {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default
     }
 
@@ -83,7 +71,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
      */
     async ngOnInit(): Promise<void> {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
-        //console.log(`Config :`, this.widgetHelper.getWidgetConfig());
 
         //set the devices observable for the config form
         let deviceList = await this.getDeviceList();
@@ -108,23 +95,19 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
      * @returns
      */
     async getSupportedSeries(devices: ListItem[]): Promise<ListItem[]> {
-        //console.log("Get Supported series", devices);
         let local: ListItem[] = [];
         if (devices) {
             for (let index = 0; index < devices.length; index++) {
                 const dev = devices[index];
-                let current: ListItem[] = (await this.fetchSeries(dev.id)).map(
-                    (m) => {
-                        return {
-                            id: dev.id + "." + m,
-                            text: `${m}(${dev.text})`,
-                        };
-                    }
-                );
+                let current: ListItem[] = (await this.fetchSeries(dev.id)).map((m) => {
+                    return {
+                        id: dev.id + "." + m,
+                        text: `${m}(${dev.text})`,
+                    };
+                });
                 local = [...local, ...current];
             }
         }
-        // //console.log(local);
         return local;
     }
 
@@ -132,25 +115,12 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
      * respond to changes in options, record in config
      */
     async updateSelectedMeasurements() {
-        //console.log("Updating...Measurements");
-
-        this.widgetHelper
-            .getChartConfig()
-            .clearSeries(
-                this.widgetHelper.getWidgetConfig().selectedMeasurements
-            );
-        this.widgetHelper
-            .getWidgetConfig()
-            .selectedMeasurements.forEach((v, i) => {
-                this.widgetHelper
-                    .getChartConfig()
-                    .addSeries(
-                        v.id,
-                        v.text,
-                        this.widgetHelper.getChartConfig().colorList[i],
-                        this.widgetHelper.getChartConfig().avgColorList[i]
-                    );
-            });
+        this.widgetHelper.getChartConfig().clearSeries(this.widgetHelper.getWidgetConfig().selectedMeasurements);
+        this.widgetHelper.getWidgetConfig().selectedMeasurements.forEach((v, i) => {
+            this.widgetHelper
+                .getChartConfig()
+                .addSeries(v.id, v.text, this.widgetHelper.getChartConfig().colorList[i], this.widgetHelper.getChartConfig().avgColorList[i]);
+        });
     }
 
     showSection(id) {
@@ -159,16 +129,12 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         } else {
             this.selectedSeries = id;
         }
-
-        //console.log(id);
     }
 
     /**
      * respond to changes in options, record in config
      */
     async updateConfig() {
-        //console.log("Updating...");
-
         let conf = this.widgetHelper.getWidgetConfig();
         let chart = this.widgetHelper.getChartConfig();
         if (chart && conf.selectedDevices && conf.selectedDevices.length > 0) {
@@ -176,49 +142,34 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
             for (let index = 0; index < conf.selectedDevices.length; index++) {
                 checklist.add(conf.selectedDevices[index].id);
             }
-            //console.log(checklist);
-            //console.log(conf.selectedMeasurements);
             let newSelected: ListItem[] = [];
-            if (
-                conf.selectedMeasurements &&
-                conf.selectedMeasurements.length > 0
-            ) {
-                for (
-                    let index = 0;
-                    index < conf.selectedMeasurements.length;
-                    index++
-                ) {
-                    if (
-                        checklist.has(
-                            conf.selectedMeasurements[index].id.split(".")[0]
-                        )
-                    )
-                        newSelected.push(conf.selectedMeasurements[index]);
+            if (conf.selectedMeasurements && conf.selectedMeasurements.length > 0) {
+                for (let index = 0; index < conf.selectedMeasurements.length; index++) {
+                    if (checklist.has(conf.selectedMeasurements[index].id.split(".")[0])) newSelected.push(conf.selectedMeasurements[index]);
                 }
             }
             conf.selectedMeasurements = newSelected;
 
-            this.supportedSeries = await this.getSupportedSeries(
-                conf.selectedDevices
-            );
+            this.supportedSeries = await this.getSupportedSeries(conf.selectedDevices);
         }
 
         let fmt = this.widgetHelper.getChartConfig().rangeDisplay[
-            this.widgetHelper.getChartConfig().rangeUnits[
-                this.widgetHelper.getChartConfig().timeFormatType
-            ].text
+            this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
         ];
 
         if (this.widgetHelper.getChartConfig().customFormat) {
             fmt = this.widgetHelper.getChartConfig().customFormatString;
 
             this.widgetHelper.getChartConfig().rangeDisplay[
-                this.widgetHelper.getChartConfig().rangeUnits[
-                    this.widgetHelper.getChartConfig().timeFormatType
-                ].text
+                this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
             ] = fmt; //store custom in list
         }
         this.widgetHelper.getChartConfig().dateExample = moment().format(fmt);
+
+        //Some charts need certain defaults
+        if (this.widgetHelper.getChartConfig().type === "scatter") {
+            this.widgetHelper.getChartConfig().showPoints = 4;
+        }
 
         this.widgetHelper.setWidgetConfig(this.config);
     }
