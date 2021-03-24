@@ -94,7 +94,7 @@
                 <div class="form-check-inline col-lg-2">
                     <label class="label-with-help" class="form-check-label" for="groupby" translate>
                         <input
-                               [disabled]="widgetHelper.getChartConfig().multivariateplot"
+                               [disabled]="widgetHelper.getChartConfig().multivariateplot && widgetHelper.getChartConfig().getChartType() !== 'radar'"
                                class="form-check-input" type="checkbox" name="groupby"
                                [(ngModel)]="widgetHelper.getChartConfig().groupby" (ngModelChange)="updateConfig()" />
                         Group measurements<span class="help-icon">
@@ -145,7 +145,8 @@
                                  title="The type of chart to plot.">
                         </span>
                         <select class="form-control" name="chartSelector"
-                                [(ngModel)]="widgetHelper.getChartConfig().type" (ngModelChange)="updateConfig()">
+                                [(ngModel)]="widgetHelper.getChartConfig().type"
+                                (ngModelChange)="updateConfig()">
                             <option *ngFor="
                                 let chart of widgetHelper.getChartConfig()
                                     .chartTypes; index as i;
@@ -162,9 +163,9 @@
                         Other types will have different options. 
                     -->
             <ng-container *ngIf="
-                        widgetHelper.getChartConfig().type === 'line' ||
-                        widgetHelper.getChartConfig().type === 'bubble' ||
-                        widgetHelper.getChartConfig().type === 'scatter'
+                        widgetHelper.getChartConfig().getChartType() === 'line' ||
+                        widgetHelper.getChartConfig().getChartType() === 'bubble' ||
+                        widgetHelper.getChartConfig().getChartType() === 'scatter'
                         ">
                 <div class="row form-group">
                     <div class="form-check-inline col-lg-2">
@@ -216,7 +217,7 @@
                             </label>
                         </div>
                     </div>
-                    <ng-container *ngIf="widgetHelper.getChartConfig().type === 'line'">
+                    <ng-container *ngIf="widgetHelper.getChartConfig().getChartType() === 'line'">
                         <div class="form-check-inline col-lg-2">
                             <label class="label-with-help" class="form-check-label" for="fillArea" translate>
                                 <input class="form-check-input" type="checkbox" name="fillArea"
@@ -237,7 +238,7 @@
                                     Other types will have different options. 
                     -->
             <ng-container
-                          *ngIf="widgetHelper.getChartConfig().type === 'bar' || widgetHelper.getChartConfig().type === 'horizontalBar'">
+                          *ngIf="widgetHelper.getChartConfig().getChartType() === 'bar' || widgetHelper.getChartConfig().getChartType() === 'horizontalBar'">
                 <div class="row form-group">
                     <div class="form-check-inline col-lg-2">
                         <label class="label-with-help" class="form-check-label" for="showXAxis" translate>
@@ -295,7 +296,7 @@
             </ng-container>
 
             <ng-container
-                          *ngIf="widgetHelper.getChartConfig().type === 'pie' || widgetHelper.getChartConfig().type === 'doughnut'">
+                          *ngIf="widgetHelper.getChartConfig().getChartType() === 'pie' || widgetHelper.getChartConfig().getChartType() === 'doughnut'">
                 <div class="row form-group">
                     <div class="  col-lg-6">
                         <label class="label-with-help" for="aggSelector" translate>Aggregate
@@ -407,8 +408,8 @@
 
             <ng-container *ngIf="
                     !widgetHelper.getChartConfig().multivariateplot && 
-                    widgetHelper.getChartConfig().type !== 'pie' && 
-                    widgetHelper.getChartConfig().type !== 'doughnut'">
+                    widgetHelper.getChartConfig().getChartType() !== 'pie' && 
+                    widgetHelper.getChartConfig().getChartType() !== 'doughnut'">
                 <div class="row form-group">
                     <div class="form-check-inline col-lg-2">
                         <label class="label-with-help" class="form-check-label" for="customFormat" translate>
@@ -466,8 +467,8 @@
             </ng-container>
             <div class="row form-group">
                 <ng-container *ngIf="
-                widgetHelper.getChartConfig().type !== 'pie' && 
-                widgetHelper.getChartConfig().type !== 'doughnut'">
+                widgetHelper.getChartConfig().getChartType() !== 'pie' && 
+                widgetHelper.getChartConfig().getChartType() !== 'doughnut'">
                     <div class="col-lg-2">
                         <label class="label-with-help" translate>Point size
                             <span class="help-icon">
@@ -507,11 +508,11 @@
             <h4 translate>Series settings</h4>
             <div *ngIf="widgetHelper.getChartConfig().hasSeries()">
                 <ng-container *ngIf="widgetHelper.getWidgetConfig().selectedMeasurements.length > 1 &&
-                        widgetHelper.getChartConfig().type == 'line' ||
-                        widgetHelper.getChartConfig().type == 'radar' ||
-                        widgetHelper.getChartConfig().type == 'polarArea' ||
-                        widgetHelper.getChartConfig().type == 'bubble' ||
-                        widgetHelper.getChartConfig().type == 'scatter' 
+                        widgetHelper.getChartConfig().getChartType() == 'line' ||
+                        widgetHelper.getChartConfig().getChartType() == 'radar' ||
+                        widgetHelper.getChartConfig().getChartType() == 'polarArea' ||
+                        widgetHelper.getChartConfig().getChartType() == 'bubble' ||
+                        widgetHelper.getChartConfig().getChartType() == 'scatter' 
                     ">
                     <div class="row form-group">
                         <div class="form-check-inline  col-lg-6">

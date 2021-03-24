@@ -44,6 +44,7 @@ export class ChartConfig {
      */
     public chartTypes: ListItem[] = [
         { id: 0, text: "line" },
+        { id: 5, text: "spline chart" },
         { id: 1, text: "bar" },
         { id: 2, text: "horizontalBar" },
         { id: 4, text: "doughnut" },
@@ -209,6 +210,15 @@ export class ChartConfig {
 
     constructor() {}
 
+    getChartType() {
+        if (this.type == "spline chart") {
+            return "line";
+        }
+        if (this.type == "histogram") {
+            return "bar";
+        }
+        return this.type;
+    }
     /**
      *
      * @returns true if series exist
