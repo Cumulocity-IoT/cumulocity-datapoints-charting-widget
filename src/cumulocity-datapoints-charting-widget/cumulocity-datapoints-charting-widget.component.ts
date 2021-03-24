@@ -165,7 +165,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     x: measurementDate,
                     y: measurementValue,
                 };
-                if (this.widgetHelper.getChartConfig().type == "horizontalBar") {
+                if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
                     datum = {
                         y: measurementDate,
                         x: measurementValue,
@@ -185,7 +185,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 //need to add to current data point
                 if (options.groupby && newPointBucket === lastPointBucket) {
                     this.seriesData[key].valCount += 1;
-                    if (this.widgetHelper.getChartConfig().type == "horizontalBar") {
+                    if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
                         let v: any = this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].x;
                         this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].x =
                             (<number>datum.x + v * (this.seriesData[key].valCount - 1)) / this.seriesData[key].valCount;
@@ -204,6 +204,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     this.seriesData[key].valCount = 1;
                     this.seriesData[key].valtimes.push(datum);
                 }
+
                 //console.log("point", this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1]);
                 if (this.widgetHelper.getChartConfig().multivariateplot) {
                     //this.seriesData[key].valtimes.push(datum);
@@ -245,7 +246,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 }
 
                 // Pie/Doughnut differ from other types
-                if (this.widgetHelper.getChartConfig().type == "pie" || this.widgetHelper.getChartConfig().type == "doughnut") {
+                if (this.widgetHelper.getChartConfig().getChartType() == "pie" || this.widgetHelper.getChartConfig().getChartType() == "doughnut") {
                     this.seriesData[key].valtimes.push(datum);
 
                     //aggregating by time buckets
@@ -287,7 +288,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         //just the values
                         let source = this.seriesData[key].valtimes
                             .slice(Math.max(this.seriesData[key].valtimes.length - options.avgPeriod, 0))
-                            .map((val) => val.y);
+                            .map((val) => (options.targetGraphType !== "horizontalBar" ? val.y : val.x));
 
                         // let a = sma(source, options.avgPeriod, 3);
                         let avper = options.avgPeriod > source.length ? source.length : options.avgPeriod;
@@ -316,7 +317,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     //
                     // Line has the bollinger bands
                     //
-                    if (this.widgetHelper.getChartConfig().type === "line") {
+                    if (
+                        this.widgetHelper.getChartConfig().getChartType() === "line" ||
+                        this.widgetHelper.getChartConfig().getChartType() === "spline chart"
+                    ) {
                         while (moment(this.seriesData[key].aggregate[0].x).isBefore(moment(from))) {
                             this.seriesData[key].upper.shift();
                             this.seriesData[key].aggregate.shift();
@@ -324,7 +328,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         }
                     }
 
-                    if (this.widgetHelper.getChartConfig().type === "pie" || this.widgetHelper.getChartConfig().type === "doughnut") {
+                    if (
+                        this.widgetHelper.getChartConfig().getChartType() === "pie" ||
+                        this.widgetHelper.getChartConfig().getChartType() === "doughnut"
+                    ) {
                         //all graph types
                         //only remove data when we deal with times...
                         if (this.widgetHelper.getChartConfig().aggregation == 0) {
@@ -342,14 +349,18 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         }
                     }
 
-                    if (this.widgetHelper.getChartConfig().type === "line" || this.widgetHelper.getChartConfig().type === "bar") {
+                    if (
+                        this.widgetHelper.getChartConfig().getChartType() === "line" ||
+                        this.widgetHelper.getChartConfig().getChartType() === "spline chart" ||
+                        this.widgetHelper.getChartConfig().getChartType() === "bar"
+                    ) {
                         //all graph types
                         while (moment(this.seriesData[key].valtimes[0].x).isBefore(moment(from))) {
                             this.seriesData[key].valtimes.shift();
                         }
                     }
 
-                    if (this.widgetHelper.getChartConfig().type === "horizontalBar") {
+                    if (this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
                         while (moment(this.seriesData[key].valtimes[0].y).isBefore(moment(from))) {
                             this.seriesData[key].valtimes.shift();
                         }
@@ -412,7 +423,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         measurement.id.split(".")[1],
                         measurement.id.split(".")[2],
                         this.widgetHelper.getChartConfig().series[key].avgPeriod,
-                        this.widgetHelper.getChartConfig().type,
+                        this.widgetHelper.getChartConfig().getChartType(),
                         this.widgetHelper.getChartConfig().numdp,
                         this.widgetHelper.getChartConfig().numBuckets,
                         this.widgetHelper.getChartConfig().groupby,
@@ -436,7 +447,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
         } else {
             console.log("generating composite series from sources");
-            console.log(`for a chart of type ${this.widgetHelper.getChartConfig().type}`);
+            console.log(`for a chart of type ${this.widgetHelper.getChartConfig().getChartType()}`);
             let seriesList: { [id: string]: string } = {};
             let assigned: number = 0;
             //
@@ -464,7 +475,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         measurement.id.split(".")[1],
                         measurement.id.split(".")[2],
                         this.widgetHelper.getChartConfig().series[key].avgPeriod,
-                        this.widgetHelper.getChartConfig().type,
+                        this.widgetHelper.getChartConfig().getChartType(),
                         this.widgetHelper.getChartConfig().numdp,
                         this.widgetHelper.getChartConfig().numBuckets,
                         this.widgetHelper.getChartConfig().groupby,
@@ -500,7 +511,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param seriesList list of series with specific variable assignments
      * @param localChartData output
      */
-    private createMultivariateChart(seriesList: { [id: string]: string; }, localChartData: any[]) {
+    private createMultivariateChart(seriesList: { [id: string]: string }, localChartData: any[]) {
         let seriesName = this.widgetHelper.getChartConfig().series[seriesList["x"]].name;
         if ("y" in seriesList) {
             seriesName = seriesName + ` vs ${this.widgetHelper.getChartConfig().series[seriesList["y"]].name}`;
@@ -522,8 +533,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             let yval = this.seriesData[seriesList["y"]].valtimes.filter((val) => {
                 return (
                     //Match dates within a Tolerance
-                    Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) <
-                    this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
+                    Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) < this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
                 );
             });
             //console.log(yval);
@@ -532,7 +542,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 zval = this.seriesData[seriesList["r"]].valtimes.filter((val) => {
                     return (
                         //Match dates within a Tolerance
-                        Math.abs((<Date>zval.x).getTime() - (<Date>val.x).getTime()) <
+                        Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) <
                         this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
                     );
                 });
@@ -549,8 +559,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //x increasing - assume  y(,r) function of x
         result = result.sort((a, b) => <number>a.x - <number>b.x);
 
-        if (this.widgetHelper.getChartConfig().type == "radar" ||
-            this.widgetHelper.getChartConfig().type == "polarArea" //not handled yet
+        if (
+            this.widgetHelper.getChartConfig().getChartType() == "radar" ||
+            this.widgetHelper.getChartConfig().getChartType() == "polarArea" //not handled yet
         ) {
             //we need separate labels and values here
             thisSeries.data = result.map((v) => <number>v.y);
@@ -559,6 +570,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             thisSeries.data = result;
             thisSeries.pointRadius = this.widgetHelper.getChartConfig().showPoints;
         }
+
+        //need raw type
+        if (this.widgetHelper.getChartConfig().type == "spline chart") {
+            thisSeries.lineTension = 0.4;
+        } else {
+            thisSeries.lineTension = 0;
+        }
+
         localChartData.push(thisSeries);
         //console.log("MULTIVARIATE", thisSeries);
         this.setAxesLabels(seriesList["x"], seriesList["y"]);
@@ -580,8 +599,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
         let unitIndex = this.widgetHelper.getChartConfig().timeFormatType;
         if (
-            this.widgetHelper.getChartConfig().type == "pie" ||
-            (this.widgetHelper.getChartConfig().type == "doughnut" && this.widgetHelper.getChartConfig().aggregation == 0)
+            this.widgetHelper.getChartConfig().getChartType() == "pie" ||
+            (this.widgetHelper.getChartConfig().getChartType() == "doughnut" && this.widgetHelper.getChartConfig().aggregation == 0)
         ) {
             unitIndex = this.widgetHelper.getChartConfig().aggTimeFormatType;
         }
@@ -602,7 +621,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             from,
             to,
             null,
-            this.widgetHelper.getChartConfig().type,
+            this.widgetHelper.getChartConfig().getChartType(),
             this.widgetHelper.getChartConfig().aggregation == 0,
             aggUnit,
             aggFormat,
@@ -636,7 +655,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         localChartData.push(thisSeries);
 
         //Update series as measurements come in.
-        if (this.widgetHelper.getChartConfig().series[key].realTime) {
+        if (this.widgetHelper.getChartConfig().series[key].realTime === "realtime") {
             if (!this.subscription[key]) {
                 this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
                     this.handleRealtime(data, key, options)
@@ -703,7 +722,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
 
         //Update series as measurements come in.
-        if (this.widgetHelper.getChartConfig().series[key].realTime) {
+        if (this.widgetHelper.getChartConfig().series[key].realTime == "realtime") {
             if (!this.subscription[key]) {
                 this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
                     this.handleRealtime(data, key, options)
@@ -711,7 +730,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
         }
     }
-
 
     // helper
     private setAxesLabels(xLabelKey: string, yLabelKey: string) {
@@ -779,7 +797,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         if (this.chartOptions.legend.display) {
             this.chartOptions.legend.position = <PositionType>this.widgetHelper.getChartConfig().position;
         }
-        if (this.widgetHelper.getChartConfig().type === "horizontalBar") {
+        if (this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
             //swapped x & y
             const timeUnitType = this.widgetHelper.getChartConfig().rangeUnits[
                 this.widgetHelper.getChartConfig().rangeType ? this.widgetHelper.getChartConfig().rangeType : 2
@@ -810,12 +828,13 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 labels: [],
             };
         } else if (
-            this.widgetHelper.getChartConfig().type == "pie" ||
-            this.widgetHelper.getChartConfig().type == "doughnut" ||
-            this.widgetHelper.getChartConfig().type == "radar" ||
-            this.widgetHelper.getChartConfig().type == "polarArea"
+            this.widgetHelper.getChartConfig().getChartType() == "pie" ||
+            this.widgetHelper.getChartConfig().getChartType() == "doughnut" ||
+            this.widgetHelper.getChartConfig().getChartType() == "radar" ||
+            this.widgetHelper.getChartConfig().getChartType() == "polarArea"
         ) {
             let dp = this.widgetHelper.getChartConfig().numdp ? this.widgetHelper.getChartConfig().numdp : 2;
+            this.chartOptions.animation = { duration: 0 };
             this.chartOptions.scales.yAxes.length = 0; //reset axes
             this.chartOptions.scales.yAxes.push({
                 display: false,
@@ -845,14 +864,18 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.chartOptions.scales.xAxes.length = 0; //reset axes
             if (this.widgetHelper.getChartConfig().multivariateplot) {
                 if (
-                    this.widgetHelper.getChartConfig().type == "line" ||
-                    this.widgetHelper.getChartConfig().type == "scatter" ||
-                    this.widgetHelper.getChartConfig().type == "bubble"
+                    this.widgetHelper.getChartConfig().getChartType() == "line" ||
+                    this.widgetHelper.getChartConfig().getChartType() === "spline chart" ||
+                    this.widgetHelper.getChartConfig().getChartType() == "scatter" ||
+                    this.widgetHelper.getChartConfig().getChartType() == "bubble"
                 ) {
                     this.chartOptions.scales.yAxes.length = 0; //reset axes
                     this.chartOptions.scales.xAxes.length = 0; //reset axes
 
-                    if (this.widgetHelper.getChartConfig().type == "scatter" || this.widgetHelper.getChartConfig().type == "bubble") {
+                    if (
+                        this.widgetHelper.getChartConfig().getChartType() == "scatter" ||
+                        this.widgetHelper.getChartConfig().getChartType() == "bubble"
+                    ) {
                         this.widgetHelper.getChartConfig().fitAxis = true; //always fit data
                     }
 

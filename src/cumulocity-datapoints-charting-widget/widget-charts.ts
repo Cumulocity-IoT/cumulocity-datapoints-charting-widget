@@ -24,7 +24,8 @@ export class ChartSeries {
     avgType: string = "None";
     avgPeriod: number = 10;
     avgColor: string = "#4ABBF0"; //display colour
-    realTime: boolean = true;
+    realTime: string = "realtime";
+    timerDelay: number = 30;
     constructor(k: string, n: string, c: string, a: string) {
         this.id = k;
         this.name = n;
@@ -38,22 +39,6 @@ export class ChartSeries {
  * chart js settings
  */
 export class ChartConfig {
-    /**
-     * Chart JS chart types
-     */
-    public chartTypes: ListItem[] = [
-        { id: 0, text: "line" },
-        { id: 1, text: "bar" },
-        { id: 2, text: "horizontalBar" },
-        { id: 4, text: "doughnut" },
-        { id: 7, text: "pie" },
-        { id: 3, text: "radar" },
-        //{ id: 5, text: "polarArea" },
-        { id: 8, text: "scatter" },
-        { id: 6, text: "bubble" },
-        // { id: 9, text: "histogram" },
-    ];
-
     /**
      *  Legend position
      */
@@ -166,10 +151,12 @@ export class ChartConfig {
     numBuckets: number = 5; //Make default 5 buckets for value agg
     groupby: boolean = false; // default no grouping
     cumulative: boolean = false; // not cumulative
+    realtime: string = "realtime"; // type of update
+    timerDelay: number = 30; // seconds delay if timer (default 30)
 
     customFormat: boolean = false;
-    customFormatString: string = "yyyy-MM-dd hh:mm";
-    dateExample: string = "yyyy-MM-dd hh:mm"; //config display field only
+    customFormatString: string = "yyyy-MM-DD HH:mm";
+    dateExample: string = ""; //config display field only
 
     /**
      * Scatter, Bubble, line and certain other charts are plotted
@@ -206,6 +193,31 @@ export class ChartConfig {
 
     constructor() {}
 
+    getChartType() {
+        if (this.type == "spline chart") {
+            return "line";
+        }
+        if (this.type == "histogram") {
+            return "bar";
+        }
+        return this.type;
+    }
+
+    getChartTypes(): ListItem[] {
+        return [
+            { id: 0, text: "line" },
+            { id: 5, text: "spline chart" },
+            { id: 1, text: "bar" },
+            { id: 2, text: "horizontalBar" },
+            { id: 4, text: "doughnut" },
+            { id: 7, text: "pie" },
+            { id: 3, text: "radar" },
+            //{ id: 5, text: "polarArea" },
+            { id: 8, text: "scatter" },
+            { id: 6, text: "bubble" },
+            // { id: 9, text: "histogram" },
+        ];
+    }
     /**
      *
      * @returns true if series exist
@@ -225,8 +237,7 @@ export class ChartConfig {
             let temp = this.series;
             this.series = {};
             l.forEach((selected) => {
-                if (temp[selected.id])
-                    this.series[selected.id] = temp[selected.id];
+                if (temp[selected.id]) this.series[selected.id] = temp[selected.id];
             });
         }
     }
@@ -249,19 +260,9 @@ export class ChartConfig {
      * @param seriesColor is the main color
      * @param altColor is the aggregate color
      */
-    addSeries(
-        key: string,
-        seriesName: string,
-        seriesColor: string,
-        altColor: string
-    ) {
+    addSeries(key: string, seriesName: string, seriesColor: string, altColor: string) {
         if (!_.has(this.series, key)) {
-            this.series[key] = new ChartSeries(
-                key,
-                seriesName,
-                seriesColor,
-                altColor
-            );
+            this.series[key] = new ChartSeries(key, seriesName, seriesColor, altColor);
         }
     }
 }
