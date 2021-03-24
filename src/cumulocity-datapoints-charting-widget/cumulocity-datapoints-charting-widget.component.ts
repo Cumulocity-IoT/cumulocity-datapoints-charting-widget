@@ -500,7 +500,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param seriesList list of series with specific variable assignments
      * @param localChartData output
      */
-    private createMultivariateChart(seriesList: { [id: string]: string; }, localChartData: any[]) {
+    private createMultivariateChart(seriesList: { [id: string]: string }, localChartData: any[]) {
         let seriesName = this.widgetHelper.getChartConfig().series[seriesList["x"]].name;
         if ("y" in seriesList) {
             seriesName = seriesName + ` vs ${this.widgetHelper.getChartConfig().series[seriesList["y"]].name}`;
@@ -522,8 +522,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             let yval = this.seriesData[seriesList["y"]].valtimes.filter((val) => {
                 return (
                     //Match dates within a Tolerance
-                    Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) <
-                    this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
+                    Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) < this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
                 );
             });
             //console.log(yval);
@@ -532,7 +531,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 zval = this.seriesData[seriesList["r"]].valtimes.filter((val) => {
                     return (
                         //Match dates within a Tolerance
-                        Math.abs((<Date>zval.x).getTime() - (<Date>val.x).getTime()) <
+                        Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) <
                         this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
                     );
                 });
@@ -549,7 +548,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //x increasing - assume  y(,r) function of x
         result = result.sort((a, b) => <number>a.x - <number>b.x);
 
-        if (this.widgetHelper.getChartConfig().type == "radar" ||
+        if (
+            this.widgetHelper.getChartConfig().type == "radar" ||
             this.widgetHelper.getChartConfig().type == "polarArea" //not handled yet
         ) {
             //we need separate labels and values here
@@ -636,7 +636,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         localChartData.push(thisSeries);
 
         //Update series as measurements come in.
-        if (this.widgetHelper.getChartConfig().series[key].realTime) {
+        if (this.widgetHelper.getChartConfig().series[key].realTime === "realtime") {
             if (!this.subscription[key]) {
                 this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
                     this.handleRealtime(data, key, options)
@@ -703,7 +703,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
 
         //Update series as measurements come in.
-        if (this.widgetHelper.getChartConfig().series[key].realTime) {
+        if (this.widgetHelper.getChartConfig().series[key].realTime == "realtime") {
             if (!this.subscription[key]) {
                 this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
                     this.handleRealtime(data, key, options)
@@ -711,7 +711,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
         }
     }
-
 
     // helper
     private setAxesLabels(xLabelKey: string, yLabelKey: string) {
@@ -816,6 +815,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().type == "polarArea"
         ) {
             let dp = this.widgetHelper.getChartConfig().numdp ? this.widgetHelper.getChartConfig().numdp : 2;
+            this.chartOptions.animation = { duration: 0 };
             this.chartOptions.scales.yAxes.length = 0; //reset axes
             this.chartOptions.scales.yAxes.push({
                 display: false,
