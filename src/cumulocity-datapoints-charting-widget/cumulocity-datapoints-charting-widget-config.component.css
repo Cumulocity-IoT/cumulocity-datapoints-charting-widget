@@ -1,63 +1,42 @@
 /** @format */
 
 h4 {
-  width: 100%;
-  text-align: center;
+    width: 100%;
+    text-align: center;
 }
 
-.configsection {
-  display: grid;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-  margin: 0.25em;
-  padding: 0.25em;
+.configSection {
+    display: grid;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    margin: 0.25em;
+    padding: 0.25em;
 }
 
 .row {
-  padding: 0.5em;
+    padding: 0.5em;
 }
 
 .col-layout {
-  display: inline-flex;
-  align-content: baseline;
-  align-items: center;
+    display: inline-flex;
+    align-content: baseline;
+    align-items: center;
 }
 
-.col-layout-old {
-  display: inline-flex;
-  align-content: baseline;
-  align-items: center;
-  justify-content: space-evenly;
-  gap: 0.5em;
-  padding-top: 0.25em;
-}
 .seriesButton {
-  width: 100%;
-  text-align: left !important;
+    width: 100%;
+    text-align: left !important;
 }
 
-.select-editable {
-  position: relative;
-  background-color: white;
-  border: solid grey 1px;
-  width: 100%;
+.help-icon {
+    margin-left: 5px;
 }
-.select-editable select {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  border: none;
-  margin: 0;
+
+.help-icon > img {
+    max-width: 20px;
+    max-height: 20px;
 }
-.select-editable input {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  padding: 5px;
-  margin-left: 3px;
-  border: none;
-}
-.select-editable select:focus,
-.select-editable input:focus {
-  outline: none;
+
+.label-with-help {
+    display: inline;
 }
