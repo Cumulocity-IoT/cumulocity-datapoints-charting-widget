@@ -5,12 +5,13 @@
         "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
     },
     "version": "0.9.310",
-    "description": "Widget for displaying realtime measurment data in graphs (written by Software AG Global Presales)",
+    "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "scripts": {
-        "build": "gulp"
+        "build": "gulp",
+        "serve": "c8ycli serve"
     },
     "keywords": [],
-    "author": "John Heath - Software AG, Global Presales",
+    "author": "John Heath - Software AG, Global Pre-sales",
     "license": "Apache 2.0",
     "dependencies": {
         "bollinger-bands": "^3.0.1",
@@ -65,6 +66,7 @@
         "url-loader": "^4.1.0",
         "webpack": "^4.43.0",
         "webpack-cli": "^3.3.11",
+        "webpack-dev-middleware": "^4.1.0",
         "webpack-external-import": "^2.2.3",
         "zone.js": "~0.9.1"
     }
