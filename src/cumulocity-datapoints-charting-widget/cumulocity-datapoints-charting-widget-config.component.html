@@ -149,7 +149,7 @@
                                 (ngModelChange)="updateConfig()">
                             <option *ngFor="
                                 let chart of widgetHelper.getChartConfig()
-                                    .chartTypes; index as i;
+                                    .getChartTypes(); index as i;
                             " [ngValue]="chart.text">
                                 {{ chart.text }}
                             </option>

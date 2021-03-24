@@ -40,23 +40,6 @@ export class ChartSeries {
  */
 export class ChartConfig {
     /**
-     * Chart JS chart types
-     */
-    public chartTypes: ListItem[] = [
-        { id: 0, text: "line" },
-        { id: 5, text: "spline chart" },
-        { id: 1, text: "bar" },
-        { id: 2, text: "horizontalBar" },
-        { id: 4, text: "doughnut" },
-        { id: 7, text: "pie" },
-        { id: 3, text: "radar" },
-        //{ id: 5, text: "polarArea" },
-        { id: 8, text: "scatter" },
-        { id: 6, text: "bubble" },
-        // { id: 9, text: "histogram" },
-    ];
-
-    /**
      *  Legend position
      */
     public chartPositions: ListItem[] = [
@@ -218,6 +201,22 @@ export class ChartConfig {
             return "bar";
         }
         return this.type;
+    }
+
+    getChartTypes(): ListItem[] {
+        return [
+            { id: 0, text: "line" },
+            { id: 5, text: "spline chart" },
+            { id: 1, text: "bar" },
+            { id: 2, text: "horizontalBar" },
+            { id: 4, text: "doughnut" },
+            { id: 7, text: "pie" },
+            { id: 3, text: "radar" },
+            //{ id: 5, text: "polarArea" },
+            { id: 8, text: "scatter" },
+            { id: 6, text: "bubble" },
+            // { id: 9, text: "histogram" },
+        ];
     }
     /**
      *
