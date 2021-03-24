@@ -169,6 +169,11 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         this.widgetHelper.getChartConfig().dateExample = moment().format(fmt);
 
         //Some charts need certain defaults
+        if (this.widgetHelper.getChartConfig().multivariateplot === true) {
+            this.widgetHelper.getChartConfig().groupby = true;
+        }
+
+        //Some charts need certain defaults
         if (
             (this.widgetHelper.getChartConfig().type === "scatter" || this.widgetHelper.getChartConfig().type === "bubble") &&
             this.widgetHelper.getChartConfig().showPoints == 0
@@ -176,7 +181,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
             this.widgetHelper.getChartConfig().showPoints = 4;
         }
 
-        //Bar and Doughnut should be time based 
+        //Bar and Doughnut should be time based
         if (this.widgetHelper.getChartConfig().type === "bar" || this.widgetHelper.getChartConfig().type === "horizontalBar") {
             this.widgetHelper.getChartConfig().multivariateplot = false;
         }
