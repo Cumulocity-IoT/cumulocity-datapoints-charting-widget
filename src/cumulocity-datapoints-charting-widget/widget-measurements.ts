@@ -515,6 +515,9 @@ export class MeasurementHelper {
     public categorize(options: MeasurementOptions, val: Chart.ChartPoint, mn?: number, mx?: number, buckets?: number): string {
         //are we aggregating by time unit
         if (options.timeBucket || options.groupby) {
+            if (options.targetGraphType == "horizontalBar") {
+                return moment(val.y).format(options.labelDateFormat);
+            }
             return moment(val.x).format(options.labelDateFormat);
         }
 

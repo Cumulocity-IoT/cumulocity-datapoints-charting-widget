@@ -204,6 +204,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     this.seriesData[key].valCount = 1;
                     this.seriesData[key].valtimes.push(datum);
                 }
+
                 //console.log("point", this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1]);
                 if (this.widgetHelper.getChartConfig().multivariateplot) {
                     //this.seriesData[key].valtimes.push(datum);
@@ -287,7 +288,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         //just the values
                         let source = this.seriesData[key].valtimes
                             .slice(Math.max(this.seriesData[key].valtimes.length - options.avgPeriod, 0))
-                            .map((val) => val.y);
+                            .map((val) => (options.targetGraphType !== "horizontalBar" ? val.y : val.x));
 
                         // let a = sma(source, options.avgPeriod, 3);
                         let avper = options.avgPeriod > source.length ? source.length : options.avgPeriod;
