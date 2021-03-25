@@ -391,11 +391,11 @@
                     </ng-container>
                     <ng-template #aggvalues>
                         <div class=" col-lg-3">
-                            <label class="label-with-help" translate>Buckets from
+                            <label class="label-with-help" translate>Value from
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}"
                                          alt="help tooltip"
-                                         title="start of first bucket">
+                                         title="start of value range">
                                 </span>
                             </label>
                             <input class="form-control" type="number" [ngModelOptions]="{ standalone: true }"
@@ -403,11 +403,11 @@
                                    (ngModelChange)="updateConfig()" />
                         </div>
                         <div class=" col-lg-3">
-                            <label class="label-with-help" translate> to
+                            <label class="label-with-help" translate>Value to
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}"
                                          alt="help tooltip"
-                                         title="start of first bucket">
+                                         title="End of the value range">
                                 </span>
                             </label>
                             <input class="form-control" type="number" [ngModelOptions]="{ standalone: true }"
@@ -415,11 +415,11 @@
                                    (ngModelChange)="updateConfig()" />
                         </div>
                         <div class=" col-lg-3">
-                            <label class="label-with-help" translate>Bucket Size
+                            <label class="label-with-help" translate>Slice Size
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}"
                                          alt="help tooltip"
-                                         title="split the bucket range into equal pieces (plus catch all buckets above and below range).">
+                                         title="split the range into equal pieces (plus catch all buckets above and below range).">
                                 </span>
                             </label>
                             <input class="form-control" type="number" [ngModelOptions]="{ standalone: true }"

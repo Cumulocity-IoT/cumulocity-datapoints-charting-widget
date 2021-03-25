@@ -556,6 +556,9 @@ export class MeasurementHelper {
         //const min = dataCopy[0];
         //const max = dataCopy[dataCopy.length - 1];
         //const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
+        bins.push(0); //lower catch all
+        binLabels.push(`< ${minBucket}`);
+
         let numBins = Math.floor((maxBucket - minBucket) / binSize);
         //Initialize to 0 and labels
         for (let i = 0; i < numBins; i++) {
@@ -566,8 +569,6 @@ export class MeasurementHelper {
         }
 
         bins.push(0); //lower catch all
-        binLabels.push(`< ${minBucket}`);
-        bins.push(0); //lower catch all
         binLabels.push(`> ${maxBucket}`);
 
         dataCopy.forEach((item) => {
@@ -575,7 +576,7 @@ export class MeasurementHelper {
             //console.log("index", item, binIndex);
 
             if (binIndex < 0) {
-                bins[bins.length - 2]++;
+                bins[0]++;
             } else if (binIndex > numBins) {
                 bins[bins.length - 1]++;
             } else {
@@ -583,7 +584,7 @@ export class MeasurementHelper {
                 if (binIndex === numBins) {
                     binIndex--;
                 }
-                bins[binIndex]++;
+                bins[binIndex + 1]++; //offset the <x bucket
             }
         });
 

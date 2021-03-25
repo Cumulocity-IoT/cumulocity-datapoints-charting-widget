@@ -734,6 +734,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     this.handleRealtime(data, key, options)
                 );
             }
+        } else {
+            //Set up timer to redraw this graph.
         }
     }
 
