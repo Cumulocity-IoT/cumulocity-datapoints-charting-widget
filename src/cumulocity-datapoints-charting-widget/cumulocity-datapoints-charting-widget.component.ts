@@ -414,7 +414,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
          *
          */
         if (!this.widgetHelper.getChartConfig().multivariateplot) {
-            console.log("getting independent variables");
+            //console.log("getting independent variables");
             //for each fragment/series to be plotted
             //ChartSeries has most of the config for the series
             //the MeasurementList contains the data (and its independent)
@@ -461,8 +461,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     }
 
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
-        console.log("generating composite series from sources");
-        console.log(`for a chart of type ${this.widgetHelper.getChartConfig().getChartType()}`);
+        //console.log("generating composite series from sources");
+        //console.log(`for a chart of type ${this.widgetHelper.getChartConfig().getChartType()}`);
         let seriesList: { [id: string]: string } = {};
         let assigned: number = 0;
         //
@@ -590,7 +590,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //Update series as measurements come in.
         //Set up timer to redraw this graph.
         if (!("timer" in this.subscription)) {
-            console.log(`Setting timer`);
+            //console.log(`Setting timer`);
             this.subscription["timer"] = setInterval(this.handleTimer, this.widgetHelper.getChartConfig().timerDelay * 1000, this);
         }
     }
