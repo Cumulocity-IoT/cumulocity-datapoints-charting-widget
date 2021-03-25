@@ -60,14 +60,8 @@ export class WidgetHelper<CONFIGTYPE> {
             // because this is stored and retrieved from mongo db
             // reset the prototype and leave the data
             this.config = _.get(c, "customwidgetdata");
-            if (
-                Object.getPrototypeOf(this.config) !==
-                Object.getPrototypeOf(this.reference)
-            ) {
-                Object.setPrototypeOf(
-                    this.config,
-                    Object.getPrototypeOf(this.reference)
-                );
+            if (Object.getPrototypeOf(this.config) !== Object.getPrototypeOf(this.reference)) {
+                Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));
             }
         }
     }
@@ -101,14 +95,8 @@ export class WidgetHelper<CONFIGTYPE> {
         let chartConfig: ChartConfig;
         if (_.has(this.config, "chart")) {
             chartConfig = _.get(this.config, "chart");
-            if (
-                Object.getPrototypeOf(chartConfig) !==
-                Object.getPrototypeOf(this.chartRef)
-            ) {
-                Object.setPrototypeOf(
-                    chartConfig,
-                    Object.getPrototypeOf(this.chartRef)
-                );
+            if (Object.getPrototypeOf(chartConfig) !== Object.getPrototypeOf(this.chartRef)) {
+                Object.setPrototypeOf(chartConfig, Object.getPrototypeOf(this.chartRef));
             }
         } else {
             //add new ? or perhaps throw if we get more serious

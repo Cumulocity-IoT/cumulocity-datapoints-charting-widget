@@ -97,11 +97,42 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @returns true if we have devices and measurements selected
      */
     verifyConfig(): boolean {
-        return (
-            this.widgetHelper.getWidgetConfig() !== undefined &&
-            this.widgetHelper.getWidgetConfig().selectedDevices.length > 0 &&
-            this.widgetHelper.getWidgetConfig().selectedMeasurements.length > 0
-        );
+        //optimism
+        this.widgetHelper.getChartConfig().enabled = this.widgetHelper.getWidgetConfig() !== undefined;
+        this.widgetHelper.getChartConfig().message = "Loading Data...";
+        if (this.widgetHelper.getChartConfig().enabled) {
+            if (!this.widgetHelper.getWidgetConfig().selectedDevices.length || !this.widgetHelper.getWidgetConfig().selectedMeasurements.length) {
+                //1: do we have devices
+                this.widgetHelper.getChartConfig().enabled = false;
+                this.widgetHelper.getChartConfig().message = "You must choose at least one device and fragment to plot a chart.";
+            } else if (this.widgetHelper.getChartConfig().multivariateplot) {
+                let checks = this.checkMultivariateChart();
+                //console.log(this.widgetHelper.getChartConfig().getChartType(), checks);
+                if (this.widgetHelper.getChartConfig().getChartType() == "bubble") {
+                    if (checks.series != 3 || !checks.x || !checks.y || !checks.r) {
+                        this.widgetHelper.getChartConfig().enabled = false;
+                        this.widgetHelper.getChartConfig().message = "You must choose exactly 3 fragments and assign x,y, and r.";
+                    }
+                } else if (checks.series != 2) {
+                    this.widgetHelper.getChartConfig().enabled = false;
+                    this.widgetHelper.getChartConfig().message = "You must choose exactly 2 fragments and assign x,y.";
+                } else if (!checks.x || !checks.y) {
+                    this.widgetHelper.getChartConfig().enabled = false;
+                    this.widgetHelper.getChartConfig().message = "You must assign x,y.";
+                } else {
+                    //just in case
+                    this.widgetHelper.getChartConfig().enabled = true;
+                }
+            } else if (!this.chartData.length && this.dataLoaded) {
+                this.widgetHelper.getChartConfig().enabled = false;
+                this.widgetHelper.getChartConfig().message = "There appears to be no data selected to plot a chart (check series).";
+            } else if (!this.dataLoaded) {
+                this.widgetHelper.getChartConfig().enabled = false;
+                this.widgetHelper.getChartConfig().message = "Loading Data...";
+            }
+        }
+
+        return this.widgetHelper.getChartConfig().enabled;
     }
 
     /**
@@ -509,6 +540,33 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         } else {
             this.createMultivariateChart(seriesList, localChartData);
         }
+    }
+
+    private checkMultivariateChart(): { series: number; x: boolean; y: boolean; r: boolean } {
+        let rval = { series: 0, x: false, y: false, r: false };
+        //
+        // Get the data - there will be 1-3 series that will get
+        // compressed into a single with x,y,r values
+        //
+        for (let key of Object.keys(this.widgetHelper.getChartConfig().series)) {
+            if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, key)) {
+                const measurement = this.widgetHelper.getChartConfig().series[key];
+                const v = this.widgetHelper.getChartConfig().series[key].variable;
+                rval.series++;
+                switch (v) {
+                    case "x":
+                        rval.x = true;
+                        break;
+                    case "y":
+                        rval.y = true;
+                        break;
+                    case "r":
+                        rval.r = true;
+                        break;
+                }
+            }
+        }
+        return rval;
     }
 
     /**

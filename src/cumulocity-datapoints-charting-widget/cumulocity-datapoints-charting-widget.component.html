@@ -1,11 +1,11 @@
-<div class="chart-container" *ngIf="verifyConfig() else message">
+<div class="chart-container" *ngIf="verifyConfig() else error">
     <!-- <div style="display: block; width: 500px; height: 400px;"> -->
     <!-- <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions" -->
-    <ng-container *ngIf="chartData && chartData.length > 0 else waiting">
+    <ng-container *ngIf="chartData && chartData.length > 0">
         <ng-container *ngIf="
-            widgetHelper.getWidgetConfig().chart.type == 'pie' || 
-            widgetHelper.getWidgetConfig().chart.type == 'radar' || 
-            widgetHelper.getWidgetConfig().chart.type == 'doughnut' else normal">
+            widgetHelper.getChartConfig().getChartType() == 'pie' || 
+            widgetHelper.getChartConfig().getChartType() == 'radar' || 
+            widgetHelper.getChartConfig().getChartType() == 'doughnut' else normal">
             <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
                     [chartType]="widgetHelper.getChartConfig().getChartType()" [labels]="chartLabels"
                     [legend]="chartLegend">
@@ -16,14 +16,11 @@
                     [chartType]="widgetHelper.getChartConfig().getChartType()">
             </canvas>
         </ng-template>
-
-
-
     </ng-container>
-    <ng-template #waiting>
-        <div class="loader">Loading...</div>
-    </ng-template>
 </div>
-<ng-template #message>
-    <h4>Please choose at least one device, and measurement and a graph type to see a chart display</h4>
+<ng-template #error>
+    <div class="chart-container">
+        <i class="fa fa-exclamation-circle fa-5x primary"></i>
+        <h4>{{widgetHelper.getChartConfig().message}}</h4>
+    </div>
 </ng-template>

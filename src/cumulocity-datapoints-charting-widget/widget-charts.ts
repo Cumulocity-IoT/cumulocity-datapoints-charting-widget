@@ -131,7 +131,7 @@ export class ChartConfig {
 
     //Global properties
     enabled: boolean = true;
-
+    message: string = "Loading...";
     /**
      * Most processing and chartjs uses these.
      */
