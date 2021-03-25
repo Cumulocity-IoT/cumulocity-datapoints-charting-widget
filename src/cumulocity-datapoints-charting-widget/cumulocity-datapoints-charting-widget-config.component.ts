@@ -139,6 +139,8 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     async updateConfig() {
         let conf = this.widgetHelper.getWidgetConfig();
         let chart = this.widgetHelper.getChartConfig();
+
+        // get the list of possible fragments
         if (chart && conf.selectedDevices && conf.selectedDevices.length > 0) {
             let checklist = new Set([]);
             for (let index = 0; index < conf.selectedDevices.length; index++) {
@@ -155,6 +157,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
             this.supportedSeries = await this.getSupportedSeries(conf.selectedDevices);
         }
 
+        //Formats
         let fmt = this.widgetHelper.getChartConfig().rangeDisplay[
             this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
         ];

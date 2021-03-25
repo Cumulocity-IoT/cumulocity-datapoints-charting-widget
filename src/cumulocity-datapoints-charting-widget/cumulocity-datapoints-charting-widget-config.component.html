@@ -390,16 +390,40 @@
                         </div>
                     </ng-container>
                     <ng-template #aggvalues>
-                        <div class=" col-lg-4">
-                            <label class="label-with-help" translate>#Buckets
+                        <div class=" col-lg-3">
+                            <label class="label-with-help" translate>Buckets from
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}"
                                          alt="help tooltip"
-                                         title="Define the number of ranges to split values into, used with max/min to calculate the bucket size.">
+                                         title="start of first bucket">
                                 </span>
                             </label>
-                            <input class="form-control" type="text" [ngModelOptions]="{ standalone: true }"
-                                   [(ngModel)]="widgetHelper.getChartConfig().numBuckets"
+                            <input class="form-control" type="number" [ngModelOptions]="{ standalone: true }"
+                                   [(ngModel)]="widgetHelper.getChartConfig().minBucket"
+                                   (ngModelChange)="updateConfig()" />
+                        </div>
+                        <div class=" col-lg-3">
+                            <label class="label-with-help" translate> to
+                                <span class="help-icon">
+                                    <img src="{{CONST_HELP_IMAGE_FILE}}"
+                                         alt="help tooltip"
+                                         title="start of first bucket">
+                                </span>
+                            </label>
+                            <input class="form-control" type="number" [ngModelOptions]="{ standalone: true }"
+                                   [(ngModel)]="widgetHelper.getChartConfig().maxBucket"
+                                   (ngModelChange)="updateConfig()" />
+                        </div>
+                        <div class=" col-lg-3">
+                            <label class="label-with-help" translate>Bucket Size
+                                <span class="help-icon">
+                                    <img src="{{CONST_HELP_IMAGE_FILE}}"
+                                         alt="help tooltip"
+                                         title="split the bucket range into equal pieces (plus catch all buckets above and below range).">
+                                </span>
+                            </label>
+                            <input class="form-control" type="number" [ngModelOptions]="{ standalone: true }"
+                                   [(ngModel)]="widgetHelper.getChartConfig().sizeBuckets"
                                    (ngModelChange)="updateConfig()" />
                         </div>
                     </ng-template>

@@ -271,7 +271,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         let vals = this.seriesData[key].valtimes.map((val) => <number>val.y);
                         let hist = this.measurementHelper.calculateHistogram(
                             vals,
-                            this.widgetHelper.getChartConfig().numBuckets,
+                            this.widgetHelper.getChartConfig().maxBucket,
+                            this.widgetHelper.getChartConfig().minBucket,
+                            this.widgetHelper.getChartConfig().sizeBuckets,
                             this.widgetHelper.getChartConfig().numdp
                         );
                         //
@@ -425,7 +427,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().series[key].avgPeriod,
                         this.widgetHelper.getChartConfig().getChartType(),
                         this.widgetHelper.getChartConfig().numdp,
-                        this.widgetHelper.getChartConfig().numBuckets,
+                        this.widgetHelper.getChartConfig().sizeBuckets,
+                        this.widgetHelper.getChartConfig().minBucket,
+                        this.widgetHelper.getChartConfig().maxBucket,
                         this.widgetHelper.getChartConfig().groupby,
                         this.widgetHelper.getChartConfig().cumulative
                     );
@@ -477,7 +481,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().series[key].avgPeriod,
                         this.widgetHelper.getChartConfig().getChartType(),
                         this.widgetHelper.getChartConfig().numdp,
-                        this.widgetHelper.getChartConfig().numBuckets,
+                        this.widgetHelper.getChartConfig().sizeBuckets,
+                        this.widgetHelper.getChartConfig().minBucket,
+                        this.widgetHelper.getChartConfig().maxBucket,
                         this.widgetHelper.getChartConfig().groupby,
                         this.widgetHelper.getChartConfig().cumulative
                     );

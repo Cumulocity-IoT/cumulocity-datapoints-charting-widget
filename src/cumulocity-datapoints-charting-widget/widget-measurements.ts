@@ -27,7 +27,9 @@ export class MeasurementOptions {
     bucketPeriod: string;
     labelDateFormat: string;
     numdp: number;
-    numBuckets: number;
+    sizeBuckets: number;
+    mnBuckets: number;
+    mxBuckets: number;
     groupby: boolean;
     cumulative: boolean;
 
@@ -39,7 +41,9 @@ export class MeasurementOptions {
         averagePeriod: number,
         targetGraphType: string,
         numdp: number,
-        numBuckets: number,
+        sizeBuckets: number,
+        mnBuckets: number,
+        mxBuckets: number,
         groupby: boolean,
         cumulative: boolean
     ) {
@@ -56,7 +60,9 @@ export class MeasurementOptions {
         this.bucketPeriod = "minute";
         this.labelDateFormat = "HH:mm";
         this.numdp = numdp;
-        this.numBuckets = numBuckets;
+        this.sizeBuckets = sizeBuckets;
+        this.mnBuckets = mnBuckets;
+        this.mxBuckets = mxBuckets;
         this.groupby = groupby;
         this.cumulative = cumulative;
     }
@@ -151,7 +157,7 @@ export class MeasurementList {
             this.mx = mx;
             this.mn = mn;
         } else {
-            this.sourceCriteria = new MeasurementOptions("", "", "", "", 30, "line", 2, 5, false, false);
+            this.sourceCriteria = new MeasurementOptions("", "", "", "", 30, "line", 2, 5, 0, 10, false, false);
             this.aggregate = [];
             this.valtimes = [];
             this.valCount = 0;
@@ -484,7 +490,7 @@ export class MeasurementHelper {
             } else {
                 //values buckets
                 let vals = rawData.vl.map((val) => val.y);
-                let hist = this.calculateHistogram(vals, options.numBuckets, options.numdp);
+                let hist = this.calculateHistogram(vals, options.mxBuckets, options.mnBuckets, options.sizeBuckets, options.numdp);
                 return { labels: hist.labels, data: hist.counts };
             }
         }
@@ -541,32 +547,44 @@ export class MeasurementHelper {
      * @param numBins number of buckets
      * @returns data and labels in object
      */
-    calculateHistogram(arr: number[], numBins: number, dp: number): { labels: string[]; counts: number[] } {
+    calculateHistogram(arr: number[], maxBucket: any, minBucket: any, binSize: any, dp: number): { labels: string[]; counts: number[] } {
         const bins: number[] = [];
         const binLabels: string[] = [];
-
+        let previousLabel: string = parseFloat(minBucket).toFixed(dp);
         let dataCopy = arr.sort((a, b) => a - b);
-        const min = dataCopy[0];
-        const max = dataCopy[dataCopy.length - 1];
 
-        const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
-
+        //const min = dataCopy[0];
+        //const max = dataCopy[dataCopy.length - 1];
+        //const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
+        let numBins = Math.floor((maxBucket - minBucket) / binSize);
         //Initialize to 0 and labels
-        let previousLabel = "0.00";
         for (let i = 0; i < numBins; i++) {
             bins.push(0);
-            let upper = (i * binSize).toFixed(dp);
+            let upper = ((i + 1) * binSize).toFixed(dp);
             binLabels.push(`${previousLabel} - ${upper}`);
             previousLabel = upper;
         }
 
+        bins.push(0); //lower catch all
+        binLabels.push(`< ${minBucket}`);
+        bins.push(0); //lower catch all
+        binLabels.push(`> ${maxBucket}`);
+
         dataCopy.forEach((item) => {
-            let binIndex = Math.floor((item - min) / binSize);
-            // for values that lie exactly on last bin we need to subtract one
-            if (binIndex === numBins) {
-                binIndex--;
+            let binIndex = Math.floor((item - minBucket) / binSize);
+            //console.log("index", item, binIndex);
+
+            if (binIndex < 0) {
+                bins[bins.length - 2]++;
+            } else if (binIndex > numBins) {
+                bins[bins.length - 1]++;
+            } else {
+                // for values that lie exactly on last bin we need to subtract one
+                if (binIndex === numBins) {
+                    binIndex--;
+                }
+                bins[binIndex]++;
             }
-            bins[binIndex]++;
         });
 
         return { labels: binLabels, counts: bins };

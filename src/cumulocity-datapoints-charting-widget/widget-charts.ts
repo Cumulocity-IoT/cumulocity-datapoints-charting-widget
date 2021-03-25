@@ -148,7 +148,9 @@ export class ChartConfig {
     fillArea: boolean = false;
     showPoints: number = 0; //default radius = 0 == no show
     numdp: number = 2; //2 decimal points numeric by default, can be set in config
-    numBuckets: number = 5; //Make default 5 buckets for value agg
+    sizeBuckets: number = 5; //Make default size 5
+    minBucket: number = 0; 
+    maxBucket: number = 10; 
     groupby: boolean = false; // default no grouping
     cumulative: boolean = false; // not cumulative
     realtime: string = "realtime"; // type of update
