@@ -172,8 +172,13 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         this.widgetHelper.getChartConfig().dateExample = moment().format(fmt);
 
         //Some charts need certain defaults
-        if (this.widgetHelper.getChartConfig().multivariateplot === true && this.widgetHelper.getChartConfig().getChartType() !== "radar") {
-            this.widgetHelper.getChartConfig().groupby = true;
+        if (this.widgetHelper.getChartConfig().multivariateplot === true) {
+            if (this.widgetHelper.getChartConfig().getChartType() !== "radar") {
+                this.widgetHelper.getChartConfig().groupby = true;
+            }
+            this.widgetHelper.getChartConfig().realtime = "timer";
+        } else {
+            this.widgetHelper.getChartConfig().realtime = "realtime";
         }
 
         //Some charts need certain defaults

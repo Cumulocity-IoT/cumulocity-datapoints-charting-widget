@@ -565,15 +565,6 @@
                                        [value]="widgetHelper.getChartConfig().multivariateColor"
                                        (ngModelChange)="updateConfig()" />
                             </div>
-                            <div class=" col-lg-3" *ngIf="widgetHelper.getChartConfig().multivariateplot == true">
-                                <select class="form-control" name="updateSelector"
-                                        [ngModelOptions]="{ standalone: true }"
-                                        [(ngModel)]="widgetHelper.getChartConfig().realtime"
-                                        (ngModelChange)="updateConfig()">
-                                    <option>realtime</option>
-                                    <option>timer</option>
-                                </select>
-                            </div>
                             <ng-container *ngIf="widgetHelper.getChartConfig().realtime == 'timer'">
                                 <div class=" col-lg-2">
                                     <label translate>Update chart every</label>
@@ -588,24 +579,6 @@
                                     <label class="label-with-help" translate> seconds</label>
                                 </div>
                             </ng-container>
-                            <!-- <div class=" col-lg-2">
-                                                            <label class="label-with-help" translate>Match datapoints within +/-
-                                                                <span class="help-icon">
-                                                                    <img src="{{CONST_HELP_IMAGE_FILE}}"
-                                                                         alt="help tooltip"
-                                                                         title="Data points may not have the same timestamp, use this to define the tolerance in seconds in which fragments can be matched together.">
-                                                                </span>
-                                                            </label>
-                                                        </div>
-                                                        <div class=" col-lg-2">
-                                                            <input class="form-control" style="width: 100%" type="text"
-                                                                   [ngModelOptions]="{ standalone: true }"
-                                                                   [(ngModel)]="widgetHelper.getChartConfig().multivariateplotTolerance"
-                                                                   (ngModelChange)="updateConfig()" />
-                                                        </div>
-                                                        <div class=" col-lg-1">
-                                                            <label class="label-with-help" translate> seconds</label>
-                                                        </div> -->
                         </div>
                     </ng-container>
                 </ng-container>
@@ -628,29 +601,6 @@
                                    (ngModelChange)="updateConfig()" />
 
                         </div>
-                        <div class=" col-lg-3" *ngIf="widgetHelper.getChartConfig().multivariateplot == false">
-                            <select class="form-control" name="updateSelector" [ngModelOptions]="{ standalone: true }"
-                                    [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].realTime"
-                                    (ngModelChange)="updateConfig()">
-                                <option>realtime</option>
-                                <option>timer</option>
-                            </select>
-                        </div>
-                        <ng-container *ngIf="widgetHelper.getChartConfig().series[seriesKey].realTime == 'timer'">
-                            <div class=" col-lg-2">
-                                <label translate>Update chart every</label>
-                            </div>
-                            <div class=" col-lg-2">
-                                <input class="form-control" style="width: 100%" type="text"
-                                       [ngModelOptions]="{ standalone: true }"
-                                       [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].timerDelay"
-                                       (ngModelChange)="updateConfig()" />
-                            </div>
-                            <div class=" col-lg-1">
-                                <label class="label-with-help" translate> seconds</label>
-                            </div>
-                        </ng-container>
-
                         <div class=" col-lg-3" *ngIf="widgetHelper.getChartConfig().multivariateplot == true">
                             <select class="form-control" name="variableSelector" [ngModelOptions]="{ standalone: true }"
                                     [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].variable"

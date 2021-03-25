@@ -24,8 +24,6 @@ export class ChartSeries {
     avgType: string = "None";
     avgPeriod: number = 10;
     avgColor: string = "#4ABBF0"; //display colour
-    realTime: string = "realtime";
-    timerDelay: number = 30;
     constructor(k: string, n: string, c: string, a: string) {
         this.id = k;
         this.name = n;
@@ -149,8 +147,8 @@ export class ChartConfig {
     showPoints: number = 0; //default radius = 0 == no show
     numdp: number = 2; //2 decimal points numeric by default, can be set in config
     sizeBuckets: number = 5; //Make default size 5
-    minBucket: number = 0; 
-    maxBucket: number = 10; 
+    minBucket: number = 0;
+    maxBucket: number = 10;
     groupby: boolean = false; // default no grouping
     cumulative: boolean = false; // not cumulative
     realtime: string = "realtime"; // type of update

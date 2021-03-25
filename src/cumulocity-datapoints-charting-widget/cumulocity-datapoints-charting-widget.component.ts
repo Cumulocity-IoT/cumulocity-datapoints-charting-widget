@@ -131,7 +131,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         for (const sub in this.subscription) {
             if (Object.prototype.hasOwnProperty.call(this.subscription, sub)) {
                 const tbd = this.subscription[sub];
-                this.realtimeService.unsubscribe(tbd);
+                if (sub == "timer") {
+                    clearTimeout(<number>tbd);
+                } else {
+                    this.realtimeService.unsubscribe(tbd);
+                }
             }
         }
     }
@@ -388,7 +392,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         for (const subKey in this.subscription) {
             if (Object.prototype.hasOwnProperty.call(this.subscription, subKey)) {
                 const sub = this.subscription[subKey];
-                if (!(subKey in seriesKeys)) {
+                if (!(subKey in seriesKeys) && sub !== "timer") {
                     this.realtimeService.unsubscribe(sub);
                     delete this.subscription[subKey];
                 }
@@ -450,66 +454,61 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 }
             }
         } else {
-            console.log("generating composite series from sources");
-            console.log(`for a chart of type ${this.widgetHelper.getChartConfig().getChartType()}`);
-            let seriesList: { [id: string]: string } = {};
-            let assigned: number = 0;
-            //
-            // Get the data - there will be 1-3 series that will get
-            // compressed into a single with x,y,r values
-            //
-            for (let key of Object.keys(this.widgetHelper.getChartConfig().series)) {
-                if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, key)) {
-                    //For each variable retrieve the measurements
-                    //we need to match up measurements to get the
-                    //graph - omit gaps - real time?
-                    const measurement = this.widgetHelper.getChartConfig().series[key];
-                    const v = this.widgetHelper.getChartConfig().series[key].variable;
-
-                    //store variable x, y, r with key
-                    if (v !== "Assign variable") {
-                        seriesList[v] = key;
-                        assigned++;
-                    }
-
-                    //each series (aggregates and functions of raw data too) gets this
-                    let options: MeasurementOptions = new MeasurementOptions(
-                        measurement.id.split(".")[0],
-                        measurement.name,
-                        measurement.id.split(".")[1],
-                        measurement.id.split(".")[2],
-                        this.widgetHelper.getChartConfig().series[key].avgPeriod,
-                        this.widgetHelper.getChartConfig().getChartType(),
-                        this.widgetHelper.getChartConfig().numdp,
-                        this.widgetHelper.getChartConfig().sizeBuckets,
-                        this.widgetHelper.getChartConfig().minBucket,
-                        this.widgetHelper.getChartConfig().maxBucket,
-                        this.widgetHelper.getChartConfig().groupby,
-                        this.widgetHelper.getChartConfig().cumulative
-                    );
-
-                    let { from, to } = this.getDateRange();
-                    await this.getBaseMeasurements(from, to, key, options);
-
-                    //TODO: issue here with composite series as we need multiple measurements to update graph.
-                    // if (this.widgetHelper.getChartConfig().series[key].realTime) {
-                    //     if (!this.subscription[key]) {
-                    //         this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                    //             this.handleRealtime(data, key, options, seriesList)
-                    //         );
-                    //     }
-                    // }
-                }
-            }
-
-            if (assigned < 2) {
-                //do something sensible - warn not assigned
-            } else {
-                this.createMultivariateChart(seriesList, localChartData);
-            }
+            await this.retrieveAndPlotMultivariateChart(localChartData);
         }
         this.chartData = localChartData; //replace
         this.dataLoaded = true; //update
+    }
+
+    private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
+        console.log("generating composite series from sources");
+        console.log(`for a chart of type ${this.widgetHelper.getChartConfig().getChartType()}`);
+        let seriesList: { [id: string]: string } = {};
+        let assigned: number = 0;
+        //
+        // Get the data - there will be 1-3 series that will get
+        // compressed into a single with x,y,r values
+        //
+        for (let key of Object.keys(this.widgetHelper.getChartConfig().series)) {
+            if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, key)) {
+                //For each variable retrieve the measurements
+                //we need to match up measurements to get the
+                //graph - omit gaps - real time?
+                const measurement = this.widgetHelper.getChartConfig().series[key];
+                const v = this.widgetHelper.getChartConfig().series[key].variable;
+
+                //store variable x, y, r with key
+                if (v !== "Assign variable") {
+                    seriesList[v] = key;
+                    assigned++;
+                }
+
+                //each series (aggregates and functions of raw data too) gets this
+                let options: MeasurementOptions = new MeasurementOptions(
+                    measurement.id.split(".")[0],
+                    measurement.name,
+                    measurement.id.split(".")[1],
+                    measurement.id.split(".")[2],
+                    this.widgetHelper.getChartConfig().series[key].avgPeriod,
+                    this.widgetHelper.getChartConfig().getChartType(),
+                    this.widgetHelper.getChartConfig().numdp,
+                    this.widgetHelper.getChartConfig().sizeBuckets,
+                    this.widgetHelper.getChartConfig().minBucket,
+                    this.widgetHelper.getChartConfig().maxBucket,
+                    this.widgetHelper.getChartConfig().groupby,
+                    this.widgetHelper.getChartConfig().cumulative
+                );
+
+                let { from, to } = this.getDateRange();
+                await this.getBaseMeasurements(from, to, key, options);
+            }
+        }
+
+        if (assigned < 2) {
+            //do something sensible - warn not assigned
+        } else {
+            this.createMultivariateChart(seriesList, localChartData);
+        }
     }
 
     /**
@@ -587,6 +586,13 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         localChartData.push(thisSeries);
         //console.log("MULTIVARIATE", thisSeries);
         this.setAxesLabels(seriesList["x"], seriesList["y"]);
+
+        //Update series as measurements come in.
+        //Set up timer to redraw this graph.
+        if (!("timer" in this.subscription)) {
+            console.log(`Setting timer`);
+            this.subscription["timer"] = setInterval(this.handleTimer, this.widgetHelper.getChartConfig().timerDelay * 1000, this);
+        }
     }
 
     /**
@@ -661,12 +667,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         localChartData.push(thisSeries);
 
         //Update series as measurements come in.
-        if (this.widgetHelper.getChartConfig().series[key].realTime === "realtime") {
-            if (!this.subscription[key]) {
-                this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                    this.handleRealtime(data, key, options)
-                );
-            }
+        if (!this.subscription[key]) {
+            this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
+                this.handleRealtime(data, key, options)
+            );
         }
     }
 
@@ -727,16 +731,17 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
         }
 
-        //Update series as measurements come in.
-        if (this.widgetHelper.getChartConfig().series[key].realTime == "realtime") {
-            if (!this.subscription[key]) {
-                this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                    this.handleRealtime(data, key, options)
-                );
-            }
-        } else {
-            //Set up timer to redraw this graph.
+        if (!this.subscription[key]) {
+            this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
+                this.handleRealtime(data, key, options)
+            );
         }
+    }
+
+    async handleTimer(parent: CumulocityDataPointsChartingWidget) {
+        let localChartData = []; //build list locally because empty dataset is added by framework
+        parent.retrieveAndPlotMultivariateChart(localChartData);
+        parent.chartData = localChartData;
     }
 
     // helper
