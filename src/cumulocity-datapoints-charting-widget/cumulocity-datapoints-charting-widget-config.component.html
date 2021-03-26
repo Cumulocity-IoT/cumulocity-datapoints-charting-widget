@@ -541,9 +541,13 @@
                     <div class="row form-group">
                         <div class="form-check-inline  col-lg-6">
                             <label class="label-with-help" class=" form-check-label" translate>
-                                <input class="form-check-input" [disabled]="widgetHelper
-                                        .getChartConfig()
-                                        .seriesKeys().length < 2 " type="checkbox"
+                                <input class="form-check-input"
+                                       [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
+                                       this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
+                                       this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
+                                       this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
+                                       this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
+                                       type="checkbox"
                                        [ngModelOptions]="{ standalone: true }"
                                        [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
                                        (ngModelChange)="updateConfig()" /> Plot data points from one series against
@@ -612,7 +616,14 @@
                             </select>
                         </div>
 
-                        <div class=" col-lg-1" *ngIf="!widgetHelper.getChartConfig().multivariateplot == true">
+                        <div class=" col-lg-1" *ngIf="!widgetHelper.getChartConfig().multivariateplot == true && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'bar' && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'horizontalBar' && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'scatter' && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'bubble' && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'pie' && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'radar' && 
+                                       this.widgetHelper.getChartConfig().getChartType() !== 'doughnut' ">
                             <button (click)="showSection(seriesKey)" class="btn btn-primary">
                                 <i class="fa fa-angle-double-down"></i>
                             </button>

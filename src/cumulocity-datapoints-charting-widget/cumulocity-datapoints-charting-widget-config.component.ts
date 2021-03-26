@@ -189,9 +189,15 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
             this.widgetHelper.getChartConfig().showPoints = 4;
         }
 
-        //Bar and Doughnut should be time based
-        if (this.widgetHelper.getChartConfig().getChartType() === "bar" || this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
+        //Bar and horizontalBar should be time based
+        if (
+            this.widgetHelper.getChartConfig().getChartType() === "bar" ||
+            this.widgetHelper.getChartConfig().getChartType() === "horizontalBar" ||
+            this.widgetHelper.getChartConfig().getChartType() === "pie" ||
+            this.widgetHelper.getChartConfig().getChartType() === "doughnut"
+        ) {
             this.widgetHelper.getChartConfig().multivariateplot = false;
+            
         }
         this.widgetHelper.setWidgetConfig(this.config);
     }

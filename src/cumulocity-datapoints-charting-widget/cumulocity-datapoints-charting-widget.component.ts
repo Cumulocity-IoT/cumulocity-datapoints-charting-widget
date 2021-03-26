@@ -182,7 +182,35 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      */
     handleRealtime(data: any, key: string, options: MeasurementOptions, seriesMap?: { [id: string]: string }): void {
         //get the values
-        let measurementDate = data.data.data.time;
+
+        let measurementDate = new Date(data.data.data.time);
+        if (options.groupby === true) {
+            switch (options.bucketPeriod) {
+                case "second": {
+                    measurementDate.setMilliseconds(0);
+                    break;
+                }
+                case "minute": {
+                    measurementDate.setMilliseconds(0);
+                    measurementDate.setSeconds(0);
+                    break;
+                }
+                case "hour": {
+                    measurementDate.setMilliseconds(0);
+                    measurementDate.setSeconds(0);
+                    measurementDate.setMinutes(0);
+                    break;
+                }
+                default: {
+                    measurementDate.setMilliseconds(0);
+                    measurementDate.setSeconds(0);
+                    measurementDate.setMinutes(0);
+                    measurementDate.setHours(0);
+                    break;
+                }
+            }
+        }
+
         let measurementValue = 0; //default
         let measurementUnit = undefined; //default
         //need the fragment, series
@@ -190,7 +218,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             let frag = _.get(data.data.data, options.fragment);
             if (_.has(frag, options.series)) {
                 let ser = _.get(frag, options.series);
-                measurementValue = ser.value;
+                measurementValue = parseFloat(parseFloat(ser.value).toFixed(options.numdp));
                 if (_.has(ser, "unit")) {
                     measurementUnit = ser.unit;
                 }
@@ -241,44 +269,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 }
 
                 //console.log("point", this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1]);
-                if (this.widgetHelper.getChartConfig().multivariateplot) {
-                    //this.seriesData[key].valtimes.push(datum);
-                    //x/y series (!!Date Order!!) - make sure x/y values match timestamps
-                    // let result: ChartPoint[] = [];
-                    // for (let index = 0; index < this.seriesData[seriesMap["x"]].valtimes.length; index++) {
-                    //     let xval = this.seriesData[seriesMap["x"]].valtimes[index];
-                    //     //console.log("Matching", xval);
-                    //     let yval = this.seriesData[seriesMap["y"]].valtimes.filter((val) => {
-                    //         return (
-                    //             //Match dates within a Tolerance
-                    //             Math.abs((<Date>xval.x).getTime() - (<Date>val.x).getTime()) <
-                    //             this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
-                    //         );
-                    //     });
-                    //     //console.log(yval);
-                    //     let zval = undefined;
-                    //     if ("r" in seriesMap) {
-                    //         zval = this.seriesData[seriesMap["r"]].valtimes.filter((val) => {
-                    //             return (
-                    //                 //Match dates within a Tolerance
-                    //                 Math.abs((<Date>zval.x).getTime() - (<Date>val.x).getTime()) <
-                    //                 this.widgetHelper.getChartConfig().multivariateplotTolerance * 1000
-                    //             );
-                    //         });
-                    //     }
-                    //     if (0 in yval && zval && 0 in zval) {
-                    //         result.push({ x: xval.y, y: yval[0].y, r: zval[0].y });
-                    //     } else if (0 in yval) {
-                    //         result.push({ x: xval.y, y: yval[0].y });
-                    //     } else {
-                    //         result.push({ x: index, y: xval.y }); //sensible default
-                    //     }
-                    // }
-                    // //x increasing - assume  y(,r) function of x
-                    // result = result.sort((a, b) => <number>a.x - <number>b.x);
-                    // this.seriesData[key].valtimes.length = 0;
-                    // this.seriesData[key].valtimes.push(...result);
-                }
 
                 // Pie/Doughnut differ from other types
                 if (this.widgetHelper.getChartConfig().getChartType() == "pie" || this.widgetHelper.getChartConfig().getChartType() == "doughnut") {
@@ -389,6 +379,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     if (
                         this.widgetHelper.getChartConfig().getChartType() === "line" ||
                         this.widgetHelper.getChartConfig().getChartType() === "spline chart" ||
+                        (!this.widgetHelper.getChartConfig().multivariateplot && this.widgetHelper.getChartConfig().getChartType() === "scatter") ||
                         this.widgetHelper.getChartConfig().getChartType() === "bar"
                     ) {
                         //all graph types
