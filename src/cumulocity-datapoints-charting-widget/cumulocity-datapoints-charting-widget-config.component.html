@@ -613,7 +613,8 @@
                                 <option>Assign variable</option>
                                 <option>x</option>
                                 <option>y</option>
-                                <option>r</option>
+                                <option *ngIf="this.widgetHelper.getChartConfig().getChartType() === 'bubble'">r
+                                </option>
                             </select>
                         </div>
 

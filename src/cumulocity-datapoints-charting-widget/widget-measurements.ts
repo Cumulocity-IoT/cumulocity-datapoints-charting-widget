@@ -563,30 +563,31 @@ export class MeasurementHelper {
         //Initialize to 0 and labels
         for (let i = 0; i < numBins; i++) {
             bins.push(0);
-            let upper = Math.min((i + 1) * binSize, maxBucket).toFixed(dp);
+            let upper = Math.min(minBucket + (i + 1) * binSize, maxBucket).toFixed(dp);
             binLabels.push(`${previousLabel} - ${upper}`);
             previousLabel = upper;
         }
 
         bins.push(0); //upper catch all
         binLabels.push(`> ${maxBucket}`);
+        //console.log(`Buckets:,  ${minBucket}, ${binSize}`, bins, binLabels, dataCopy);
 
         dataCopy.forEach((item) => {
             let binIndex = Math.floor((item - minBucket) / binSize);
-            //console.log(`categorize:, ${item}, ${minBucket}, ${binSize}, ${binIndex}`);
 
             if (item < minBucket) {
                 bins[0]++;
             } else if (item > maxBucket) {
                 bins[bins.length - 1]++;
             } else {
+                console.log("binIndex==numBins", item, binIndex, binLabels[binIndex]);
                 // for values that lie exactly on last bin we need to subtract one
                 if (binIndex === numBins) {
                     binIndex--;
                 }
                 bins[binIndex + 1]++; //offset the <x bucket
             }
-            console.log(bins, binLabels);
+            //console.log(bins, binLabels);
         });
 
         return { labels: binLabels, counts: bins };
