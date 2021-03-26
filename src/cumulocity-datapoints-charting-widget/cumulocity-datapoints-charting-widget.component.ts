@@ -731,6 +731,19 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param options options for chart
      */
     private createNormalChart(key: string, localChartData: any[], options: MeasurementOptions) {
+        if (
+            this.widgetHelper.getChartConfig().getChartType() === "bar" &&
+            this.widgetHelper.getChartConfig().getChartType() === "horizontalBar" &&
+            this.widgetHelper.getChartConfig().getChartType() === "scatter" &&
+            this.widgetHelper.getChartConfig().getChartType() === "bubble" &&
+            this.widgetHelper.getChartConfig().getChartType() === "pie" &&
+            this.widgetHelper.getChartConfig().getChartType() === "radar" &&
+            this.widgetHelper.getChartConfig().getChartType() === "doughnut"
+        ) {
+            this.widgetHelper.getChartConfig().series[key].hideMeasurements = false;
+            this.widgetHelper.getChartConfig().series[key].avgType = "None";
+        }
+
         if (this.widgetHelper.getChartConfig().series[key].hideMeasurements !== true) {
             let thisSeries: ChartDataSets = this.createSeries(
                 key,
@@ -780,6 +793,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
         }
 
+        //realtime
         if (!this.subscription[key]) {
             this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
                 this.handleRealtime(data, key, options)
@@ -933,13 +947,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 ) {
                     this.chartOptions.scales.yAxes.length = 0; //reset axes
                     this.chartOptions.scales.xAxes.length = 0; //reset axes
-
-                    if (
-                        this.widgetHelper.getChartConfig().getChartType() == "scatter" ||
-                        this.widgetHelper.getChartConfig().getChartType() == "bubble"
-                    ) {
-                        this.widgetHelper.getChartConfig().fitAxis = true; //always fit data
-                    }
 
                     let dp = this.widgetHelper.getChartConfig().numdp ? this.widgetHelper.getChartConfig().numdp : 2;
                     this.chartOptions.scales.xAxes.push({

@@ -207,9 +207,10 @@
                     <div *ngIf="widgetHelper.getChartConfig().showy">
                         <div class="form-check-inline col-lg-2">
                             <label class="label-with-help" class="form-check-label" for="beginAtZero2" translate>
-                                <input class="form-check-input" type="checkbox" name="beginAtZero2" [(ngModel)]="
-                                                widgetHelper.getChartConfig().fitAxis
-                                            " (ngModelChange)="updateConfig()" /> Fit axes<span class="help-icon">
+                                <input class="form-check-input"
+                                       type="checkbox" name="beginAtZero2"
+                                       [(ngModel)]="widgetHelper.getChartConfig().fitAxis"
+                                       (ngModelChange)="updateConfig()" /> Fit axes<span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}"
                                          alt="help tooltip"
                                          title="Fit the range of the chart axes to the data.">
