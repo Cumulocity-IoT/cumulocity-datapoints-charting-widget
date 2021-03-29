@@ -17,7 +17,7 @@ The widget currently supports the following chart types
     -   supporting multiple plots on the same graph
 -   bar & horizontal bar
     -   supporting stacked
-    -   ![horizontal and verical stacked bars](/images/horz_vs_vertbar.png)
+    -   ![horizontal and vertical stacked bars](/images/horz_vs_vertbar.png)
 -   pie & doughnut
     -   aggregated by time or value range buckets
     -   ![bucket types](/images/buckets.png)
