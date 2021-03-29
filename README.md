@@ -12,16 +12,19 @@ The Data Points Charting Widget allows you to create real time graphs showing cu
 
 The widget currently supports the following chart types
 
--   line
+-   line and spline
+    -   ![line and spline](/images/line_vs_spline.png)
     -   supporting multiple plots on the same graph
 -   bar & horizontal bar
     -   supporting stacked
+    -   ![horizontal and verical stacked bars](/images/horz_vs_vertbar.png)
 -   pie & doughnut
     -   aggregated by time or value range buckets
+    -   ![bucket types](/images/buckets.png)
 -   radar
 -   scatter and bubble
 
-_There will be more added in the future (histogram)_
+_There will be more added in the future depending on demand (E.G histogram)_
 
 ### Customization
 
@@ -51,7 +54,7 @@ NOTE: This guide assumes that you have followed the [installation](https://githu
 1. Open the Application Builder application from the app switcher (Next to your username in the top right)
 2. Add a new dashboard or navigate to an existing dashboard
 3. Click `Add Widget`
-4. Search for `Data Points Charting`
+4. Search for `Data Points Charting` ![devices and measurements](/images/add_widget.png)
 5. See below for the configuration options
 
 The widget configuration page contains a number of configuration attributes.
@@ -68,6 +71,11 @@ The widget configuration page contains a number of configuration attributes.
 
     -   define the range of data points to use by changing the Amount, Unit
     -   define the accuracy and display of data values by changing the number of decimal points to show.
+
+-   **Aggregation of values**: define whether to show raw data, or group measurements by averaging or summing them when received within the unit of the range you chose (E.G average values by minute).
+
+    -   The time unit you chose for the range will determine how the measurements are grouped. The _cumulative_ checkbox will change from the default of averaging to summing the values.
+    -   This can be disabled in certain circumstances (See 'Plotting one series against another below')
 
 -   **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurements.
 
@@ -101,21 +109,26 @@ bucket the data to allow it to be displayed.
 ![series](/images/pie.gif)
 
 -   We can also create a chart showing the number of measurements within value ranges
+    -   These are defined in the config
 -   The number of buckets will determine the bucket ranges when aggregating by value.
 
-![series](/images/value.gif)
+![series](/images/value_buckets.png)
 
 ### Plotting one series against another
 
 The example shown here is a plot of the PH measured against a measure of PO4 (Phosphate) in a boiler. The relationship in this made up example is linear and so we should see a straight line when they are plotted against each other.
 
-It is important to make sure that the data you wish to plot will match. The tolerance (t) allows the data to have some variation in timings.
-
-The matching works through the 'x' data points selecting the first data point in the 'y' series that has a time stamp +/- the tolerance. If there is no match then it will omit that point.
+It is important to make sure that the data you wish to plot is related in some way, and that the measurements will arrive approximately at the same time.
 
 -   After choosing your series, check the _Plot data points from one series against another_
 -   This will change the display so you can choose the x and y of the chart.
 -   Select the color and tolerance of what time stamps should match.
+
+When you choose the 2 series and decide to plot them against each other the configuration will automatically switch on the "group measurements" option.
+
+![series](/images/group.png)
+
+It will be disabled so that it cannot be turned off.
 
 ![series](/images/multivariate.gif)
 
