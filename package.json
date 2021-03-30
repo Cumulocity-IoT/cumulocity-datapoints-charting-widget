@@ -4,11 +4,11 @@
         "dist\\bundle-src\\custom-widget.js": "cumulocity-datapoints-charting-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
     },
-    "version": "0.9.410",
+    "version": "1.0.0",
     "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "scripts": {
         "build": "gulp",
-        "serve": "c8ycli serve"
+        "release": "gulp release"
     },
     "keywords": [],
     "author": "John Heath - Software AG, Global Pre-sales",
