@@ -39,12 +39,32 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     //
     // Helper methods
     //
-    async getDeviceList(): Promise<IResultList<IManagedObject>> {
-        let devs = this.inventory.list({
-            pageSize: 100,
+    async getDeviceList(): Promise<IManagedObject[]> {
+        let dev: IManagedObject[] = [];
+        let page = 1;
+        let resp = await this.inventory.list({
+            pageSize: 2000,
             fragmentType: "c8y_IsDevice",
         });
-        return devs;
+
+        if (resp.res.status == 200) {
+            dev = [...resp.data];
+            page = resp.paging.nextPage;
+            while (page != null) {
+                console.log(`requesting page ${page}`);
+                // Need to handle errors here and also could there be
+                // other status codes to handle?
+                resp = await resp.paging.next();
+                if (resp.res.status == 200) {
+                    //add next range of stuff...
+                    dev = [...dev, ...resp.data];
+                }
+
+                page = resp.paging.nextPage;
+            }
+            console.log(`total of ${resp.data.length} points`);
+        }
+        return dev;
     }
 
     async getDeviceDetail(id: IdReference): Promise<IResult<IManagedObject>> {
@@ -77,7 +97,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         //set the devices observable for the config form
         let deviceList = await this.getDeviceList();
         this.devices = of(
-            deviceList.data
+            deviceList
                 .map((item) => {
                     return { id: item.id, text: item.name };
                 })
@@ -197,7 +217,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
             this.widgetHelper.getChartConfig().getChartType() === "doughnut"
         ) {
             this.widgetHelper.getChartConfig().multivariateplot = false;
-            
         }
         this.widgetHelper.setWidgetConfig(this.config);
     }
