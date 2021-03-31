@@ -40,11 +40,17 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     // Helper methods
     //
     async getDeviceList(): Promise<IResultList<IManagedObject>> {
-        let devs = this.inventory.list({
-            pageSize: 100,
-            fragmentType: "c8y_IsDevice",
-        });
-        return devs;
+        const filter: object = {
+            pageSize: 2000,
+            withTotalPages: true,
+        };
+
+        const query = {
+            name: "*",
+        };
+
+        //const { data, res, paging } = await
+        return this.inventory.listQueryDevices(query, filter);
     }
 
     async getDeviceDetail(id: IdReference): Promise<IResult<IManagedObject>> {
