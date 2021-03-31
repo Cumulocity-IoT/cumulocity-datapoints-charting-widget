@@ -98,7 +98,7 @@ exports.default = series(clean, compile, bundle, async function success() {
     console.log(`Widget Angular Library (Install with: "npm i <filename.tgz>"): dist/${pkgJson.name}-${pkgJson.version}.tgz`);
 });
 
-exports.release = series(clean, compileNoBump, bundleRelease, async function success() {
+exports.release = series(clean, compileNoBump, bundle, async function success() {
     console.log("Build Finished Successfully!");
     const pkgJson = require('./dist/widget-library/package.json');
     console.log(`Runtime Widget Output (Install in the browser): dist/${pkgJson.name}-${pkgJson.version}.zip`);
