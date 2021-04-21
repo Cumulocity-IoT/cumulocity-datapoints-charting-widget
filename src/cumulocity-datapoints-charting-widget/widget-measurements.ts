@@ -1,10 +1,10 @@
 /** @format */
 
 import { formatDate } from "@angular/common";
-import _ from "lodash";
+import * as _ from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
-import * as moment from "moment";
+import moment from "moment";
 import * as Chart from "chart.js";
 
 /**

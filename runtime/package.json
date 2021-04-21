@@ -1,0 +1,71 @@
+{
+    "name": "cumulocity-datapoints-charting-widget",
+    "interleave": {
+        "dist\\bundle-src\\custom-widget.js": "cumulocity-datapoints-charting-CustomWidget",
+        "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
+    },
+    "version": "0.0.43",
+    "description": "CumulocityDatapointsCharting Runtime Widget (written by Software AG Global Presales)",
+    "scripts": {
+        "build": "gulp"
+    },
+    "keywords": [],
+    "author": "John Heath - Software AG, Global Presales",
+    "license": "Apache 2.0",
+    "dependencies": {
+        "bollinger-bands": "^3.0.1",
+        "chart.js": "^2.9.4",
+        "chartjs-plugin-labels": "^1.1.0",
+        "compute-iqr": "^1.1.0",
+        "lodash": "^4.17.20",
+        "moment": "^2.29.1",
+        "moving-averages": "^4.0.5",
+        "ng-multiselect-dropdown": "^0.2.14",
+        "ng2-charts": "^2.4.2",
+        "@types/lodash": "^4.14.168"
+    },
+    "peerDependencies": {
+        "@angular/common": "8.2.13",
+        "@angular/core": "8.2.13",
+        "@angular/forms": "8.2.13",
+        "@angular/http": "7.2.15",
+        "@angular/router": "8.2.13",
+        "@c8y/ngx-components": "1006.3.0"
+    },
+    "devDependencies": {
+        "@angular-devkit/build-angular": "0.803.17",
+        "@angular/animations": "8.2.13",
+        "@angular/cdk": "8.2.3",
+        "@angular/common": "8.2.13",
+        "@angular/compiler": "8.2.13",
+        "@angular/compiler-cli": "8.2.13",
+        "@angular/core": "8.2.13",
+        "@angular/forms": "8.2.13",
+        "@angular/http": "7.2.15",
+        "@angular/platform-browser": "8.2.13",
+        "@angular/router": "8.2.13",
+        "@c8y/ngx-components": "1006.3.0",
+        "ajv": "^6.9.1",
+        "core-js": "^3.4.0",
+        "css-loader": "^3.5.3",
+        "del": "^5.1.0",
+        "delay": "^4.3.0",
+        "fs-extra": "^9.0.0",
+        "gulp": "^4.0.2",
+        "gulp-filter": "^6.0.0",
+        "gulp-replace": "^1.0.0",
+        "gulp-zip": "^5.0.1",
+        "gulp-bump": "^3.2.0",
+        "ng-packagr": "^9.1.1",
+        "ngx-bootstrap": "5.5.0",
+        "rxjs": "~6.4.0",
+        "rxjs-compat": "^6.5.3",
+        "source-map-loader": "^0.2.4",
+        "typescript": "3.5.3",
+        "url-loader": "^4.1.0",
+        "webpack": "^4.43.0",
+        "webpack-cli": "^3.3.11",
+        "webpack-external-import": "^2.2.3",
+        "zone.js": "~0.9.1"
+    }
+}

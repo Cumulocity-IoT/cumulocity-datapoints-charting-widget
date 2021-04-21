@@ -99,8 +99,9 @@ export class WidgetHelper<CONFIGTYPE> {
                 Object.setPrototypeOf(chartConfig, Object.getPrototypeOf(this.chartRef));
             }
         } else {
+            chartConfig = new ChartConfig();
             //add new ? or perhaps throw if we get more serious
-            chartConfig = _.set(this.config, "chart", new ChartConfig());
+            _.set(<any>this.config, "chart", chartConfig);
         }
         return chartConfig;
     }

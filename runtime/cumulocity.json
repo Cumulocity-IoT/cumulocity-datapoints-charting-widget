@@ -1,0 +1,13 @@
+{
+    "name": "CumulocityDatapointsCharting",
+    "contextPath": "cumulocity-datapoints-charting",
+    "key": "cumulocity-datapoints-charting-application-key",
+    "contentSecurityPolicy": "default-src 'self'",
+    "description": "DESCRIPTION FOR CumulocityDatapointsCharting",
+    "icon": {
+        "class": "fa fw fa-database"
+    },
+    "manifest": {
+        "noAppSwitcher": true
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "angularCompilerOptions": {
+        "enableIvy": false,
+        "skipTemplateCodegen": true,
+        "strictMetadataEmit": true,
+        "fullTemplateTypeCheck": true,
+        "enableResourceInlining": true
+    },
+    "compileOnSave": false,
+    "include": [
+        "../src/**/*.ts"
+    ],
+    "compilerOptions": {
+        "baseUrl": "./src",
+        "outDir": "./dist/out-tsc",
+        "declaration": true,
+        "moduleResolution": "node",
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "skipLibCheck": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "es2015",
+        "module": "es2015",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "importHelpers": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "lib": [
+            "dom",
+            "es2016"
+        ]
+    }
+}

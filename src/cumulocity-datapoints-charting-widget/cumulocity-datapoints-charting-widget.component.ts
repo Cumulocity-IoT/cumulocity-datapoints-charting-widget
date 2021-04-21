@@ -1,3 +1,24 @@
+/**
+ * /*
+ * Copyright (c) 2019 Software AG, Darmstadt, Germany and/or its licensors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @format
+ */
+
 /** @format */
 
 import { Component, Input, OnDestroy, OnInit, ViewChild } from "@angular/core";
@@ -9,16 +30,16 @@ import { DatePipe } from "@angular/common";
 import { MeasurementList, MeasurementOptions, MeasurementHelper } from "./widget-measurements";
 import { MeasurementService, Realtime } from "@c8y/ngx-components/api";
 import { WidgetHelper } from "./widget-helper";
-import * as moment from "moment";
+import moment from "moment";
 import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
 
 @Component({
-    templateUrl: "./cumulocity-datapoints-charting-widget.component.html",
-    styleUrls: ["./cumulocity-datapoints-charting-widget.component.css"],
+    templateUrl: "cumulocity-datapoints-charting-widget.component.html",
+    styleUrls: ["cumulocity-datapoints-charting-widget.component.css"],
     providers: [DatePipe, ThemeService],
 })
-export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
+export class CumulocityDatapointsChartingWidget implements OnInit, OnDestroy {
     /**
      * Standard config element, access this via the widgetHelper
      * rather than directly.
@@ -813,7 +834,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
     }
 
-    async handleTimer(parent: CumulocityDataPointsChartingWidget) {
+    async handleTimer(parent: CumulocityDatapointsChartingWidget) {
         let localChartData = []; //build list locally because empty dataset is added by framework
         parent.retrieveAndPlotMultivariateChart(localChartData);
         parent.chartData = localChartData;
