@@ -4,7 +4,7 @@
         "dist\\bundle-src\\custom-widget.js": "cumulocity-datapoints-charting-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
     },
-    "version": "1.0.2",
+    "version": "1.0.47",
     "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "scripts": {
         "build": "gulp",
@@ -14,6 +14,7 @@
     "author": "John Heath - Software AG, Global Pre-sales",
     "license": "Apache 2.0",
     "dependencies": {
+        "@ng-select/ng-select": "^3.7.3",
         "bollinger-bands": "^3.0.1",
         "chart.js": "^2.9.4",
         "chartjs-plugin-labels": "^1.1.0",
@@ -21,7 +22,6 @@
         "lodash": "^4.17.20",
         "moment": "^2.29.1",
         "moving-averages": "^4.0.5",
-        "ng-multiselect-dropdown": "^0.2.14",
         "ng2-charts": "^2.4.2",
         "ngx-color-picker": "^11.0.0"
     },

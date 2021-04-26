@@ -4,7 +4,7 @@ import { CoreModule, HOOK_COMPONENTS } from "@c8y/ngx-components";
 import { CumulocityDataPointsChartingWidgetConfig as CumulocityDataPointsChartingWidgetConfig } from "./cumulocity-datapoints-charting-widget-config.component";
 import { CumulocityDataPointsChartingWidget as CumulocityDataPointsChartingWidget } from "./cumulocity-datapoints-charting-widget.component";
 import { NgModule } from "@angular/core";
-import { NgMultiSelectDropDownModule } from "ng-multiselect-dropdown";
+import { NgSelectModule } from "@ng-select/ng-select";
 import { ColorPickerModule } from "ngx-color-picker";
 import { ChartsModule } from "ng2-charts";
 //import { HttpClientModule } from "@angular/common/http";
@@ -16,7 +16,7 @@ import "~styles/index.css";
 // import 'some-module/styles.css'
 
 @NgModule({
-    imports: [CoreModule, NgMultiSelectDropDownModule, ColorPickerModule, ChartsModule],
+    imports: [CoreModule, NgSelectModule, ColorPickerModule, ChartsModule],
     declarations: [CumulocityDataPointsChartingWidget, CumulocityDataPointsChartingWidgetConfig],
     entryComponents: [CumulocityDataPointsChartingWidget, CumulocityDataPointsChartingWidgetConfig],
     providers: [

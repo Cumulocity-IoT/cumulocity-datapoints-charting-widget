@@ -14,13 +14,28 @@
                              alt="help tooltip"
                              title="Select one or more devices for the chart.">
                     </span>
-                    <ng-multiselect-dropdown name="deviceSelector" [placeholder]="'Select Device(s)'"
-                                             [data]="devices | async"
+                    <ng-select
+                               [items]="getDeviceDropdownList$() | async"
+                               [multiple]="true"
+                               bindLabel="text"
+                               [closeOnSelect]="false"
+                               [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices"
+                               (ngModelChange)="updateConfig()">
+                        <!-- <ng-template ng-optgroup-tmp let-item=" item" let-item$="item$" let-index="index">
+                        <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.gender |
+                        uppercase}}
+                        </ng-template> -->
+                        <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                            <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
+                        </ng-template>
+                    </ng-select>
+                    <!-- <ng-multiselect-dropdown name="deviceSelector" [placeholder]="'Select Device(s)'"
+                                             [data]="getDeviceDropdownList$() | async"
                                              [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices"
                                              [settings]="
                         widgetHelper.getWidgetConfig().multiDropdownSettings
                     " (ngModelChange)="updateConfig()">
-                    </ng-multiselect-dropdown>
+                    </ng-multiselect-dropdown> -->
                 </label>
             </div>
 
@@ -38,13 +53,27 @@
                                  alt="help tooltip"
                                  title="Select one or more data fragments for the chart.">
                         </span>
-                        <ng-multiselect-dropdown name="measurementSelector" [placeholder]="'Select Measurements'"
+                        <ng-select
+                                   [items]="getSupportedSeries$() | async"
+                                   [multiple]="true"
+                                   bindLabel="text"
+                                   [closeOnSelect]="false"
+                                   [(ngModel)]="widgetHelper.getWidgetConfig().selectedMeasurements"
+                                   (ngModelChange)="updateSelectedMeasurements()">
+                            <!-- <ng-template ng-optgroup-tmp let-item="item" let-item$="item$" let-index="index">
+                                                <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.gender | uppercase}}
+                                            </ng-template> -->
+                            <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                                <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
+                            </ng-template>
+                        </ng-select>
+                        <!-- <ng-multiselect-dropdown name="measurementSelector" [placeholder]="'Select Measurements'"
                                                  [data]="supportedSeries" [(ngModel)]="
                             widgetHelper.getWidgetConfig().selectedMeasurements
                         " [settings]="
                             widgetHelper.getWidgetConfig().multiDropdownSettings
                         " (ngModelChange)="updateSelectedMeasurements()">
-                        </ng-multiselect-dropdown>
+                        </ng-multiselect-dropdown> -->
                     </label>
                 </div>
             </ng-container>

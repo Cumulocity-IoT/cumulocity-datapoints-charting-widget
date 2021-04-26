@@ -3,7 +3,9 @@
 //
 // Helper classes and interfaces
 //
-import { IDropdownSettings } from "ng-multiselect-dropdown";
+// import { IDropdownSettings } from "ng-multiselect-dropdown";
+// import { ListItem } from "ng-multiselect-dropdown/multiselect.model";
+import { Observable, of } from "rxjs";
 import { ChartConfig } from "./widget-charts";
 
 /**
@@ -13,10 +15,11 @@ import { ChartConfig } from "./widget-charts";
  *
  * optional generic field for label/text/date formatting etc
  */
-export interface ListItem {
+export interface RawListItem {
     id: any;
     text: any;
     format?: string;
+    isGroup?: boolean;
 }
 
 /**
@@ -26,37 +29,13 @@ export class WidgetConfig {
     /**
      * Members for the config
      */
-    selectedDevices: ListItem[];
-    selectedMeasurements: ListItem[];
+    selectedDevices: RawListItem[];
+    selectedMeasurements: RawListItem[];
 
     /**
      * charts configuration
      */
     chart: ChartConfig;
-
-    /**
-     * Multi select component needs a few defaults
-     * List item has id and text fields tell the component
-     * what to pick for what (selection will be a list item)
-     */
-    multiDropdownSettings: IDropdownSettings = {
-        singleSelection: false,
-        idField: "id",
-        textField: "text",
-        selectAllText: "Select All",
-        unSelectAllText: "UnSelect All",
-        itemsShowLimit: 3,
-        allowSearchFilter: false,
-        closeDropDownOnSelection: true,
-    };
-
-    singleDropdownSettings: IDropdownSettings = {
-        singleSelection: true,
-        idField: "id",
-        textField: "text",
-        itemsShowLimit: 3,
-        allowSearchFilter: false,
-    };
 
     /**
      *  Create an instance of the config object
