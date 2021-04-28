@@ -12,6 +12,16 @@ import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
+import { of, Subject } from "rxjs";
+import { concatMap, finalize, groupBy, mergeMap, reduce, scan, switchMap, tap, toArray } from "rxjs/operators";
+import { group } from "@angular/animations";
+import { AccordionComponent } from "ngx-bootstrap";
+
+interface DataObject {
+    data: any;
+    key: string;
+    options: MeasurementOptions;
+}
 
 @Component({
     templateUrl: "./cumulocity-datapoints-charting-widget.component.html",
@@ -91,6 +101,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         },
     };
 
+    rtData$: Subject<DataObject> = new Subject<DataObject>();
+
     /**
      * Used on the page
      *
@@ -159,6 +171,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * Remove subs
      */
     ngOnDestroy(): void {
+        this.rtData$.unsubscribe();
+
         for (const sub in this.subscription) {
             if (Object.prototype.hasOwnProperty.call(this.subscription, sub)) {
                 const tbd = this.subscription[sub];
@@ -171,6 +185,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
     }
 
+    queueRealtime(data: any, key: string, options: MeasurementOptions): void {
+        //use an observable (from/of) queue
+        this.rtData$.next({ data, key, options });
+    }
+
     /**
      * As we process required series we create subscriptions to measurements.
      * This method is the generic call back for these measurements as they
@@ -180,12 +199,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param key
      * @param options
      */
-    handleRealtime(data: any, key: string, options: MeasurementOptions, seriesMap?: { [id: string]: string }): void {
-        //get the values
-
-        let measurementDate = new Date(data.data.data.time);
-        if (options.groupby === true) {
-            switch (options.bucketPeriod) {
+    handleRealtime(dataObject: DataObject): void {
+        let measurementDate = new Date(dataObject.data.data.data.time);
+        if (dataObject.options.groupby === true) {
+            switch (dataObject.options.bucketPeriod) {
                 case "second": {
                     measurementDate.setMilliseconds(0);
                     break;
@@ -214,11 +231,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         let measurementValue = 0; //default
         let measurementUnit = undefined; //default
         //need the fragment, series
-        if (_.has(data.data.data, options.fragment)) {
-            let frag = _.get(data.data.data, options.fragment);
-            if (_.has(frag, options.series)) {
-                let ser = _.get(frag, options.series);
-                measurementValue = parseFloat(parseFloat(ser.value).toFixed(options.numdp));
+        if (_.has(dataObject.data.data.data, dataObject.options.fragment)) {
+            let frag = _.get(dataObject.data.data.data, dataObject.options.fragment);
+            if (_.has(frag, dataObject.options.series)) {
+                let ser = _.get(frag, dataObject.options.series);
+                measurementValue = parseFloat(parseFloat(ser.value).toFixed(dataObject.options.numdp));
                 if (_.has(ser, "unit")) {
                     measurementUnit = ser.unit;
                 }
@@ -236,48 +253,34 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 }
 
                 //What bucket should it be in?
-                let newPointBucket = this.measurementHelper.categorize(options, datum);
+                let newPointBucket = this.measurementHelper.categorize(dataObject.options, datum);
                 let lastPointBucket = "";
-                if (this.seriesData[key].valtimes.length - 1 >= 0) {
+                if (this.seriesData[dataObject.key].valtimes.length - 1 >= 0) {
                     lastPointBucket = this.measurementHelper.categorize(
-                        options,
-                        this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1]
+                        dataObject.options,
+                        this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1]
                     );
                 }
 
-                //need to add to current data point
-                if (options.groupby && newPointBucket === lastPointBucket) {
-                    this.seriesData[key].valCount += 1;
-                    if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
-                        let v: any = this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].x;
-                        this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].x =
-                            (<number>datum.x + v * (this.seriesData[key].valCount - 1)) / this.seriesData[key].valCount;
-                        this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].x = parseFloat(
-                            (<number>this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].x).toFixed(options.numdp)
-                        );
-                    } else {
-                        let v: any = this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].y;
-                        this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].y =
-                            (<number>datum.y + v * (this.seriesData[key].valCount - 1)) / this.seriesData[key].valCount;
-                        this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].y = parseFloat(
-                            (<number>this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1].y).toFixed(options.numdp)
-                        );
-                    }
-                } else {
-                    this.seriesData[key].valCount = 1;
-                    this.seriesData[key].valtimes.push(datum);
-                }
+                console.log("BUCKET", newPointBucket, lastPointBucket);
+                // need to add to current data point - Note that we test for the bucket we should be putting this in
+                // and tally up the count of the actual values in the current average (valcount)
+                //if we are not grouping, OR if we are adding a new bucket we set valcount to 1
+                this.updateSeriesData(dataObject, newPointBucket, lastPointBucket, datum);
+
+                //handle group series
+                this.updateGroupData(dataObject.options, datum);
 
                 //console.log("point", this.seriesData[key].valtimes[this.seriesData[key].valtimes.length - 1]);
 
                 // Pie/Doughnut differ from other types
                 if (this.widgetHelper.getChartConfig().getChartType() == "pie" || this.widgetHelper.getChartConfig().getChartType() == "doughnut") {
-                    this.seriesData[key].valtimes.push(datum);
+                    this.seriesData[dataObject.key].valtimes.push(datum);
 
                     //aggregating by time buckets
                     if (this.widgetHelper.getChartConfig().aggregation == 0) {
                         let index = -1;
-                        this.seriesData[key].labels.some((v, i) => {
+                        this.seriesData[dataObject.key].labels.some((v, i) => {
                             if (v === newPointBucket) {
                                 index = i;
                                 return true;
@@ -286,14 +289,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         });
 
                         if (index === -1) {
-                            this.seriesData[key].labels.push(newPointBucket);
-                            this.seriesData[key].bucket.push(1);
+                            this.seriesData[dataObject.key].labels.push(newPointBucket);
+                            this.seriesData[dataObject.key].bucket.push(1);
                         } else {
-                            this.seriesData[key].bucket[index] = this.seriesData[key].bucket[index] + 1;
+                            this.seriesData[dataObject.key].bucket[index] = this.seriesData[dataObject.key].bucket[index] + 1;
                         }
                     } else {
                         //By Value buckets
-                        let vals = this.seriesData[key].valtimes.map((val) => <number>val.y);
+                        let vals = this.seriesData[dataObject.key].valtimes.map((val) => <number>val.y);
                         let hist = this.measurementHelper.calculateHistogram(
                             vals,
                             this.widgetHelper.getChartConfig().maxBucket,
@@ -304,33 +307,33 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         //
                         // In this case we want to replace the data
                         //
-                        this.seriesData[key].labels.length = 0;
-                        this.seriesData[key].bucket.length = 0;
-                        this.seriesData[key].labels.push(...hist.labels);
-                        this.seriesData[key].bucket.push(...hist.counts);
+                        this.seriesData[dataObject.key].labels.length = 0;
+                        this.seriesData[dataObject.key].bucket.length = 0;
+                        this.seriesData[dataObject.key].labels.push(...hist.labels);
+                        this.seriesData[dataObject.key].bucket.push(...hist.counts);
                     }
                 } else {
                     //Only take the last N values to create the average
-                    if (options.avgPeriod > 0) {
+                    if (dataObject.options.avgPeriod > 0) {
                         //just the values
-                        let source = this.seriesData[key].valtimes
-                            .slice(Math.max(this.seriesData[key].valtimes.length - options.avgPeriod, 0))
-                            .map((val) => (options.targetGraphType !== "horizontalBar" ? val.y : val.x));
+                        let source = this.seriesData[dataObject.key].valtimes
+                            .slice(Math.max(this.seriesData[dataObject.key].valtimes.length - dataObject.options.avgPeriod, 0))
+                            .map((val) => (dataObject.options.targetGraphType !== "horizontalBar" ? val.y : val.x));
 
                         // let a = sma(source, options.avgPeriod, 3);
-                        let avper = options.avgPeriod > source.length ? source.length : options.avgPeriod;
+                        let avper = dataObject.options.avgPeriod > source.length ? source.length : dataObject.options.avgPeriod;
                         let a = boll(source, avper, 2);
 
                         //aggregate needs x and y coordinates but we use only the last
-                        this.seriesData[key].upper.push({
+                        this.seriesData[dataObject.key].upper.push({
                             x: measurementDate,
                             y: a.upper[a.upper.length - 1],
                         });
-                        this.seriesData[key].aggregate.push({
+                        this.seriesData[dataObject.key].aggregate.push({
                             x: measurementDate,
                             y: a.mid[a.mid.length - 1],
                         });
-                        this.seriesData[key].lower.push({
+                        this.seriesData[dataObject.key].lower.push({
                             x: measurementDate,
                             y: a.lower[a.lower.length - 1],
                         });
@@ -348,10 +351,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().getChartType() === "line" ||
                         this.widgetHelper.getChartConfig().getChartType() === "spline"
                     ) {
-                        while (moment(this.seriesData[key].aggregate[0].x).isBefore(moment(from))) {
-                            this.seriesData[key].upper.shift();
-                            this.seriesData[key].aggregate.shift();
-                            this.seriesData[key].lower.shift();
+                        while (moment(this.seriesData[dataObject.key].aggregate[0].x).isBefore(moment(from))) {
+                            this.seriesData[dataObject.key].upper.shift();
+                            this.seriesData[dataObject.key].aggregate.shift();
+                            this.seriesData[dataObject.key].lower.shift();
                         }
                     }
 
@@ -369,9 +372,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                                 aggFormat = this.widgetHelper.getChartConfig().customFormatString;
                             }
 
-                            while (moment(this.seriesData[key].labels[0], aggFormat).isBefore(from)) {
-                                this.seriesData[key].bucket.shift();
-                                this.seriesData[key].labels.shift();
+                            while (moment(this.seriesData[dataObject.key].labels[0], aggFormat).isBefore(from)) {
+                                this.seriesData[dataObject.key].bucket.shift();
+                                this.seriesData[dataObject.key].labels.shift();
                             }
                         }
                     }
@@ -383,19 +386,86 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().getChartType() === "bar"
                     ) {
                         //all graph types
-                        while (moment(this.seriesData[key].valtimes[0].x).isBefore(moment(from))) {
-                            this.seriesData[key].valtimes.shift();
+                        while (moment(this.seriesData[dataObject.key].valtimes[0].x).isBefore(moment(from))) {
+                            this.seriesData[dataObject.key].valtimes.shift();
+                        }
+                        while (moment(this.seriesData[dataObject.options.group].valtimes[0].x).isBefore(moment(from))) {
+                            this.seriesData[dataObject.options.group].valtimes.shift();
                         }
                     }
 
                     if (this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
-                        while (moment(this.seriesData[key].valtimes[0].y).isBefore(moment(from))) {
-                            this.seriesData[key].valtimes.shift();
+                        while (moment(this.seriesData[dataObject.key].valtimes[0].y).isBefore(moment(from))) {
+                            this.seriesData[dataObject.key].valtimes.shift();
+                        }
+                        while (moment(this.seriesData[dataObject.options.group].valtimes[0].y).isBefore(moment(from))) {
+                            this.seriesData[dataObject.options.group].valtimes.shift();
                         }
                     }
 
                     this.setAxes();
                     this.chartElement.update();
+                }
+            }
+        }
+    }
+
+    private updateSeriesData(dataObject: DataObject, newPointBucket: string, lastPointBucket: string, datum: ChartPoint) {
+        if (dataObject.options.groupby && newPointBucket === lastPointBucket) {
+            this.seriesData[dataObject.key].valCount += 1;
+            if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
+                let v: any = this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].x;
+                this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].x =
+                    (<number>datum.x + v * (this.seriesData[dataObject.key].valCount - 1)) / this.seriesData[dataObject.key].valCount;
+                this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].x = parseFloat(
+                    (<number>this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].x).toFixed(
+                        dataObject.options.numdp
+                    )
+                );
+            } else {
+                let v: any = this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].y;
+                this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].y =
+                    (<number>datum.y + v * (this.seriesData[dataObject.key].valCount - 1)) / this.seriesData[dataObject.key].valCount;
+                this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].y = parseFloat(
+                    (<number>this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1].y).toFixed(
+                        dataObject.options.numdp
+                    )
+                );
+            }
+        } else {
+            this.seriesData[dataObject.key].valCount = 1;
+            this.seriesData[dataObject.key].valtimes.push(datum);
+        }
+    }
+
+    private updateGroupData(options: MeasurementOptions, datum: ChartPoint) {
+        if (options.group !== "default") {
+            let lastElement: ChartPoint = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1];
+            let nextTime = moment(datum.x).format(options.labelDateFormat);
+            let lastTime = moment(lastElement.x).format(options.labelDateFormat);
+            console.log("updateGroupData ", options.group, datum, options, lastElement);
+
+            if (lastTime !== nextTime) {
+                console.log("CREATE");
+                this.seriesData[options.group].valCount = 1;
+                this.seriesData[options.group].valtimes.push(datum);
+            } else {
+                console.log("ADDING");
+                this.seriesData[options.group].valCount += 1;
+                if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
+                    let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x;
+                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x =
+                        (<number>datum.x + v * (this.seriesData[options.group].valCount - 1)) / this.seriesData[options.group].valCount;
+                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x = parseFloat(
+                        (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x).toFixed(options.numdp)
+                    );
+                } else {
+                    let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y;
+                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y =
+                        (<number>datum.y + v * (this.seriesData[options.group].valCount - 1)) / this.seriesData[options.group].valCount;
+                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y = parseFloat(
+                        (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y).toFixed(options.numdp)
+                    );
                 }
             }
         }
@@ -409,6 +479,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
         //Clean up
         this.chartData = [];
+
+        //make sure we don't leak
+        if (this.rtData$.observers.length > 0) {
+            this.rtData$.unsubscribe();
+        }
 
         let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
         for (const subKey in this.subscription) {
@@ -440,46 +515,120 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             //for each fragment/series to be plotted
             //ChartSeries has most of the config for the series
             //the MeasurementList contains the data (and its independent)
-            for (let key of Object.keys(this.widgetHelper.getChartConfig().series)) {
-                if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, key)) {
-                    const measurement = this.widgetHelper.getChartConfig().series[key];
+            let groups = [];
 
-                    //each series (aggregates and functions of raw data too) gets this
-                    let options: MeasurementOptions = new MeasurementOptions(
-                        measurement.id.split(".")[0],
-                        measurement.name,
-                        measurement.id.split(".")[1],
-                        measurement.id.split(".")[2],
-                        this.widgetHelper.getChartConfig().series[key].avgPeriod,
-                        this.widgetHelper.getChartConfig().getChartType(),
-                        this.widgetHelper.getChartConfig().numdp,
-                        this.widgetHelper.getChartConfig().sizeBuckets,
-                        this.widgetHelper.getChartConfig().minBucket,
-                        this.widgetHelper.getChartConfig().maxBucket,
-                        this.widgetHelper.getChartConfig().groupby,
-                        this.widgetHelper.getChartConfig().cumulative
-                    );
+            for (let seriesName of Object.keys(this.widgetHelper.getChartConfig().series)) {
+                if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, seriesName)) {
+                    const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
 
-                    //a period of time where quantity is the # of units,
-                    // and type(unit) has the # of seconds per unit in the id field
-                    let { from, to } = this.getDateRange();
-                    await this.getBaseMeasurements(from, to, key, options);
+                    if (!seriesConfig.isParent) {
+                        //each series (aggregates and functions of raw data too) gets this
+                        let options: MeasurementOptions = new MeasurementOptions(
+                            this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
+                            this.widgetHelper.getChartConfig().getChartType(),
+                            this.widgetHelper.getChartConfig().numdp,
+                            this.widgetHelper.getChartConfig().sizeBuckets,
+                            this.widgetHelper.getChartConfig().minBucket,
+                            this.widgetHelper.getChartConfig().maxBucket,
+                            this.widgetHelper.getChartConfig().groupby,
+                            this.widgetHelper.getChartConfig().cumulative,
+                            seriesConfig.memberOf
+                        );
+                        //a period of time where quantity is the # of units,
+                        // and type(unit) has the # of seconds per unit in the id field
+                        let { from, to } = this.getDateRange();
+                        //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
+                        for (let index = 0; index < seriesConfig.idList.length; index++) {
+                            const seriesId = seriesConfig.idList[index];
+                            await this.getBaseMeasurements(
+                                seriesConfig.idList.length > 1,
+                                seriesId.split(".")[0],
+                                seriesConfig.name,
+                                seriesId.split(".")[1],
+                                seriesId.split(".")[2],
+                                from,
+                                to,
+                                seriesConfig.idList.length > 1 ? seriesId : seriesName,
+                                options
+                            );
+                        }
 
-                    if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
-                        //different to line/bar type plots - potentially lots of colours req
-                        //if lots of points added. If they run out you get grey...
-                        this.createPieChart(key, localChartData, options);
+                        if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
+                            //different to line/bar type plots - potentially lots of colours req
+                            //if lots of points added. If they run out you get grey...
+                            this.createPieChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
+                        } else {
+                            //Normal plot
+                            this.createNormalChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
+                        }
                     } else {
-                        //Normal plot
-                        this.createNormalChart(key, localChartData, options);
+                        groups.push(seriesName);
                     }
+                }
+            }
+
+            //now add the group series (we should have data at this point.)
+            for (let index = 0; index < groups.length; index++) {
+                const seriesName = groups[index];
+                const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
+                //each series (aggregates and functions of raw data too) gets this
+                let options: MeasurementOptions = new MeasurementOptions(
+                    this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
+                    this.widgetHelper.getChartConfig().getChartType(),
+                    this.widgetHelper.getChartConfig().numdp,
+                    this.widgetHelper.getChartConfig().sizeBuckets,
+                    this.widgetHelper.getChartConfig().minBucket,
+                    this.widgetHelper.getChartConfig().maxBucket,
+                    this.widgetHelper.getChartConfig().groupby,
+                    this.widgetHelper.getChartConfig().cumulative,
+                    seriesName
+                );
+
+                let { from, to } = this.getDateRange();
+
+                //TODO : tidy up these unused params
+                await this.getBaseMeasurements(
+                    seriesConfig.idList.length > 1, //should be true
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    from,
+                    to,
+                    seriesName,
+                    options
+                );
+
+                //do something here with the parent group.
+                if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
+                    //different to line/bar type plots - potentially lots of colours req
+                    //if lots of points added. If they run out you get grey...
+                    this.createPieChart(seriesName, localChartData, options);
+                } else {
+                    //Normal plot
+                    this.createNormalChart(seriesName, localChartData, options);
                 }
             }
         } else {
             await this.retrieveAndPlotMultivariateChart(localChartData);
         }
+        //console.log("DATA", localChartData);
+
         this.chartData = localChartData; //replace
         this.dataLoaded = true; //update
+        // this.rtData$
+        //     .pipe(
+        //         groupBy((g) => moment(g.data.data.data.x).format(g.options.labelDateFormat)),
+        //         switchMap((group) => group.pipe(scan<DataObject>((a, c) => [...a, c], [])))
+        //     )
+        //     .subscribe(
+        //         (x) => {
+        //             console.log("[PROCESSED]", x);
+        //             this.handleRealtime(x);
+        //         },
+        //         (error) => console.log(error)
+        //     );
+        this.rtData$.subscribe((incoming) => this.handleRealtime(incoming));
     }
 
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
@@ -491,27 +640,23 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         // Get the data - there will be 1-3 series that will get
         // compressed into a single with x,y,r values
         //
-        for (let key of Object.keys(this.widgetHelper.getChartConfig().series)) {
-            if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, key)) {
+        for (let seriesName of Object.keys(this.widgetHelper.getChartConfig().series)) {
+            if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, seriesName)) {
                 //For each variable retrieve the measurements
                 //we need to match up measurements to get the
                 //graph - omit gaps - real time?
-                const measurement = this.widgetHelper.getChartConfig().series[key];
-                const v = this.widgetHelper.getChartConfig().series[key].variable;
+                const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
+                const v = this.widgetHelper.getChartConfig().series[seriesName].variable;
 
                 //store variable x, y, r with key
                 if (v !== "Assign variable") {
-                    seriesList[v] = key;
+                    seriesList[v] = seriesName;
                     assigned++;
                 }
 
                 //each series (aggregates and functions of raw data too) gets this
                 let options: MeasurementOptions = new MeasurementOptions(
-                    measurement.id.split(".")[0],
-                    measurement.name,
-                    measurement.id.split(".")[1],
-                    measurement.id.split(".")[2],
-                    this.widgetHelper.getChartConfig().series[key].avgPeriod,
+                    this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
                     this.widgetHelper.getChartConfig().getChartType(),
                     this.widgetHelper.getChartConfig().numdp,
                     this.widgetHelper.getChartConfig().sizeBuckets,
@@ -522,7 +667,20 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 );
 
                 let { from, to } = this.getDateRange();
-                await this.getBaseMeasurements(from, to, key, options);
+                for (let index = 0; index < seriesConfig.idList.length; index++) {
+                    const seriesId = seriesConfig.idList[index];
+                    await this.getBaseMeasurements(
+                        seriesConfig.idList.length > 1,
+                        seriesId.split(".")[0],
+                        seriesConfig.name,
+                        seriesId.split(".")[1],
+                        seriesId.split(".")[2],
+                        from,
+                        to,
+                        seriesConfig.idList.length > 1 ? seriesId : seriesName,
+                        options
+                    );
+                }
             }
         }
 
@@ -657,7 +815,17 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param key the series key
      * @param options options for the series
      */
-    private async getBaseMeasurements(from: Date, to: Date, key: string, options: MeasurementOptions) {
+    private async getBaseMeasurements(
+        isGroup: boolean,
+        deviceId: string,
+        name: string,
+        fragment: string,
+        series: string,
+        from: Date,
+        to: Date,
+        key: string,
+        options: MeasurementOptions
+    ) {
         if (from.getTime() == to.getTime()) {
             from = new Date(new Date(to).setFullYear(to.getFullYear() - 1));
         }
@@ -678,21 +846,36 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             aggFormat = this.widgetHelper.getChartConfig().customFormatString;
         }
 
-        //
-        // WorkHorse Functionality - retrieve and calculate derived numbers
-        //
-        this.seriesData[key] = await this.measurementHelper.getMeasurements(
-            this.measurementService,
-            options,
-            from,
-            to,
-            null,
-            this.widgetHelper.getChartConfig().getChartType(),
-            this.widgetHelper.getChartConfig().aggregation == 0,
-            aggUnit,
-            aggFormat,
-            measurementLimit
-        );
+        if (!isGroup) {
+            //
+            // WorkHorse Functionality - retrieve and calculate derived numbers
+            //
+            this.seriesData[key] = await this.measurementHelper.getMeasurements(
+                deviceId,
+                name,
+                fragment,
+                series,
+                this.measurementService,
+                options,
+                from,
+                to,
+                null,
+                this.widgetHelper.getChartConfig().getChartType(),
+                this.widgetHelper.getChartConfig().aggregation == 0,
+                aggUnit,
+                aggFormat,
+                measurementLimit
+            );
+        } else {
+            //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);
+
+            //take the individual series and aggregate them into a composite
+            this.seriesData[key] = await this.measurementHelper.createAggregate(
+                this.seriesData,
+                this.widgetHelper.getChartConfig().series[key].idList,
+                options
+            );
+        }
     }
 
     /**
@@ -723,7 +906,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //Update series as measurements come in.
         if (!this.subscription[key]) {
             this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                this.handleRealtime(data, key, options)
+                this.queueRealtime(data, key, options)
             );
         }
     }
@@ -736,6 +919,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param options options for chart
      */
     private createNormalChart(key: string, localChartData: any[], options: MeasurementOptions) {
+        //console.log("KEY", key);
         if (
             this.widgetHelper.getChartConfig().getChartType() === "bar" &&
             this.widgetHelper.getChartConfig().getChartType() === "horizontalBar" &&
@@ -749,13 +933,16 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().series[key].avgType = "None";
         }
 
+        //console.log("SERIES", key, this.widgetHelper.getChartConfig().series, this.seriesData);
         if (this.widgetHelper.getChartConfig().series[key].hideMeasurements !== true) {
+            //console.log("CREATE SERIES", key);
             let thisSeries: ChartDataSets = this.createSeries(
                 key,
                 this.widgetHelper.getChartConfig().series[key].name,
                 this.widgetHelper.getWidgetConfig().chart.series[key].color
             );
             thisSeries.data = this.seriesData[key].valtimes;
+            //console.log("DATA", thisSeries.data);
             thisSeries.barPercentage = 0.9;
             thisSeries.categoryPercentage = 0.9;
             //need raw type
@@ -806,9 +993,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
 
         //realtime
-        if (!this.subscription[key]) {
+        if (!this.subscription[key] && !this.widgetHelper.getChartConfig().series[key].isParent) {
             this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                this.handleRealtime(data, key, options)
+                this.queueRealtime(data, key, options)
             );
         }
     }

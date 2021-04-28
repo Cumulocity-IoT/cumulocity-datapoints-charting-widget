@@ -32,12 +32,9 @@ export class MeasurementOptions {
     mxBuckets: number;
     groupby: boolean;
     cumulative: boolean;
+    group: string;
 
     constructor(
-        deviceId: string,
-        name: string,
-        fragment: string,
-        series: string,
         averagePeriod: number,
         targetGraphType: string,
         numdp: number,
@@ -45,12 +42,9 @@ export class MeasurementOptions {
         mnBuckets: number,
         mxBuckets: number,
         groupby: boolean,
-        cumulative: boolean
+        cumulative: boolean,
+        group: string = "default"
     ) {
-        this.deviceId = deviceId;
-        this.name = name;
-        this.fragment = fragment;
-        this.series = series;
         this.pageSize = 50;
         this.queryDateFormat = "yyyy-MM-ddTHH:mm:ssZ";
         this.locale = "en";
@@ -65,9 +59,14 @@ export class MeasurementOptions {
         this.mxBuckets = mxBuckets;
         this.groupby = groupby;
         this.cumulative = cumulative;
+        this.group = group;
     }
 
     public setFilter(
+        deviceId: string,
+        name: string,
+        fragment: string,
+        series: string,
         from: Date,
         to: Date,
         count: number,
@@ -76,6 +75,10 @@ export class MeasurementOptions {
         bucketPeriod: string,
         labelDateFormat: string
     ) {
+        this.deviceId = deviceId;
+        this.name = name;
+        this.fragment = fragment;
+        this.series = series;
         if (from) {
             _.set(this, "dateFrom", from);
         }
@@ -157,7 +160,7 @@ export class MeasurementList {
             this.mx = mx;
             this.mn = mn;
         } else {
-            this.sourceCriteria = new MeasurementOptions("", "", "", "", 30, "line", 2, 5, 0, 10, false, false);
+            this.sourceCriteria = new MeasurementOptions(30, "line", 2, 5, 0, 10, false, false);
             this.aggregate = [];
             this.valtimes = [];
             this.valCount = 0;
@@ -214,6 +217,10 @@ export class MeasurementHelper {
      * @param maxMeasurements: limit the measurements (used when #measurements required)
      */
     public async getMeasurements(
+        deviceId: string,
+        name: string,
+        fragment: string,
+        series: string,
         measurementService: MeasurementService,
         options: MeasurementOptions,
         dateFrom: Date,
@@ -225,7 +232,7 @@ export class MeasurementHelper {
         labelDateFormat: string,
         maxMeasurements: number
     ): Promise<MeasurementList> {
-        options.setFilter(dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
+        options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
 
         let filter = options.filter();
 
@@ -255,6 +262,62 @@ export class MeasurementHelper {
             console.log(`total of ${data.length} points`);
         }
         return this.processData(data, options);
+    }
+
+    public async createAggregate(
+        seriesData: { [key: string]: MeasurementList },
+        measurements: string[],
+        options: MeasurementOptions
+    ): Promise<MeasurementList> {
+        let rawData: RawData = new RawData();
+        let upper = [];
+        let lower = [];
+        let aggseries = [];
+
+        //we have the rawdata - MUST fill out the sources before attempting this.
+        for (let index = 0; index < measurements.length; index++) {
+            const seriesKey = measurements[index];
+            const raw = seriesData[seriesKey];
+            console.log("DEST", seriesKey, rawData.vl);
+            console.log("SOURCE", seriesKey, raw.valtimes);
+            //lets accumulate the data...
+            if (rawData.vl.length == 0) {
+                console.log("COPY FIRST", seriesKey);
+                rawData.vl = JSON.parse(JSON.stringify(raw.valtimes)); //deep copy
+            } else {
+                //add the values
+                console.log("ADD ", seriesKey);
+
+                for (let innerIndex = 0; innerIndex < raw.valtimes.length; innerIndex++) {
+                    const element = raw.valtimes[innerIndex];
+                    rawData.vl[innerIndex].y += element.y;
+                }
+            }
+        }
+
+        console.log("SUM ", rawData.vl);
+
+        for (let index = 0; index < rawData.vl.length; index++) {
+            const point = rawData.vl[index];
+            rawData.vl[index].y = parseFloat((point.y / measurements.length).toFixed(options.numdp));
+        }
+
+        console.log("AVG ", rawData.vl);
+        //instance of data for use
+        let measurementList: MeasurementList = new MeasurementList(
+            options,
+            upper,
+            aggseries,
+            lower,
+            rawData.vl,
+            rawData.vlCounts[rawData.vlCounts.length - 1], //last count so we can continue
+            [], //bucket data
+            [], //bucket labels
+            rawData.mx,
+            rawData.mn,
+            rawData.sm
+        );
+        return measurementList;
     }
 
     /**
@@ -376,15 +439,6 @@ export class MeasurementHelper {
 
                 //new data point needed - deal with the last values
                 if (newArr.lastBucket != lst) {
-                    //average over period
-                    // if (!options.cumulative && newArr.vl.length > 0 && newArr.counted > 0) {
-                    //     if (options.targetGraphType == "horizontalBar") {
-                    //         newArr.vl[newArr.vl.length - 1].x = newArr.vl[newArr.vl.length - 1].x / newArr.counted;
-                    //     } else {
-                    //         newArr.vl[newArr.vl.length - 1].y = newArr.vl[newArr.vl.length - 1].y / newArr.counted;
-                    //     }
-                    // }
-                    // newArr.counted = 0;
                     newArr.vl.push(v);
                     newArr.vlCounts.push(1);
                 } else {
@@ -418,7 +472,7 @@ export class MeasurementHelper {
             }
         }
 
-        //console.log("RawData", result);
+        console.log("RawData", result);
         return result;
     }
 
@@ -580,7 +634,7 @@ export class MeasurementHelper {
             } else if (item > maxBucket) {
                 bins[bins.length - 1]++;
             } else {
-                console.log("binIndex==numBins", item, binIndex, binLabels[binIndex]);
+                //console.log("binIndex==numBins", item, binIndex, binLabels[binIndex]);
                 // for values that lie exactly on last bin we need to subtract one
                 if (binIndex === numBins) {
                     binIndex--;

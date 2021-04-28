@@ -100,7 +100,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     async fetchSeries(id): Promise<string[]> {
         let resp: IFetchResponse = await this.fetchclient.fetch("/inventory/managedObjects/" + id + "/supportedSeries");
         let body = await resp.json();
-        console.log("FETCH RESP", resp, body);
         return body.c8y_SupportedSeries;
     }
 
@@ -157,9 +156,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
                 return item.text !== undefined;
             });
 
-        console.log("DEVICES", this.rawDevices);
-
-        //this.updateSelectedMeasurements();
         this.updateConfig();
     }
 
@@ -234,7 +230,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         if (devices) {
             for (let index = 0; index < devices.length; index++) {
                 const dev: RawListItem = devices[index];
-                console.log("FETCH", dev);
                 //is it a group
                 if (dev.isGroup) {
                     //get the child devices and generate the list of ids to process
@@ -242,12 +237,12 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
 
                     for (let index = 0; index < actualDevices.length; index++) {
                         const device = actualDevices[index];
-                        console.log("Getting Group device series", device.id, device.name);
                         let current: RawListItem[] = (await this.fetchSeries(device.id)).map((m) => {
                             return {
                                 id: device.id + "." + m,
                                 text: `${m}(${dev.text}/${device.name})`,
                                 isGroup: true,
+                                groupname: dev.text,
                             };
                         });
                         local = [...local, ...current];
@@ -258,13 +253,13 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
                             id: dev.id + "." + m,
                             text: `${m}(${dev.text})`,
                             isGroup: false,
+                            groupname: "default",
                         };
                     });
                     local = [...local, ...current];
                 }
             }
         }
-        console.log("Got Series ", local);
         return local;
     }
 
@@ -274,9 +269,33 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     async updateSelectedMeasurements() {
         this.widgetHelper.getChartConfig().clearSeries(this.widgetHelper.getWidgetConfig().selectedMeasurements);
         this.widgetHelper.getWidgetConfig().selectedMeasurements.forEach((v, i) => {
+            console.log("CURRENT SELECTED = ", v);
             this.widgetHelper
                 .getChartConfig()
-                .addSeries(v.id, v.text, this.widgetHelper.getChartConfig().colorList[i], this.widgetHelper.getChartConfig().avgColorList[i]);
+                .addSeries(
+                    [v.id],
+                    v.text,
+                    this.widgetHelper.getChartConfig().colorList[i],
+                    this.widgetHelper.getChartConfig().avgColorList[i],
+                    v.groupname
+                );
+            //add a series for the group - this will be controlled via a flag as well...
+            if (v.isGroup && !(v.groupname in this.widgetHelper.getChartConfig().series)) {
+                console.log("CREATING ", v.groupname);
+
+                this.widgetHelper.getChartConfig().addSeries(
+                    [v.id], //create and add the source device
+                    v.groupname,
+                    this.widgetHelper.getChartConfig().colorList[i],
+                    this.widgetHelper.getChartConfig().avgColorList[i],
+                    v.groupname,
+                    true
+                );
+            } else if (v.isGroup && v.groupname in this.widgetHelper.getChartConfig().series) {
+                //add this device if
+                console.log("ADDING device to ", v.groupname);
+                this.widgetHelper.getChartConfig().series[v.groupname].idList.push(v.id);
+            }
         });
     }
 
@@ -294,12 +313,9 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     async updateConfig() {
         let conf = this.widgetHelper.getWidgetConfig();
         let chart = this.widgetHelper.getChartConfig();
-        console.log("SELECTED", conf.selectedDevices);
         // get the list of possible fragments
         if (chart && conf.selectedDevices && conf.selectedDevices.length > 0) {
             let checklist = new Set([]);
-
-            console.log("UPDATE CONFIG", conf.selectedDevices);
 
             for (let index = 0; index < conf.selectedDevices.length; index++) {
                 checklist.add(conf.selectedDevices[index].id);

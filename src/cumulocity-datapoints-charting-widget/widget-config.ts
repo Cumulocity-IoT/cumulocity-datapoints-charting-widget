@@ -20,6 +20,7 @@ export interface RawListItem {
     text: any;
     format?: string;
     isGroup?: boolean;
+    groupname?: string;
 }
 
 /**

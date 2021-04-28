@@ -15,7 +15,7 @@ export interface Aggregation {
  * chosen by the user. (and sensible defaults)
  */
 export class ChartSeries {
-    id: string = ""; //series id
+    idList: string[] = []; //series id
     name: string = ""; //series name
     variable: string = "Assign variable"; //part of composite co-ordinate (0 = no order, 1 = x, 2 = y...)
     color: string = "#4ABBF0"; //display colour default just in case
@@ -24,11 +24,15 @@ export class ChartSeries {
     avgType: string = "None";
     avgPeriod: number = 10;
     avgColor: string = "#4ABBF0"; //display colour
-    constructor(k: string, n: string, c: string, a: string) {
-        this.id = k;
+    memberOf: string = "default";
+    isParent: boolean;
+    constructor(k: string[], n: string, c: string, a: string, g: string, p: boolean) {
+        this.idList = k;
         this.name = n;
         this.color = c;
         this.avgColor = a;
+        this.memberOf = g;
+        this.isParent = p;
     }
 }
 
@@ -41,20 +45,20 @@ export class ChartConfig {
      *  Legend position
      */
     public chartPositions: RawListItem[] = [
-        { isGroup: false, id: 0, text: "None" },
-        { isGroup: false, id: 1, text: "left" },
-        { isGroup: false, id: 2, text: "right" },
-        { isGroup: false, id: 3, text: "top" },
-        { isGroup: false, id: 4, text: "bottom" },
-        { isGroup: false, id: 5, text: "chartArea" },
+        { id: 0, text: "None" },
+        { id: 1, text: "left" },
+        { id: 2, text: "right" },
+        { id: 3, text: "top" },
+        { id: 4, text: "bottom" },
+        { id: 5, text: "chartArea" },
     ];
 
     /**
      * Types of aggregation for the single series (Pie/Doughnut and later Histogram)
      */
     public aggregationType: RawListItem[] = [
-        { isGroup: false, id: 0, text: "By Time" },
-        { isGroup: false, id: 1, text: "Value Buckets" },
+        { id: 0, text: "By Time" },
+        { id: 1, text: "Value Buckets" },
     ];
 
     /**
@@ -68,15 +72,15 @@ export class ChartConfig {
      */
     public rangeUnits: RawListItem[] = [
         // { isGroup:false , id: -1, text: "Dates" },
-        { isGroup: false, id: 0, text: "measurements", format: "h:mm:ss.SSS a" },
-        { isGroup: false, id: 1, text: "second", format: "h:mm:ss a" },
-        { isGroup: false, id: 60, text: "minute", format: "h:mm a" },
-        { isGroup: false, id: 3600, text: "hour", format: "hA" },
-        { isGroup: false, id: 86400, text: "day", format: "MMM D" },
-        { isGroup: false, id: 604800, text: "week", format: "week ll" },
-        { isGroup: false, id: 2592000, text: "month", format: "MMM YYYY" },
-        { isGroup: false, id: 7776000, text: "quarter", format: "[Q]Q - YYYY" },
-        { isGroup: false, id: 31536000, text: "year", format: "YYYY" },
+        { id: 0, text: "measurements", format: "h:mm:ss.SSS a" },
+        { id: 1, text: "second", format: "h:mm:ss a" },
+        { id: 60, text: "minute", format: "h:mm a" },
+        { id: 3600, text: "hour", format: "hA" },
+        { id: 86400, text: "day", format: "MMM D" },
+        { id: 604800, text: "week", format: "week ll" },
+        { id: 2592000, text: "month", format: "MMM YYYY" },
+        { id: 7776000, text: "quarter", format: "[Q]Q - YYYY" },
+        { id: 31536000, text: "year", format: "YYYY" },
     ];
 
     /**
@@ -255,14 +259,20 @@ export class ChartConfig {
     /**
      * Add a new series to the list held.
      *
-     * @param key is a composite of device, series and fragment
+     * @param devices is a list of the composite of device, series and fragment
      * @param seriesName is the display name
      * @param seriesColor is the main color
      * @param altColor is the aggregate color
      */
-    addSeries(key: string, seriesName: string, seriesColor: string, altColor: string) {
-        if (!_.has(this.series, key)) {
-            this.series[key] = new ChartSeries(key, seriesName, seriesColor, altColor);
+    addSeries(devices: string[], seriesName: string, seriesColor: string, altColor: string, memberOf: string = "default", isParent: boolean = false) {
+        if (!isParent) {
+            if (!_.has(this.series, devices[0])) {
+                this.series[devices[0]] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);
+            }
+        } else {
+            if (!_.has(this.series, seriesName)) {
+                this.series[seriesName] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);
+            }
         }
     }
 }
