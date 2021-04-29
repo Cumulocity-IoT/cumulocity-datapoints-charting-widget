@@ -6,6 +6,7 @@ import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
 import * as Chart from "chart.js";
+import { openDB, DBSchema } from "idb";
 
 /**
  * These elements can form the criteria
@@ -232,8 +233,10 @@ export class MeasurementHelper {
         labelDateFormat: string,
         maxMeasurements: number
     ): Promise<MeasurementList> {
-        options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
+        //save this data in local storage
 
+        //options for this query
+        options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
         let filter = options.filter();
 
         //get the first page
@@ -261,6 +264,12 @@ export class MeasurementHelper {
             }
             console.log(`total of ${data.length} points`);
         }
+
+        // const tx = db.transaction(storeName, "readwrite");
+        // const store = await tx.objectStore(storeName);
+        // const value = await store.put(JSON.stringify(data), storageKey);
+        // await tx.done;
+
         return this.processData(data, options);
     }
 
@@ -278,15 +287,15 @@ export class MeasurementHelper {
         for (let index = 0; index < measurements.length; index++) {
             const seriesKey = measurements[index];
             const raw = seriesData[seriesKey];
-            console.log("DEST", seriesKey, rawData.vl);
-            console.log("SOURCE", seriesKey, raw.valtimes);
+            //console.log("DEST", seriesKey, rawData.vl);
+            //console.log("SOURCE", seriesKey, raw.valtimes);
             //lets accumulate the data...
             if (rawData.vl.length == 0) {
-                console.log("COPY FIRST", seriesKey);
+                //console.log("COPY FIRST", seriesKey);
                 rawData.vl = JSON.parse(JSON.stringify(raw.valtimes)); //deep copy
             } else {
                 //add the values
-                console.log("ADD ", seriesKey);
+                //console.log("ADD ", seriesKey);
 
                 for (let innerIndex = 0; innerIndex < raw.valtimes.length; innerIndex++) {
                     const element = raw.valtimes[innerIndex];
@@ -295,14 +304,14 @@ export class MeasurementHelper {
             }
         }
 
-        console.log("SUM ", rawData.vl);
+        //console.log("SUM ", rawData.vl);
 
         for (let index = 0; index < rawData.vl.length; index++) {
             const point = rawData.vl[index];
             rawData.vl[index].y = parseFloat((point.y / measurements.length).toFixed(options.numdp));
         }
 
-        console.log("AVG ", rawData.vl);
+        //console.log("AVG ", rawData.vl);
         //instance of data for use
         let measurementList: MeasurementList = new MeasurementList(
             options,
@@ -472,7 +481,7 @@ export class MeasurementHelper {
             }
         }
 
-        console.log("RawData", result);
+        //console.log("RawData", result);
         return result;
     }
 

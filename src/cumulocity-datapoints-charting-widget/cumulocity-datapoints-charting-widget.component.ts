@@ -16,6 +16,7 @@ import { of, Subject } from "rxjs";
 import { concatMap, finalize, groupBy, mergeMap, reduce, scan, switchMap, tap, toArray } from "rxjs/operators";
 import { group } from "@angular/animations";
 import { AccordionComponent } from "ngx-bootstrap";
+import { openDB } from "idb";
 
 interface DataObject {
     data: any;
@@ -171,7 +172,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * Remove subs
      */
     ngOnDestroy(): void {
-        this.rtData$.unsubscribe();
+        //this.rtData$.unsubscribe();
 
         for (const sub in this.subscription) {
             if (Object.prototype.hasOwnProperty.call(this.subscription, sub)) {
@@ -262,7 +263,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     );
                 }
 
-                console.log("BUCKET", newPointBucket, lastPointBucket);
+                //console.log("BUCKET", newPointBucket, lastPointBucket);
                 // need to add to current data point - Note that we test for the bucket we should be putting this in
                 // and tally up the count of the actual values in the current average (valcount)
                 //if we are not grouping, OR if we are adding a new bucket we set valcount to 1
@@ -434,7 +435,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             }
         } else {
             this.seriesData[dataObject.key].valCount = 1;
-            this.seriesData[dataObject.key].valtimes.push(datum);
+            this.seriesData[dataObject.key].valtimes.push({ ...datum });
         }
     }
 
@@ -443,14 +444,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             let lastElement: ChartPoint = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1];
             let nextTime = moment(datum.x).format(options.labelDateFormat);
             let lastTime = moment(lastElement.x).format(options.labelDateFormat);
-            console.log("updateGroupData ", options.group, datum, options, lastElement);
+            //console.log("updateGroupData ", options.group, datum, options, lastElement);
 
             if (lastTime !== nextTime) {
-                console.log("CREATE");
+                //console.log("CREATE");
                 this.seriesData[options.group].valCount = 1;
-                this.seriesData[options.group].valtimes.push(datum);
+                this.seriesData[options.group].valtimes.push({ ...datum });
             } else {
-                console.log("ADDING");
+                //console.log("ADDING");
                 this.seriesData[options.group].valCount += 1;
                 if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
                     let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x;
@@ -480,10 +481,20 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //Clean up
         this.chartData = [];
 
+        let dbName = "cumulocity-datapoints-charting-widget-db";
+        let storeName = `datasets`;
+        let version = 1;
+
+        const db = await openDB(dbName, version, {
+            upgrade(db, oldVersion, newVersion, transaction) {
+                const store = db.createObjectStore(storeName);
+            },
+        });
+
         //make sure we don't leak
-        if (this.rtData$.observers.length > 0) {
-            this.rtData$.unsubscribe();
-        }
+        // if (this.rtData$.observers.length > 0) {
+        //     this.rtData$.unsubscribe();
+        // }
 
         let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
         for (const subKey in this.subscription) {
@@ -616,19 +627,9 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
         this.chartData = localChartData; //replace
         this.dataLoaded = true; //update
-        // this.rtData$
-        //     .pipe(
-        //         groupBy((g) => moment(g.data.data.data.x).format(g.options.labelDateFormat)),
-        //         switchMap((group) => group.pipe(scan<DataObject>((a, c) => [...a, c], [])))
-        //     )
-        //     .subscribe(
-        //         (x) => {
-        //             console.log("[PROCESSED]", x);
-        //             this.handleRealtime(x);
-        //         },
-        //         (error) => console.log(error)
-        //     );
-        this.rtData$.subscribe((incoming) => this.handleRealtime(incoming));
+        //this.rtData$.subscribe((incoming) => this.handleRealtime(incoming));
+
+        //save data at this point
     }
 
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
@@ -906,7 +907,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //Update series as measurements come in.
         if (!this.subscription[key]) {
             this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                this.queueRealtime(data, key, options)
+                this.handleRealtime({ data, key, options })
             );
         }
     }
@@ -995,7 +996,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //realtime
         if (!this.subscription[key] && !this.widgetHelper.getChartConfig().series[key].isParent) {
             this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                this.queueRealtime(data, key, options)
+                this.handleRealtime({ data, key, options })
             );
         }
     }
