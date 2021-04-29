@@ -172,6 +172,17 @@ export class MeasurementList {
             this.mn = 0;
         }
     }
+
+    append(ml: MeasurementList) {
+        this.sourceCriteria = ml.sourceCriteria;
+        this.upper = [...this.upper, ...ml.upper];
+        this.aggregate = [...this.aggregate, ...ml.aggregate];
+        this.lower = [...this.lower, ...ml.lower];
+        this.valtimes = [...this.lower, ...ml.lower];
+        this.valCount = ml.valCount;
+        this.bucket = [...this.bucket, ...ml.bucket];
+        this.labels = [...this.labels, ...ml.labels];
+    }
 }
 
 class RawData {
@@ -236,25 +247,33 @@ export class MeasurementHelper {
         maxMeasurements: number
     ): Promise<MeasurementList> {
         //options for this query
-        options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
-        let filter = options.filter();
 
         let dbName = "cumulocity-datapoints-charting-widget-db";
         let storeName = `datasets`;
-        let key = `${chartID}-${deviceId}-${fragment}-${series}`;
+        let key = `${chartID}-${deviceId}.${fragment}.${series}`;
         const db = await openDB(dbName);
+
+        //either initialize or create
+        let theData: MeasurementList = undefined;
 
         if (!criteriaChanged) {
             const item = await db.transaction(storeName).objectStore(storeName).get(key);
 
             //shortcut here - old data is fine - will update on next RT
             if (item) {
-                let theData = JSON.parse(item);
-                console.log(theData);
-                return theData;
+                theData = JSON.parse(item);
+
+                if (theData.valtimes.length - 1 >= 0) {
+                    const theLastValue = theData.valtimes[theData.valtimes.length - 1];
+                    if (dateFrom && moment(<Date>theLastValue.x).isAfter(dateFrom)) {
+                        dateFrom = <Date>theLastValue.x;
+                    }
+                }
             }
         }
 
+        options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
+        let filter = options.filter();
         //get the first page
         _.set(filter, "currentPage", 1);
         let data = [];
@@ -281,14 +300,17 @@ export class MeasurementHelper {
             console.log(`total of ${data.length} points`);
         }
 
-        let theData = this.processData(data, options);
+        if (theData) {
+            theData.append(this.processData(data, options));
+        } else {
+            theData = this.processData(data, options);
+        }
 
         const tx = db.transaction(storeName, "readwrite");
         const store = await tx.objectStore(storeName);
         //store the data so we can reopen immediately
         const _value = await store.put(JSON.stringify(theData), key);
         await tx.done;
-
         return theData;
     }
 

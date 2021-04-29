@@ -12,6 +12,7 @@ import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
+import { openDB } from "idb";
 //import { openDB } from "idb";
 
 interface DataObject {
@@ -189,7 +190,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param key
      * @param options
      */
-    handleRealtime(dataObject: DataObject): void {
+    async handleRealtime(dataObject: DataObject): Promise<void> {
         let measurementDate = new Date(dataObject.data.data.data.time);
         if (dataObject.options.groupby === true) {
             switch (dataObject.options.bucketPeriod) {
@@ -246,10 +247,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 let newPointBucket = this.measurementHelper.categorize(dataObject.options, datum);
                 let lastPointBucket = "";
                 if (this.seriesData[dataObject.key].valtimes.length - 1 >= 0) {
-                    lastPointBucket = this.measurementHelper.categorize(
-                        dataObject.options,
-                        this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1]
-                    );
+                    let lastPoint = this.seriesData[dataObject.key].valtimes[this.seriesData[dataObject.key].valtimes.length - 1];
+                    lastPointBucket = this.measurementHelper.categorize(dataObject.options, lastPoint);
                 }
 
                 //console.log("BUCKET", newPointBucket, lastPointBucket);
@@ -396,6 +395,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     this.setAxes();
                     this.chartElement.update();
                 }
+                let dbName = "cumulocity-datapoints-charting-widget-db";
+                let storeName = `datasets`;
+                let key = `${this.widgetHelper.getUniqueID()}-${dataObject.key}`;
+                const db = await openDB(dbName);
+                const tx = db.transaction(storeName, "readwrite");
+                const store = await tx.objectStore(storeName);
+                const _value = await store.put(JSON.stringify(this.seriesData[dataObject.key]), key);
+                await tx.done;
             }
         }
     }
@@ -623,6 +630,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
         this.chartData = localChartData; //replace
         this.dataLoaded = true; //update
+        this.widgetHelper.getWidgetConfig().changed = false;
         //this.rtData$.subscribe((incoming) => this.handleRealtime(incoming));
 
         //save data at this point
