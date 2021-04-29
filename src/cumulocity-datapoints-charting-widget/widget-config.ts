@@ -37,6 +37,7 @@ export class WidgetConfig {
      * charts configuration
      */
     chart: ChartConfig;
+    changed: boolean = false;
 
     /**
      *  Create an instance of the config object

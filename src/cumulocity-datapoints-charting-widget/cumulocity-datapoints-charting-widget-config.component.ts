@@ -313,6 +313,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     async updateConfig() {
         let conf = this.widgetHelper.getWidgetConfig();
         let chart = this.widgetHelper.getChartConfig();
+        conf.changed = true;
         // get the list of possible fragments
         if (chart && conf.selectedDevices && conf.selectedDevices.length > 0) {
             let checklist = new Set([]);

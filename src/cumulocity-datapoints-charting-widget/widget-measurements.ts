@@ -6,7 +6,7 @@ import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
 import * as Chart from "chart.js";
-import { openDB, DBSchema } from "idb";
+import { openDB } from "idb";
 
 /**
  * These elements can form the criteria
@@ -218,6 +218,8 @@ export class MeasurementHelper {
      * @param maxMeasurements: limit the measurements (used when #measurements required)
      */
     public async getMeasurements(
+        chartID: string,
+        criteriaChanged: boolean,
         deviceId: string,
         name: string,
         fragment: string,
@@ -233,11 +235,25 @@ export class MeasurementHelper {
         labelDateFormat: string,
         maxMeasurements: number
     ): Promise<MeasurementList> {
-        //save this data in local storage
-
         //options for this query
         options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
         let filter = options.filter();
+
+        let dbName = "cumulocity-datapoints-charting-widget-db";
+        let storeName = `datasets`;
+        let key = `${chartID}-${deviceId}-${fragment}-${series}`;
+        const db = await openDB(dbName);
+
+        if (!criteriaChanged) {
+            const item = await db.transaction(storeName).objectStore(storeName).get(key);
+
+            //shortcut here - old data is fine - will update on next RT
+            if (item) {
+                let theData = JSON.parse(item);
+                console.log(theData);
+                return theData;
+            }
+        }
 
         //get the first page
         _.set(filter, "currentPage", 1);
@@ -265,12 +281,15 @@ export class MeasurementHelper {
             console.log(`total of ${data.length} points`);
         }
 
-        // const tx = db.transaction(storeName, "readwrite");
-        // const store = await tx.objectStore(storeName);
-        // const value = await store.put(JSON.stringify(data), storageKey);
-        // await tx.done;
+        let theData = this.processData(data, options);
 
-        return this.processData(data, options);
+        const tx = db.transaction(storeName, "readwrite");
+        const store = await tx.objectStore(storeName);
+        //store the data so we can reopen immediately
+        const _value = await store.put(JSON.stringify(theData), key);
+        await tx.done;
+
+        return theData;
     }
 
     public async createAggregate(
@@ -296,8 +315,10 @@ export class MeasurementHelper {
             } else {
                 //add the values
                 //console.log("ADD ", seriesKey);
-
-                for (let innerIndex = 0; innerIndex < raw.valtimes.length; innerIndex++) {
+                let theLength = Math.min(rawData.vl.length, raw.valtimes.length);
+                rawData.vl.length = theLength;
+                raw.valtimes.length = theLength;
+                for (let innerIndex = 0; innerIndex < theLength; innerIndex++) {
                     const element = raw.valtimes[innerIndex];
                     rawData.vl[innerIndex].y += element.y;
                 }

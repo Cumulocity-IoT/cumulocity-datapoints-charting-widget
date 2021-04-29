@@ -12,11 +12,7 @@ import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
 import boll from "bollinger-bands";
 import "chartjs-plugin-labels";
-import { of, Subject } from "rxjs";
-import { concatMap, finalize, groupBy, mergeMap, reduce, scan, switchMap, tap, toArray } from "rxjs/operators";
-import { group } from "@angular/animations";
-import { AccordionComponent } from "ngx-bootstrap";
-import { openDB } from "idb";
+//import { openDB } from "idb";
 
 interface DataObject {
     data: any;
@@ -102,8 +98,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         },
     };
 
-    rtData$: Subject<DataObject> = new Subject<DataObject>();
-
     /**
      * Used on the page
      *
@@ -184,11 +178,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 }
             }
         }
-    }
-
-    queueRealtime(data: any, key: string, options: MeasurementOptions): void {
-        //use an observable (from/of) queue
-        this.rtData$.next({ data, key, options });
     }
 
     /**
@@ -481,15 +470,22 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //Clean up
         this.chartData = [];
 
-        let dbName = "cumulocity-datapoints-charting-widget-db";
-        let storeName = `datasets`;
-        let version = 1;
+        // let dbName = "cumulocity-datapoints-charting-widget-db";
+        // let storeName = `datasets`;
 
-        const db = await openDB(dbName, version, {
-            upgrade(db, oldVersion, newVersion, transaction) {
-                const store = db.createObjectStore(storeName);
-            },
-        });
+        // const db = await openDB(dbName);
+
+        // const item = undefined; //await db.transaction(storeName).objectStore(storeName).get(this.widgetHelper.getUniqueID());
+
+        //show old data
+        // if (item) {
+        //     try {
+        //         this.chartData = JSON.parse(item);
+        //     } catch (err) {
+        //         //go with empty
+        //         this.chartData = [];
+        //     }
+        // }
 
         //make sure we don't leak
         // if (this.rtData$.observers.length > 0) {
@@ -630,6 +626,11 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //this.rtData$.subscribe((incoming) => this.handleRealtime(incoming));
 
         //save data at this point
+        // const tx = db.transaction(storeName, "readwrite");
+        // const store = await tx.objectStore(storeName);
+        // //store the data so we can reopen immediately
+        // const value = await store.put(JSON.stringify(this.chartData), this.widgetHelper.getUniqueID());
+        // await tx.done;
     }
 
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
@@ -852,6 +853,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             // WorkHorse Functionality - retrieve and calculate derived numbers
             //
             this.seriesData[key] = await this.measurementHelper.getMeasurements(
+                this.widgetHelper.getUniqueID(),
+                this.widgetHelper.getWidgetConfig().changed,
                 deviceId,
                 name,
                 fragment,

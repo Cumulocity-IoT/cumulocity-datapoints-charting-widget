@@ -15,6 +15,7 @@
 import * as _ from "lodash";
 import { ChartConfig } from "./widget-charts";
 import { MeasurementHelper } from "./widget-measurements";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * The C8Y process has a standard member "config". This member has
@@ -110,5 +111,13 @@ export class WidgetHelper<CONFIGTYPE> {
             this.measurements = new MeasurementHelper();
         }
         return this.measurements;
+    }
+
+    getUniqueID(): string {
+        if (!_.has(this.config, "uuid")) {
+            _.set(this.config, "uuid", uuidv4());
+        }
+        console.log(this.config);
+        return _.get(this.config, "uuid");
     }
 }

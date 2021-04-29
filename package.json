@@ -4,7 +4,7 @@
         "dist\\bundle-src\\custom-widget.js": "cumulocity-datapoints-charting-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
     },
-    "version": "1.0.123",
+    "version": "1.0.136",
     "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "scripts": {
         "build": "gulp",
@@ -24,7 +24,8 @@
         "moment": "^2.29.1",
         "moving-averages": "^4.0.5",
         "ng2-charts": "^2.4.2",
-        "ngx-color-picker": "^11.0.0"
+        "ngx-color-picker": "^11.0.0",
+        "uuid": "^8.3.2"
     },
     "peerDependencies": {
         "@angular/common": "8.2.13",
