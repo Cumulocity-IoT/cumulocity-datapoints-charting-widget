@@ -251,10 +251,11 @@ export class MeasurementHelper {
         let dbName = "cumulocity-datapoints-charting-widget-db";
         let storeName = `datasets`;
         let key = `${chartID}-${deviceId}.${fragment}.${series}`;
-        const db = await openDB(dbName);
-        if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName);
-        }
+        const db = await openDB(dbName, 1, {
+            upgrade(db, oldVersion, newVersion, transaction) {
+                const store = db.createObjectStore(storeName); //needs to be in here to work
+            },
+        });
 
         //either initialize or create
         let theData: MeasurementList = undefined;
