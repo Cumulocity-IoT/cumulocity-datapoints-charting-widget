@@ -252,6 +252,9 @@ export class MeasurementHelper {
         let storeName = `datasets`;
         let key = `${chartID}-${deviceId}.${fragment}.${series}`;
         const db = await openDB(dbName);
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName);
+        }
 
         //either initialize or create
         let theData: MeasurementList = undefined;
