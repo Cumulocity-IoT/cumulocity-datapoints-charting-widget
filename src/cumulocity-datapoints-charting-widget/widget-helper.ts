@@ -117,7 +117,7 @@ export class WidgetHelper<CONFIGTYPE> {
         if (!_.has(this.config, "uuid")) {
             _.set(this.config, "uuid", uuidv4());
         }
-        console.log(this.config);
+        //console.log(this.config);
         return _.get(this.config, "uuid");
     }
 }

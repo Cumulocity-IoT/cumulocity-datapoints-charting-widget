@@ -269,7 +269,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     async updateSelectedMeasurements() {
         this.widgetHelper.getChartConfig().clearSeries(this.widgetHelper.getWidgetConfig().selectedMeasurements);
         this.widgetHelper.getWidgetConfig().selectedMeasurements.forEach((v, i) => {
-            console.log("CURRENT SELECTED = ", v);
+            //console.log("CURRENT SELECTED = ", v);
             this.widgetHelper
                 .getChartConfig()
                 .addSeries(
@@ -281,7 +281,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
                 );
             //add a series for the group - this will be controlled via a flag as well...
             if (v.isGroup && !(v.groupname in this.widgetHelper.getChartConfig().series)) {
-                console.log("CREATING ", v.groupname);
+                //console.log("CREATING ", v.groupname);
 
                 this.widgetHelper.getChartConfig().addSeries(
                     [v.id], //create and add the source device
@@ -293,7 +293,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
                 );
             } else if (v.isGroup && v.groupname in this.widgetHelper.getChartConfig().series) {
                 //add this device if
-                console.log("ADDING device to ", v.groupname);
+                //console.log("ADDING device to ", v.groupname);
                 this.widgetHelper.getChartConfig().series[v.groupname].idList.push(v.id);
             }
         });
