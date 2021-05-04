@@ -246,7 +246,7 @@ export class MeasurementHelper {
         maxMeasurements: number
     ): Promise<MeasurementList> {
         //options for this query
-
+        //console.log(` from ${dateFrom} to ${dateTo}`);
         let dbName = "cumulocity-datapoints-charting-widget-db";
         let storeName = `datasets`;
         let key = `${chartID}-${deviceId}.${fragment}.${series}`;
@@ -254,10 +254,10 @@ export class MeasurementHelper {
             upgrade(db, oldVersion, newVersion, transaction) {
                 var store;
                 try {
-                    console.log("Get the store");
+                    //console.log("Get the store");
                     store = transaction.objectStore(storeName);
                 } catch (e) {
-                    console.log("Create the store");
+                    //console.log("Create the store");
                     store = db.createObjectStore(storeName); //needs to be in here to work
                 }
             },
@@ -271,11 +271,45 @@ export class MeasurementHelper {
         //shortcut here - old data is fine - will update on next RT
         if (item) {
             theData = JSON.parse(item);
+            if (theData.valtimes.length > 0) {
+                let rangeStart: Date = new Date(Date.parse(theData.valtimes[0].x.toString()));
+                let rangeEnd: Date = new Date(Date.parse(theData.valtimes[theData.valtimes.length - 1].x.toString()));
+                console.log(`------------------`);
+                console.log(`Loaded data: from ${rangeStart} to ${rangeEnd}`);
+                console.log(`required from ${dateFrom} to ${dateTo}`);
+                console.log(`------------------`);
 
-            if (theData.valtimes.length - 1 >= 0) {
-                const theLastValue = theData.valtimes[theData.valtimes.length - 1];
-                if (dateFrom && moment(<Date>theLastValue.x).isAfter(dateFrom)) {
-                    dateFrom = <Date>theLastValue.x;
+                //if the data is not inclusive
+                if (moment(dateFrom).isBefore(rangeStart)) {
+                    //we have less stored than we need
+                    //just abandon the store. Could be cleverer later on.
+                    console.log(`retrieving all data because ${dateFrom} is before ${rangeStart}`);
+                    theData = undefined;
+                } else {
+                    // console.log(`Using stored: required from ${dateFrom} to ${dateTo}`);
+                    // console.log(`Loaded: from ${rangeStart} to ${rangeEnd}`);
+
+                    // let count = 0;
+                    // //truncate data
+                    // while (count < theData.valtimes.length && moment(theData.valtimes[count].x).isBefore(moment(dateFrom))) {
+                    //     count++;
+                    // }
+
+                    // theData.valtimes = theData.valtimes.splice(0, count);
+                    // console.log(`removed ${count} elements`);
+
+                    //we have some or all of the data
+                    if (moment(rangeEnd).isAfter(dateFrom)) {
+                        dateFrom = rangeEnd;
+                        dateFrom.setSeconds(dateFrom.getSeconds() + 1);
+                    }
+
+                    rangeStart = new Date(Date.parse(theData.valtimes[0].x.toString()));
+                    rangeEnd = new Date(Date.parse(theData.valtimes[theData.valtimes.length - 1].x.toString()));
+                    console.log(`------------------`);
+                    console.log(`Loaded data (AFTER): from ${rangeStart} to ${rangeEnd}`);
+                    console.log(`retrieving data from ${dateFrom} -> ${dateTo}`);
+                    console.log(`------------------`);
                 }
             }
         }

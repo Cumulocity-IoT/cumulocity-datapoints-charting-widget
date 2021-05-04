@@ -340,11 +340,16 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().getChartType() === "line" ||
                         this.widgetHelper.getChartConfig().getChartType() === "spline"
                     ) {
-                        while (moment(this.seriesData[dataObject.key].aggregate[0].x).isBefore(moment(from))) {
-                            this.seriesData[dataObject.key].upper.shift();
-                            this.seriesData[dataObject.key].aggregate.shift();
-                            this.seriesData[dataObject.key].lower.shift();
+                        let count = 0;
+                        while (
+                            count < this.seriesData[dataObject.key].aggregate.length &&
+                            moment(this.seriesData[dataObject.key].aggregate[count].x).isBefore(moment(from))
+                        ) {
+                            count++;
                         }
+                        this.seriesData[dataObject.key].upper = this.seriesData[dataObject.key].upper.splice(0, count);
+                        this.seriesData[dataObject.key].aggregate = this.seriesData[dataObject.key].aggregate.splice(0, count);
+                        this.seriesData[dataObject.key].lower = this.seriesData[dataObject.key].lower.splice(0, count);
                     }
 
                     if (
@@ -361,10 +366,15 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                                 aggFormat = this.widgetHelper.getChartConfig().customFormatString;
                             }
 
-                            while (moment(this.seriesData[dataObject.key].labels[0], aggFormat).isBefore(from)) {
-                                this.seriesData[dataObject.key].bucket.shift();
-                                this.seriesData[dataObject.key].labels.shift();
+                            let count = 0;
+                            while (
+                                count < this.seriesData[dataObject.key].labels.length &&
+                                moment(this.seriesData[dataObject.key].labels[count], aggFormat).isBefore(from)
+                            ) {
+                                count++;
                             }
+                            this.seriesData[dataObject.key].bucket = this.seriesData[dataObject.key].bucket.splice(0, count);
+                            this.seriesData[dataObject.key].labels = this.seriesData[dataObject.key].labels.splice(0, count);
                         }
                     }
 
@@ -375,21 +385,27 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().getChartType() === "bar"
                     ) {
                         //all graph types
-                        while (moment(this.seriesData[dataObject.key].valtimes[0].x).isBefore(moment(from))) {
-                            this.seriesData[dataObject.key].valtimes.shift();
+                        let count = 0;
+                        while (
+                            count < this.seriesData[dataObject.key].valtimes.length &&
+                            moment(this.seriesData[dataObject.key].valtimes[count].x).isBefore(moment(from))
+                        ) {
+                            count++;
                         }
-                        while (moment(this.seriesData[dataObject.options.group].valtimes[0].x).isBefore(moment(from))) {
-                            this.seriesData[dataObject.options.group].valtimes.shift();
-                        }
+                        this.seriesData[dataObject.key].valtimes = this.seriesData[dataObject.key].valtimes.splice(0, count);
+                        this.seriesData[dataObject.options.group].valtimes = this.seriesData[dataObject.options.group].valtimes.splice(0, count);
                     }
 
                     if (this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
-                        while (moment(this.seriesData[dataObject.key].valtimes[0].y).isBefore(moment(from))) {
-                            this.seriesData[dataObject.key].valtimes.shift();
+                        let count = 0;
+                        while (
+                            count < this.seriesData[dataObject.key].valtimes.length &&
+                            moment(this.seriesData[dataObject.key].valtimes[count].y).isBefore(moment(from))
+                        ) {
+                            count++;
                         }
-                        while (moment(this.seriesData[dataObject.options.group].valtimes[0].y).isBefore(moment(from))) {
-                            this.seriesData[dataObject.options.group].valtimes.shift();
-                        }
+                        this.seriesData[dataObject.key].valtimes = this.seriesData[dataObject.key].valtimes.splice(0, count);
+                        this.seriesData[dataObject.options.group].valtimes = this.seriesData[dataObject.options.group].valtimes.splice(0, count);
                     }
 
                     this.setAxes();
