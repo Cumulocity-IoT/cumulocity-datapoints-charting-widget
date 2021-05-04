@@ -230,7 +230,6 @@ export class MeasurementHelper {
      */
     public async getMeasurements(
         chartID: string,
-        criteriaChanged: boolean,
         deviceId: string,
         name: string,
         fragment: string,
@@ -253,31 +252,37 @@ export class MeasurementHelper {
         let key = `${chartID}-${deviceId}.${fragment}.${series}`;
         const db = await openDB(dbName, 1, {
             upgrade(db, oldVersion, newVersion, transaction) {
-                const store = db.createObjectStore(storeName); //needs to be in here to work
+                var store;
+                try {
+                    console.log("Get the store");
+                    store = transaction.objectStore(storeName);
+                } catch (e) {
+                    console.log("Create the store");
+                    store = db.createObjectStore(storeName); //needs to be in here to work
+                }
             },
         });
 
         //either initialize or create
         let theData: MeasurementList = undefined;
 
-        if (!criteriaChanged) {
-            const item = await db.transaction(storeName).objectStore(storeName).get(key);
+        const item = await db.transaction(storeName).objectStore(storeName).get(key);
 
-            //shortcut here - old data is fine - will update on next RT
-            if (item) {
-                theData = JSON.parse(item);
+        //shortcut here - old data is fine - will update on next RT
+        if (item) {
+            theData = JSON.parse(item);
 
-                if (theData.valtimes.length - 1 >= 0) {
-                    const theLastValue = theData.valtimes[theData.valtimes.length - 1];
-                    if (dateFrom && moment(<Date>theLastValue.x).isAfter(dateFrom)) {
-                        dateFrom = <Date>theLastValue.x;
-                    }
+            if (theData.valtimes.length - 1 >= 0) {
+                const theLastValue = theData.valtimes[theData.valtimes.length - 1];
+                if (dateFrom && moment(<Date>theLastValue.x).isAfter(dateFrom)) {
+                    dateFrom = <Date>theLastValue.x;
                 }
             }
         }
 
         options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
         let filter = options.filter();
+        console.log(filter);
         //get the first page
         _.set(filter, "currentPage", 1);
         let data = [];
@@ -305,7 +310,12 @@ export class MeasurementHelper {
         }
 
         if (theData) {
-            theData.append(this.processData(data, options));
+            let newData = this.processData(data, options);
+            if (Object.getPrototypeOf(theData) !== Object.getPrototypeOf(newData)) {
+                Object.setPrototypeOf(theData, Object.getPrototypeOf(newData));
+            }
+
+            theData.append(newData);
         } else {
             theData = this.processData(data, options);
         }

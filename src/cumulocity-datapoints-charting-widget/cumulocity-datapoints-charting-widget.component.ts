@@ -477,28 +477,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         //Clean up
         this.chartData = [];
 
-        // let dbName = "cumulocity-datapoints-charting-widget-db";
-        // let storeName = `datasets`;
-
-        // const db = await openDB(dbName);
-
-        // const item = undefined; //await db.transaction(storeName).objectStore(storeName).get(this.widgetHelper.getUniqueID());
-
-        //show old data
-        // if (item) {
-        //     try {
-        //         this.chartData = JSON.parse(item);
-        //     } catch (err) {
-        //         //go with empty
-        //         this.chartData = [];
-        //     }
-        // }
-
-        //make sure we don't leak
-        // if (this.rtData$.observers.length > 0) {
-        //     this.rtData$.unsubscribe();
-        // }
-
         let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
         for (const subKey in this.subscription) {
             if (Object.prototype.hasOwnProperty.call(this.subscription, subKey)) {
@@ -631,14 +609,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         this.chartData = localChartData; //replace
         this.dataLoaded = true; //update
         this.widgetHelper.getWidgetConfig().changed = false;
-        //this.rtData$.subscribe((incoming) => this.handleRealtime(incoming));
-
-        //save data at this point
-        // const tx = db.transaction(storeName, "readwrite");
-        // const store = await tx.objectStore(storeName);
-        // //store the data so we can reopen immediately
-        // const value = await store.put(JSON.stringify(this.chartData), this.widgetHelper.getUniqueID());
-        // await tx.done;
     }
 
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
@@ -862,7 +832,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             //
             this.seriesData[key] = await this.measurementHelper.getMeasurements(
                 this.widgetHelper.getUniqueID(),
-                this.widgetHelper.getWidgetConfig().changed,
                 deviceId,
                 name,
                 fragment,
