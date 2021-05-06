@@ -340,13 +340,16 @@ export class MeasurementHelper {
         await tx.done;
 
         console.log("STORED", data);
+        db.close();
 
         //lets make sure we only show what's required.
         let startIndex = data.length - 1;
-        let rangeStart = new Date(data[data.length - 1].time);
-        console.log(`trimming data required to start at  ${dateFrom}`);
-        while (moment(rangeStart).isBefore(dateFrom)) {
-            rangeStart = new Date(data[--startIndex].time);
+        if (startIndex >= 0) {
+            let rangeStart = new Date(data[data.length - 1].time);
+            console.log(`trimming data required to start at  ${dateFrom}`);
+            while (moment(rangeStart).isBefore(dateFrom)) {
+                rangeStart = new Date(data[--startIndex].time);
+            }
         }
 
         options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);

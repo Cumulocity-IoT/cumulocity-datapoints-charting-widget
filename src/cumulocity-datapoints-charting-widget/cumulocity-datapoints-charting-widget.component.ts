@@ -748,8 +748,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 result.push({ x: xval.y, y: yval[0].y, r: zval[0].y });
             } else if (0 in yval) {
                 result.push({ x: xval.y, y: yval[0].y });
-            } else {
-                result.push({ x: index, y: xval.y }); //sensible default
             }
         }
 

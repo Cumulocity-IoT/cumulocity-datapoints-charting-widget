@@ -10,6 +10,7 @@ import { RawListItem, WidgetConfig } from "./widget-config";
 import * as _ from "lodash";
 import { WidgetHelper } from "./widget-helper";
 import * as moment from "moment";
+import { deleteDB, openDB } from "idb";
 
 @Component({
     templateUrl: "cumulocity-datapoints-charting-widget-config.component.html",
@@ -305,6 +306,11 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         } else {
             this.selectedSeries = id;
         }
+    }
+
+    async clearCache() {
+        let dbName = "cumulocity-datapoints-charting-widget-db";
+        await deleteDB(dbName, { blocked: () => console.log(`Waiting to Removing DB ${dbName}`) });
     }
 
     /**
