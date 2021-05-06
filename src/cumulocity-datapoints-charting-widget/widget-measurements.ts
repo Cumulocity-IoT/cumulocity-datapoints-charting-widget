@@ -262,64 +262,99 @@ export class MeasurementHelper {
                 }
             },
         });
-
-        //either initialize or create
-        let theData: MeasurementList = undefined;
-
+        console.log("GET MEASUREMENTS", key);
         const item = await db.transaction(storeName).objectStore(storeName).get(key);
+        let data = [];
 
         //shortcut here - old data is fine - will update on next RT
-        if (item) {
-            theData = JSON.parse(item);
-            if (theData.valtimes.length > 0) {
-                let rangeStart: Date = new Date(Date.parse(theData.valtimes[0].x.toString()));
-                let rangeEnd: Date = new Date(Date.parse(theData.valtimes[theData.valtimes.length - 1].x.toString()));
-                console.log(`------------------`);
-                console.log(`Loaded data: from ${rangeStart} to ${rangeEnd}`);
-                console.log(`required from ${dateFrom} to ${dateTo}`);
-                console.log(`------------------`);
+        data = JSON.parse(item ? item : "[]"); //array of measurements
+        if (data.length > 0) {
+            //reversed - newest first
+            let rangeStart = new Date(data[data.length - 1].time);
+            let rangeEnd = new Date(data[0].time);
+            console.log(`retrieved stored data for ${key} = ${rangeStart} => ${rangeEnd}`);
+            console.log(`data required for  ${dateFrom} => ${dateTo}`);
 
-                //if the data is not inclusive
-                if (moment(dateFrom).isBefore(rangeStart)) {
-                    //we have less stored than we need
-                    //just abandon the store. Could be cleverer later on.
-                    console.log(`retrieving all data because ${dateFrom} is before ${rangeStart}`);
-                    theData = undefined;
-                } else {
-                    // console.log(`Using stored: required from ${dateFrom} to ${dateTo}`);
-                    // console.log(`Loaded: from ${rangeStart} to ${rangeEnd}`);
+            if (moment(dateFrom).isSameOrBefore(rangeStart)) {
+                //we need to fill the gap
+                //we need everything.
+                options.setFilter(
+                    deviceId,
+                    name,
+                    fragment,
+                    series,
+                    dateFrom,
+                    rangeStart,
+                    count,
+                    targetGraphType,
+                    timeBucket,
+                    bucketPeriod,
+                    labelDateFormat
+                );
 
-                    // let count = 0;
-                    // //truncate data
-                    // while (count < theData.valtimes.length && moment(theData.valtimes[count].x).isBefore(moment(dateFrom))) {
-                    //     count++;
-                    // }
-
-                    // theData.valtimes = theData.valtimes.splice(0, count);
-                    // console.log(`removed ${count} elements`);
-
-                    //we have some or all of the data
-                    if (moment(rangeEnd).isAfter(dateFrom)) {
-                        dateFrom = rangeEnd;
-                        dateFrom.setSeconds(dateFrom.getSeconds() + 1);
-                    }
-
-                    rangeStart = new Date(Date.parse(theData.valtimes[0].x.toString()));
-                    rangeEnd = new Date(Date.parse(theData.valtimes[theData.valtimes.length - 1].x.toString()));
-                    console.log(`------------------`);
-                    console.log(`Loaded data (AFTER): from ${rangeStart} to ${rangeEnd}`);
-                    console.log(`retrieving data from ${dateFrom} -> ${dateTo}`);
-                    console.log(`------------------`);
-                }
+                let filter = options.filter();
+                //get the first page
+                data.pop();
+                let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
+                console.log(`appending data for ${key} = ${dateFrom} => ${rangeStart}`, newData);
+                data = [...data, ...newData];
             }
+
+            if (moment(dateTo).isSameOrAfter(rangeEnd)) {
+                //we need to fill the gap
+                //we need everything.
+                options.setFilter(
+                    deviceId,
+                    name,
+                    fragment,
+                    series,
+                    rangeEnd,
+                    dateTo,
+                    count,
+                    targetGraphType,
+                    timeBucket,
+                    bucketPeriod,
+                    labelDateFormat
+                );
+
+                let filter = options.filter();
+                let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
+                data.shift(); // returned includes first element don't duplicate
+                console.log(`prepending data for ${key} = ${rangeEnd} => ${dateTo}`, newData);
+                data = [...newData, ...data];
+            }
+        } else {
+            console.log(`getting data for ${key} = ${dateFrom} => ${dateTo}`);
+            //we need everything.
+            options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
+
+            let filter = options.filter();
+            //get the first page
+            data = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
+        }
+
+        const tx = db.transaction(storeName, "readwrite");
+        const store = await tx.objectStore(storeName);
+        //store the data so we can reopen immediately
+        const _value = await store.put(JSON.stringify(data), key);
+        await tx.done;
+
+        console.log("STORED", data);
+
+        //lets make sure we only show what's required.
+        let startIndex = data.length - 1;
+        let rangeStart = new Date(data[data.length - 1].time);
+        console.log(`trimming data required to start at  ${dateFrom}`);
+        while (moment(rangeStart).isBefore(dateFrom)) {
+            rangeStart = new Date(data[--startIndex].time);
         }
 
         options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
-        let filter = options.filter();
-        console.log(filter);
-        //get the first page
+        return this.processData(data.slice(0, startIndex), options);
+    }
+
+    private async getDataFromC8y(filter: Object, measurementService: MeasurementService, data: any[], maxMeasurements: number) {
         _.set(filter, "currentPage", 1);
-        let data = [];
         let page = 1;
         let resp = await measurementService.list(filter);
         if (resp.res.status == 200) {
@@ -342,24 +377,7 @@ export class MeasurementHelper {
             }
             console.log(`total of ${data.length} points`);
         }
-
-        if (theData) {
-            let newData = this.processData(data, options);
-            if (Object.getPrototypeOf(theData) !== Object.getPrototypeOf(newData)) {
-                Object.setPrototypeOf(theData, Object.getPrototypeOf(newData));
-            }
-
-            theData.append(newData);
-        } else {
-            theData = this.processData(data, options);
-        }
-
-        const tx = db.transaction(storeName, "readwrite");
-        const store = await tx.objectStore(storeName);
-        //store the data so we can reopen immediately
-        const _value = await store.put(JSON.stringify(theData), key);
-        await tx.done;
-        return theData;
+        return data;
     }
 
     public async createAggregate(
@@ -507,7 +525,6 @@ export class MeasurementHelper {
                 let frag = _.get(row, options.fragment);
                 if (_.has(frag, options.series)) {
                     let ser = _.get(frag, options.series);
-
                     //if there is a group by we need to either sum or average the
                     //value for the current set of measurements
                     measurementValue = parseFloat(parseFloat(ser.value).toFixed(options.numdp));
@@ -572,7 +589,7 @@ export class MeasurementHelper {
             }
         }
 
-        //console.log("RawData", result);
+        console.log("RawData", result);
         return result;
     }
 

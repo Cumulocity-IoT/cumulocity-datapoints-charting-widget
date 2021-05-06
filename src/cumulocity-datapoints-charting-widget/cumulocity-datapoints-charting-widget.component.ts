@@ -395,14 +395,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     this.setAxes();
                     this.chartElement.update();
                 }
-                let dbName = "cumulocity-datapoints-charting-widget-db";
-                let storeName = `datasets`;
-                let key = `${this.widgetHelper.getUniqueID()}-${dataObject.key}`;
-                const db = await openDB(dbName);
-                const tx = db.transaction(storeName, "readwrite");
-                const store = await tx.objectStore(storeName);
-                const _value = await store.put(JSON.stringify(this.seriesData[dataObject.key]), key);
-                await tx.done;
+                //     let dbName = "cumulocity-datapoints-charting-widget-db";
+                //     let storeName = `datasets`;
+                //     let key = `${this.widgetHelper.getUniqueID()}-${dataObject.key}`;
+                //     const db = await openDB(dbName);
+                //     const tx = db.transaction(storeName, "readwrite");
+                //     const store = await tx.objectStore(storeName);
+                //     const _value = await store.put(JSON.stringify(this.seriesData[dataObject.key]), key);
+                //     await tx.done;
             }
         }
     }
@@ -439,7 +439,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         if (options.group !== "default") {
             let lastElement: ChartPoint = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1];
             let nextTime = moment(datum.x).format(options.labelDateFormat);
-            let lastTime = moment(lastElement.x).format(options.labelDateFormat);
+            let lastTime = lastElement ? moment(lastElement.x).format(options.labelDateFormat) : undefined;
             //console.log("updateGroupData ", options.group, datum, options, lastElement);
 
             if (lastTime !== nextTime) {
