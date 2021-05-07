@@ -2,6 +2,19 @@
     <!-- <div style="display: block; width: 500px; height: 400px;"> -->
     <!-- <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions" -->
     <ng-container *ngIf="chartData && chartData.length > 0">
+        <ng-container *ngIf="!widgetHelper.getChartConfig().multivariateplot">
+            <div style="float: right; margin-right: 10px;">
+                <!-- <button type="button" class="btn btn-link c8y-realtime" title="Toggle realtime" (click)="toggle()">
+                            <span [ngClass]="realtimeState?'c8y-pulse active' : 'c8y-pulse inactive'"></span>
+                            <span>Realtime</span>
+                        </button> -->
+                <!--mat-icon-button-->
+                <button style="color:#1776BF;" type="button" class="button" (click)="refresh(this)"><span
+                          class="fa fa-refresh"></span></button>
+            </div>
+
+        </ng-container>
+
         <ng-container *ngIf="
             widgetHelper.getChartConfig().getChartType() == 'pie' || 
             widgetHelper.getChartConfig().getChartType() == 'radar' || 

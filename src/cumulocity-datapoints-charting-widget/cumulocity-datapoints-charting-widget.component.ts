@@ -375,19 +375,31 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         this.widgetHelper.getChartConfig().getChartType() === "bar"
                     ) {
                         //all graph types
-                        while (moment(this.seriesData[dataObject.key].valtimes[0].x).isBefore(moment(from))) {
+                        while (
+                            this.seriesData[dataObject.key].valtimes &&
+                            moment(this.seriesData[dataObject.key].valtimes[0].x).isBefore(moment(from))
+                        ) {
                             this.seriesData[dataObject.key].valtimes.shift();
                         }
-                        while (moment(this.seriesData[dataObject.options.group].valtimes[0].x).isBefore(moment(from))) {
+                        while (
+                            this.seriesData[dataObject.options.group].valtimes &&
+                            moment(this.seriesData[dataObject.options.group].valtimes[0].x).isBefore(moment(from))
+                        ) {
                             this.seriesData[dataObject.options.group].valtimes.shift();
                         }
                     }
 
                     if (this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
-                        while (moment(this.seriesData[dataObject.key].valtimes[0].y).isBefore(moment(from))) {
+                        while (
+                            this.seriesData[dataObject.key].valtimes &&
+                            moment(this.seriesData[dataObject.key].valtimes[0].y).isBefore(moment(from))
+                        ) {
                             this.seriesData[dataObject.key].valtimes.shift();
                         }
-                        while (moment(this.seriesData[dataObject.options.group].valtimes[0].y).isBefore(moment(from))) {
+                        while (
+                            this.seriesData[dataObject.options.group].valtimes &&
+                            moment(this.seriesData[dataObject.options.group].valtimes[0].y).isBefore(moment(from))
+                        ) {
                             this.seriesData[dataObject.options.group].valtimes.shift();
                         }
                     }
@@ -983,6 +995,119 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         let localChartData = []; //build list locally because empty dataset is added by framework
         parent.retrieveAndPlotMultivariateChart(localChartData);
         parent.chartData = localChartData;
+    }
+
+    async refresh(parent: CumulocityDataPointsChartingWidget) {
+        let localChartData = []; //build list locally because empty dataset is added by framework
+
+        /**
+         *  handle independent series.
+         *
+         *
+         *
+         */
+        if (!this.widgetHelper.getChartConfig().multivariateplot) {
+            //console.log("getting independent variables");
+            //for each fragment/series to be plotted
+            //ChartSeries has most of the config for the series
+            //the MeasurementList contains the data (and its independent)
+            let groups = [];
+
+            for (let seriesName of Object.keys(this.widgetHelper.getChartConfig().series)) {
+                if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, seriesName)) {
+                    const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
+
+                    if (!seriesConfig.isParent) {
+                        //each series (aggregates and functions of raw data too) gets this
+                        let options: MeasurementOptions = new MeasurementOptions(
+                            this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
+                            this.widgetHelper.getChartConfig().getChartType(),
+                            this.widgetHelper.getChartConfig().numdp,
+                            this.widgetHelper.getChartConfig().sizeBuckets,
+                            this.widgetHelper.getChartConfig().minBucket,
+                            this.widgetHelper.getChartConfig().maxBucket,
+                            this.widgetHelper.getChartConfig().groupby,
+                            this.widgetHelper.getChartConfig().cumulative,
+                            seriesConfig.memberOf
+                        );
+                        //a period of time where quantity is the # of units,
+                        // and type(unit) has the # of seconds per unit in the id field
+                        let { from, to } = this.getDateRange();
+                        //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
+                        for (let index = 0; index < seriesConfig.idList.length; index++) {
+                            const seriesId = seriesConfig.idList[index];
+                            await this.getBaseMeasurements(
+                                seriesConfig.idList.length > 1,
+                                seriesId.split(".")[0],
+                                seriesConfig.name,
+                                seriesId.split(".")[1],
+                                seriesId.split(".")[2],
+                                from,
+                                to,
+                                seriesConfig.idList.length > 1 ? seriesId : seriesName,
+                                options
+                            );
+                        }
+
+                        if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
+                            //different to line/bar type plots - potentially lots of colours req
+                            //if lots of points added. If they run out you get grey...
+                            this.createPieChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
+                        } else {
+                            //Normal plot
+                            this.createNormalChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
+                        }
+                    } else {
+                        groups.push(seriesName);
+                    }
+                }
+            }
+
+            //now add the group series (we should have data at this point.)
+            for (let index = 0; index < groups.length; index++) {
+                const seriesName = groups[index];
+                const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
+                //each series (aggregates and functions of raw data too) gets this
+                let options: MeasurementOptions = new MeasurementOptions(
+                    this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
+                    this.widgetHelper.getChartConfig().getChartType(),
+                    this.widgetHelper.getChartConfig().numdp,
+                    this.widgetHelper.getChartConfig().sizeBuckets,
+                    this.widgetHelper.getChartConfig().minBucket,
+                    this.widgetHelper.getChartConfig().maxBucket,
+                    this.widgetHelper.getChartConfig().groupby,
+                    this.widgetHelper.getChartConfig().cumulative,
+                    seriesName
+                );
+
+                let { from, to } = this.getDateRange();
+
+                //TODO : tidy up these unused params
+                await this.getBaseMeasurements(
+                    seriesConfig.idList.length > 1, //should be true
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    from,
+                    to,
+                    seriesName,
+                    options
+                );
+
+                //do something here with the parent group.
+                if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
+                    //different to line/bar type plots - potentially lots of colours req
+                    //if lots of points added. If they run out you get grey...
+                    this.createPieChart(seriesName, localChartData, options);
+                } else {
+                    //Normal plot
+                    this.createNormalChart(seriesName, localChartData, options);
+                }
+            }
+        }
+
+        this.chartData = localChartData; //replace
     }
 
     // helper

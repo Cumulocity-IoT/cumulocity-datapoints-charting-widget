@@ -61,7 +61,8 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         const filter2: object = {
             pageSize: 2000,
             withTotalPages: true,
-            query: "((not(has(c8y_IsDynamicGroup.invisible))) and ((type eq 'c8y_DeviceGroup') or (type eq 'c8y_DynamicGroup')))",
+            query:
+                "((not(has(c8y_IsDynamicGroup.invisible))) and ((type eq 'c8y_DeviceGroup') or (type eq 'c8y_DynamicGroup') or has( c8y_IsDeviceGroup ) or has(c8y_Connection) ))",
         };
 
         let result = await this.inventory.list(filter2);
