@@ -153,10 +153,12 @@ export class ChartConfig {
     sizeBuckets: number = 5; //Make default size 5
     minBucket: number = 0;
     maxBucket: number = 10;
-    groupby: boolean = false; // default no grouping
+    groupby: boolean = false; // default no grouping by time
     cumulative: boolean = false; // not cumulative
     realtime: string = "realtime"; // type of update
     timerDelay: number = 30; // seconds delay if timer (default 30)
+    groupbyGroup: boolean = false; // default no grouping by "group"
+    groupCumulative: boolean = false; // default avearge, if true sum measurements for "Group"
 
     customFormat: boolean = false;
     customFormatString: string = "yyyy-MM-DD HH:mm";

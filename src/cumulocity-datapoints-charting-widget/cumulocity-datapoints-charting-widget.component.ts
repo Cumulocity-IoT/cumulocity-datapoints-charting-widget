@@ -859,13 +859,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             );
         } else {
             //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);
-
-            //take the individual series and aggregate them into a composite
-            this.seriesData[key] = await this.measurementHelper.createAggregate(
-                this.seriesData,
-                this.widgetHelper.getChartConfig().series[key].idList,
-                options
-            );
+            if (this.widgetHelper.getChartConfig().groupbyGroup) {
+                //take the individual series and aggregate them into a composite
+                this.seriesData[key] = await this.measurementHelper.createAggregate(
+                    this.seriesData,
+                    this.widgetHelper.getChartConfig().series[key].idList,
+                    options
+                );
+            }
         }
     }
 
@@ -924,70 +925,73 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             this.widgetHelper.getChartConfig().series[key].avgType = "None";
         }
 
-        //console.log("SERIES", key, this.widgetHelper.getChartConfig().series, this.seriesData);
-        if (this.widgetHelper.getChartConfig().series[key].hideMeasurements !== true) {
-            //console.log("CREATE SERIES", key);
-            let thisSeries: ChartDataSets = this.createSeries(
-                key,
-                this.widgetHelper.getChartConfig().series[key].name,
-                this.widgetHelper.getWidgetConfig().chart.series[key].color
-            );
-            thisSeries.data = this.seriesData[key].valtimes;
-            //console.log("DATA", thisSeries.data);
-            thisSeries.barPercentage = 0.9;
-            thisSeries.categoryPercentage = 0.9;
-            //need raw type
-            if (this.widgetHelper.getChartConfig().type == "spline") {
-                thisSeries.lineTension = 0.4;
-            } else {
-                thisSeries.lineTension = 0;
+        if (!this.widgetHelper.getChartConfig().series[key].isParent || this.widgetHelper.getChartConfig().groupbyGroup) {
+            //console.log("SERIES", key, this.widgetHelper.getChartConfig().series, this.seriesData);
+            if (this.widgetHelper.getChartConfig().series[key].hideMeasurements !== true) {
+                //console.log("CREATE SERIES", key);
+                let thisSeries: ChartDataSets = this.createSeries(
+                    key,
+                    this.widgetHelper.getChartConfig().series[key].name,
+                    this.widgetHelper.getWidgetConfig().chart.series[key].color
+                );
+                thisSeries.data = this.seriesData[key].valtimes;
+                //console.log("DATA", thisSeries.data);
+                thisSeries.barPercentage = 0.9;
+                thisSeries.categoryPercentage = 0.9;
+                //need raw type
+                if (this.widgetHelper.getChartConfig().type == "spline") {
+                    thisSeries.lineTension = 0.4;
+                } else {
+                    thisSeries.lineTension = 0;
+                }
+
+                localChartData.push(thisSeries);
+                //console.log("NORMAL PLOT", thisSeries);
             }
 
-            localChartData.push(thisSeries);
-            //console.log("NORMAL PLOT", thisSeries);
-        }
+            //If average or other function then add series for that
+            if (this.widgetHelper.getChartConfig().series[key].avgType !== "None") {
+                if (this.widgetHelper.getChartConfig().series[key].avgType.indexOf("Moving Average") > -1) {
+                    let aggregateSeries: ChartDataSets = this.createSeries(
+                        key,
+                        `${options.name} - ${this.widgetHelper.getChartConfig().series[key].avgPeriod} period`,
+                        this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
+                    );
+                    //Need to apply the correct function in the series calculations
+                    aggregateSeries.data = this.seriesData[key].aggregate;
+                    localChartData.push(aggregateSeries);
+                }
 
-        //If average or other function then add series for that
-        if (this.widgetHelper.getChartConfig().series[key].avgType !== "None") {
-            if (this.widgetHelper.getChartConfig().series[key].avgType.indexOf("Moving Average") > -1) {
-                let aggregateSeries: ChartDataSets = this.createSeries(
-                    key,
-                    `${options.name} - ${this.widgetHelper.getChartConfig().series[key].avgPeriod} period`,
-                    this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
-                );
-                //Need to apply the correct function in the series calculations
-                aggregateSeries.data = this.seriesData[key].aggregate;
-                localChartData.push(aggregateSeries);
+                if (this.widgetHelper.getChartConfig().series[key].avgType.indexOf("Bollinger Bands") > -1) {
+                    let upperBoll: ChartDataSets = this.createSeries(
+                        key,
+                        `${options.name} - upper Bollinger Band`,
+                        this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
+                    );
+
+                    //Need to apply the correct function in the series calculations
+                    upperBoll.data = this.seriesData[key].upper;
+                    localChartData.push(upperBoll);
+
+                    let lowerBoll: ChartDataSets = this.createSeries(
+                        key,
+                        `${options.name} - lower Bollinger Band`,
+                        this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
+                    );
+
+                    //Need to apply the correct function in the series calculations
+                    lowerBoll.data = this.seriesData[key].lower;
+                    localChartData.push(lowerBoll);
+                }
             }
 
-            if (this.widgetHelper.getChartConfig().series[key].avgType.indexOf("Bollinger Bands") > -1) {
-                let upperBoll: ChartDataSets = this.createSeries(
-                    key,
-                    `${options.name} - upper Bollinger Band`,
-                    this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
+            //realtime
+            if (!this.subscription[key] && !this.widgetHelper.getChartConfig().series[key].isParent) {
+                this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
+                    this.handleRealtime({ data, key, options })
                 );
-
-                //Need to apply the correct function in the series calculations
-                upperBoll.data = this.seriesData[key].upper;
-                localChartData.push(upperBoll);
-
-                let lowerBoll: ChartDataSets = this.createSeries(
-                    key,
-                    `${options.name} - lower Bollinger Band`,
-                    this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
-                );
-
-                //Need to apply the correct function in the series calculations
-                lowerBoll.data = this.seriesData[key].lower;
-                localChartData.push(lowerBoll);
             }
-        }
 
-        //realtime
-        if (!this.subscription[key] && !this.widgetHelper.getChartConfig().series[key].isParent) {
-            this.subscription[key] = this.realtimeService.subscribe("/measurements/" + options.deviceId, (data) =>
-                this.handleRealtime({ data, key, options })
-            );
         }
     }
 

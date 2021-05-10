@@ -347,7 +347,7 @@ export class MeasurementHelper {
         if (startIndex >= 0) {
             let rangeStart = new Date(data[data.length - 1].time);
             console.log(`trimming data required to start at  ${dateFrom}`);
-            while (moment(rangeStart).isBefore(dateFrom)) {
+            while (( startIndex < data.length -1 ) && moment(rangeStart).isBefore(dateFrom)) {
                 rangeStart = new Date(data[--startIndex].time);
             }
         }
