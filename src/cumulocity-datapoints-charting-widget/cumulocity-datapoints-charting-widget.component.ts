@@ -461,21 +461,43 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
             } else {
                 //console.log("ADDING");
                 this.seriesData[options.group].valCount += 1;
-                if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
-                    let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x;
-                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x =
-                        (<number>datum.x + v * (this.seriesData[options.group].valCount - 1)) / this.seriesData[options.group].valCount;
-                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x = parseFloat(
-                        (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x).toFixed(options.numdp)
-                    );
+
+                if( !this.widgetHelper.getChartConfig().groupCumulative) {
+                    //we need to account for the averaging
+                    if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
+                        let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x =
+                            (<number>datum.x + v * (this.seriesData[options.group].valCount - 1)) / this.seriesData[options.group].valCount;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x = parseFloat(
+                            (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x).toFixed(options.numdp)
+                        );
+                    } else {
+                        let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y =
+                            (<number>datum.y + v * (this.seriesData[options.group].valCount - 1)) / this.seriesData[options.group].valCount;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y = parseFloat(
+                            (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y).toFixed(options.numdp)
+                        );
+                    }
+    
                 } else {
-                    let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y;
-                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y =
-                        (<number>datum.y + v * (this.seriesData[options.group].valCount - 1)) / this.seriesData[options.group].valCount;
-                    this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y = parseFloat(
-                        (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y).toFixed(options.numdp)
-                    );
+                    //just sum
+                    if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
+                        let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x = <number>datum.x + v;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x = parseFloat(
+                            (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x).toFixed(options.numdp)
+                        );
+                    } else {
+                        let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y = <number>datum.y + v;
+                        this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y = parseFloat(
+                            (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y).toFixed(options.numdp)
+                        );
+                    }
+
                 }
+
             }
         }
     }
@@ -864,7 +886,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 this.seriesData[key] = await this.measurementHelper.createAggregate(
                     this.seriesData,
                     this.widgetHelper.getChartConfig().series[key].idList,
-                    options
+                    options,
+                    this.widgetHelper.getChartConfig().groupCumulative
                 );
             }
         }

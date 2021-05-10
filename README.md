@@ -64,18 +64,26 @@ The widget configuration page contains a number of configuration attributes.
 **Device and Measurement Configuration** section
 
 - **Device** : Select one or more devices, once you do you will then be able to select measurements. Deselect options in the dropdown or click the 'x' to remove them.
+  - The list contains devices, as well as groups defined in the cumulocity application. 
+  - When choosing a group (Such as Laboratory in the picture below) The measurements will be labeled to indicate that they are part of that group. 
 
 ![devices and measurements](/images/devandmeas.png)
+
+  - You will now be able to choose to plot an extra series for the group by checking a box shown at the top of the list in the config
+
+![devices and measurements](/images/groupseries.png)
 
 - **Measurement** : Select the measurement fragment and series from the dropdown. You can deselect them in a similar way to the devices.
 
   - define the range of data points to use by changing the Amount, Unit
   - define the accuracy and display of data values by changing the number of decimal points to show.
 
-- **Aggregation of values**: define whether to show raw data, or group measurements by averaging or summing them when received within the unit of the range you chose (E.G average values by minute).
+- **Group measurements within time unit**: This allows you to show raw data, or average or sum measurements them when received within the unit of the range you chose (E.G average values by minute).
 
-  - The time unit you chose for the range will determine how the measurements are grouped. The _cumulative_ checkbox will change from the default of averaging to summing the values.
+  - The time unit you chose for the range will determine how the measurements are grouped. The _sum measurements in group_ checkbox will change from the default of averaging to summing the values.
   - This can be disabled in certain circumstances (See 'Plotting one series against another below')
+
+- **Clear Measurement Cache**: We store data for charts within the browser so that if you choose a large volume of historic data we can avoid the delay of retrieving it every time you load the chart. This button will clear **ALL** data for all the charts. 
 
 - **Global Chart Options** : Here you can choose things like chart type and display options for axes and the legend. _Note_ the global section will only appear once you have selected the devices and measurements.
 

@@ -386,7 +386,8 @@ export class MeasurementHelper {
     public async createAggregate(
         seriesData: { [key: string]: MeasurementList },
         measurements: string[],
-        options: MeasurementOptions
+        options: MeasurementOptions,
+        sumData: boolean = false
     ): Promise<MeasurementList> {
         let rawData: RawData = new RawData();
         let upper = [];
@@ -418,9 +419,12 @@ export class MeasurementHelper {
 
         //console.log("SUM ", rawData.vl);
 
-        for (let index = 0; index < rawData.vl.length; index++) {
-            const point = rawData.vl[index];
-            rawData.vl[index].y = parseFloat((point.y / measurements.length).toFixed(options.numdp));
+        if( !sumData ) {
+            for (let index = 0; index < rawData.vl.length; index++) {
+                const point = rawData.vl[index];
+                rawData.vl[index].y = parseFloat((point.y / measurements.length).toFixed(options.numdp));
+            }
+    
         }
 
         //console.log("AVG ", rawData.vl);
