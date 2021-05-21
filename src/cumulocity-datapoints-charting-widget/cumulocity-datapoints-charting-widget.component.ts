@@ -452,7 +452,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     }
 
     private updateGroupData(options: MeasurementOptions, datum: ChartPoint) {
-        if (options.group !== "default") {
+        if (options.group !== "default" && this.widgetHelper.getChartConfig().groupbyGroup) {
             let lastElement: ChartPoint = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1];
             let nextTime = moment(datum.x).format(options.labelDateFormat);
             let lastTime = lastElement ? moment(lastElement.x).format(options.labelDateFormat) : undefined;
