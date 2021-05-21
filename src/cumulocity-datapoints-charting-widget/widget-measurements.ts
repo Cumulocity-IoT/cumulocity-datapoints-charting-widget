@@ -137,10 +137,10 @@ export class MeasurementList {
 
     constructor(
         options: MeasurementOptions,
-        upper: { x: Date; y: any }[],
-        aggregate: { x: Date; y: any }[],
-        lower: { x: Date; y: any }[],
-        valtimes: { x: Date; y: any }[],
+        upper: { x: Date; y: any; }[],
+        aggregate: { x: Date; y: any; }[],
+        lower: { x: Date; y: any; }[],
+        valtimes: { x: Date; y: any; }[],
         valCount,
         bucket: number[],
         labels: string[],
@@ -262,7 +262,7 @@ export class MeasurementHelper {
                 }
             },
         });
-        console.log("GET MEASUREMENTS", key);
+        //console.log("GET MEASUREMENTS", key);
         const item = await db.transaction(storeName).objectStore(storeName).get(key);
         let data = [];
 
@@ -272,8 +272,8 @@ export class MeasurementHelper {
             //reversed - newest first
             let rangeStart = new Date(data[data.length - 1].time);
             let rangeEnd = new Date(data[0].time);
-            console.log(`retrieved stored data for ${key} = ${rangeStart} => ${rangeEnd}`);
-            console.log(`data required for  ${dateFrom} => ${dateTo}`);
+            //console.log(`retrieved stored data for ${key} = ${rangeStart} => ${rangeEnd}`);
+            //console.log(`data required for  ${dateFrom} => ${dateTo}`);
 
             if (moment(dateFrom).isSameOrBefore(rangeStart)) {
                 //we need to fill the gap
@@ -296,7 +296,7 @@ export class MeasurementHelper {
                 //get the first page
                 data.pop();
                 let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
-                console.log(`appending data for ${key} = ${dateFrom} => ${rangeStart}`, newData);
+                //console.log(`appending data for ${key} = ${dateFrom} => ${rangeStart}`, newData);
                 data = [...data, ...newData];
             }
 
@@ -320,11 +320,11 @@ export class MeasurementHelper {
                 let filter = options.filter();
                 let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
                 data.shift(); // returned includes first element don't duplicate
-                console.log(`prepending data for ${key} = ${rangeEnd} => ${dateTo}`, newData);
+                //console.log(`prepending data for ${key} = ${rangeEnd} => ${dateTo}`, newData);
                 data = [...newData, ...data];
             }
         } else {
-            console.log(`getting data for ${key} = ${dateFrom} => ${dateTo}`);
+            //console.log(`getting data for ${key} = ${dateFrom} => ${dateTo}`);
             //we need everything.
             options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
 
@@ -339,15 +339,15 @@ export class MeasurementHelper {
         const _value = await store.put(JSON.stringify(data), key);
         await tx.done;
 
-        console.log("STORED", data);
+        //console.log("STORED", data);
         db.close();
 
         //lets make sure we only show what's required.
         let startIndex = data.length - 1;
         if (startIndex >= 0) {
             let rangeStart = new Date(data[data.length - 1].time);
-            console.log(`trimming data required to start at  ${dateFrom}`);
-            while (( startIndex < data.length -1 ) && moment(rangeStart).isBefore(dateFrom)) {
+            //console.log(`trimming data required to start at  ${dateFrom}`);
+            while ((startIndex < data.length - 1) && moment(rangeStart).isBefore(dateFrom)) {
                 rangeStart = new Date(data[--startIndex].time);
             }
         }
@@ -384,7 +384,7 @@ export class MeasurementHelper {
     }
 
     public async createAggregate(
-        seriesData: { [key: string]: MeasurementList },
+        seriesData: { [key: string]: MeasurementList; },
         measurements: string[],
         options: MeasurementOptions,
         sumData: boolean = false
@@ -419,12 +419,12 @@ export class MeasurementHelper {
 
         //console.log("SUM ", rawData.vl);
 
-        if( !sumData ) {
+        if (!sumData) {
             for (let index = 0; index < rawData.vl.length; index++) {
                 const point = rawData.vl[index];
                 rawData.vl[index].y = parseFloat((point.y / measurements.length).toFixed(options.numdp));
             }
-    
+
         }
 
         //console.log("AVG ", rawData.vl);
@@ -596,7 +596,7 @@ export class MeasurementHelper {
             }
         }
 
-        console.log("RawData", result);
+        //console.log("RawData", result);
         return result;
     }
 
@@ -648,9 +648,9 @@ export class MeasurementHelper {
      * @param rawData the results of retrieve data
      * @returns object with the 2 arrays within it.
      */
-    private createBucketSeries(options: MeasurementOptions, rawData: RawData): { labels: string[]; data: number[] } {
+    private createBucketSeries(options: MeasurementOptions, rawData: RawData): { labels: string[]; data: number[]; } {
         // Now we can turn this into the buckets and counts.
-        let result: { [id: string]: number } = {};
+        let result: { [id: string]: number; } = {};
         if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut" || options.targetGraphType == "histogram") {
             if (options.timeBucket) {
                 //just the counts over time
@@ -725,7 +725,7 @@ export class MeasurementHelper {
      * @param numBins number of buckets
      * @returns data and labels in object
      */
-    calculateHistogram(arr: number[], maxBucket: any, minBucket: any, binSize: any, dp: number): { labels: string[]; counts: number[] } {
+    calculateHistogram(arr: number[], maxBucket: any, minBucket: any, binSize: any, dp: number): { labels: string[]; counts: number[]; } {
         const bins: number[] = [];
         const binLabels: string[] = [];
         let previousLabel: string = parseFloat(minBucket).toFixed(dp);

@@ -57,8 +57,8 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * updated as measurements are received. Realtime data is
      * subscribed and so must be released on destroy
      */
-    seriesData: { [key: string]: MeasurementList };
-    subscription: { [key: string]: Object } = {}; //record per device subscriptions
+    seriesData: { [key: string]: MeasurementList; };
+    subscription: { [key: string]: Object; } = {}; //record per device subscriptions
 
     /**
      * ng2-charts data members referenced by the element
@@ -376,12 +376,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                     ) {
                         //all graph types
                         while (
+                            (dataObject.key in this.seriesData) &&
                             this.seriesData[dataObject.key].valtimes &&
                             moment(this.seriesData[dataObject.key].valtimes[0].x).isBefore(moment(from))
                         ) {
                             this.seriesData[dataObject.key].valtimes.shift();
                         }
                         while (
+                            (dataObject.options.group in this.seriesData) &&
                             this.seriesData[dataObject.options.group].valtimes &&
                             moment(this.seriesData[dataObject.options.group].valtimes[0].x).isBefore(moment(from))
                         ) {
@@ -391,12 +393,14 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
 
                     if (this.widgetHelper.getChartConfig().getChartType() === "horizontalBar") {
                         while (
+                            (dataObject.key in this.seriesData) &&
                             this.seriesData[dataObject.key].valtimes &&
                             moment(this.seriesData[dataObject.key].valtimes[0].y).isBefore(moment(from))
                         ) {
                             this.seriesData[dataObject.key].valtimes.shift();
                         }
                         while (
+                            (dataObject.options.group in this.seriesData) &&
                             this.seriesData[dataObject.options.group].valtimes &&
                             moment(this.seriesData[dataObject.options.group].valtimes[0].y).isBefore(moment(from))
                         ) {
@@ -462,7 +466,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 //console.log("ADDING");
                 this.seriesData[options.group].valCount += 1;
 
-                if( !this.widgetHelper.getChartConfig().groupCumulative) {
+                if (!this.widgetHelper.getChartConfig().groupCumulative) {
                     //we need to account for the averaging
                     if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
                         let v: any = this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].x;
@@ -479,7 +483,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                             (<number>this.seriesData[options.group].valtimes[this.seriesData[options.group].valtimes.length - 1].y).toFixed(options.numdp)
                         );
                     }
-    
+
                 } else {
                     //just sum
                     if (this.widgetHelper.getChartConfig().getChartType() == "horizontalBar") {
@@ -648,7 +652,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
         //console.log("generating composite series from sources");
         //console.log(`for a chart of type ${this.widgetHelper.getChartConfig().getChartType()}`);
-        let seriesList: { [id: string]: string } = {};
+        let seriesList: { [id: string]: string; } = {};
         let assigned: number = 0;
         //
         // Get the data - there will be 1-3 series that will get
@@ -742,7 +746,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      * @param seriesList list of series with specific variable assignments
      * @param localChartData output
      */
-    private createMultivariateChart(seriesList: { [id: string]: string }, localChartData: any[]) {
+    private createMultivariateChart(seriesList: { [id: string]: string; }, localChartData: any[]) {
         let seriesName = this.widgetHelper.getChartConfig().series[seriesList["x"]].name;
         if ("y" in seriesList) {
             seriesName = seriesName + ` vs ${this.widgetHelper.getChartConfig().series[seriesList["y"]].name}`;
@@ -1181,7 +1185,7 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      *
      * @returns Pair of dates representing the from and to dates the range extends over
      */
-    private getDateRange(): { from: Date; to: Date } {
+    private getDateRange(): { from: Date; to: Date; } {
         let to = Date.now();
         //here default to a large type so we try to get a reasonable amount of data
         const timeUnitVal: number = this.widgetHelper.getChartConfig().rangeUnits[
