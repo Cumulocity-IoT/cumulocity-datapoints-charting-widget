@@ -2,6 +2,8 @@
 
 ## Fixes
 
+-   1.1.3 Fixed firefox specific issue with chart selection.
+-   1.1.2 Fixed verbose console logging and error when realtime group not enabled
 -   1.1 release Added enhanced device list, caching of measurewments to help large volumes of data and the ability to select groups.
 -   Initial 1.0 release
 

@@ -83,6 +83,20 @@ export class ChartConfig {
         { id: 31536000, text: "year", format: "YYYY" },
     ];
 
+    public chartTypeList: RawListItem[] =[
+        { id: 0, text: "line" },
+        { id: 5, text: "spline" },
+        { id: 1, text: "bar" },
+        { id: 2, text: "horizontalBar" },
+        { id: 4, text: "doughnut" },
+        { id: 7, text: "pie" },
+        { id: 3, text: "radar" },
+        //{ isGroup:false , id: 5, text: "polarArea" },
+        { id: 8, text: "scatter" },
+        { id: 6, text: "bubble" },
+            // { isGroup:false , id: 9, text: "histogram" },
+        ];
+
     /**
      * This structure is the default options and formats
      * for the chart js options - depending on the choice

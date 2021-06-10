@@ -1,6 +1,6 @@
 <!-- @format -->
 
-# Data points charting widget [<img width="35" src="https://user-images.githubusercontent.com/67993842/97668428-f360cc80-1aa7-11eb-8801-da578bda4334.png"/>](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.2/cumulocity-datapoints-chart-widget-1.1.2.zip)
+# Data points charting widget [<img width="35" src="https://user-images.githubusercontent.com/67993842/97668428-f360cc80-1aa7-11eb-8801-da578bda4334.png"/>](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.3/cumulocity-datapoints-chart-widget-1.1.3.zip)
 
 The Data Points Charting Widget allows you to create real time graphs showing customizable amounts of data from one or more devices.
 
@@ -43,7 +43,7 @@ _There will be more added in the future depending on demand (E.G histogram)_
 
 ### Runtime Widget Deployment?
 
-- This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.2/cumulocity-datapoints-chart-widget-1.1.2.zip) and follow runtime deployment instructions from [here](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader).
+- This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.3/cumulocity-datapoints-chart-widget-1.1.3.zip) and follow runtime deployment instructions from [here](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader).
 
 ## User guide
 

@@ -4,7 +4,7 @@
         "dist\\bundle-src\\custom-widget.js": "cumulocity-datapoints-charting-CustomWidget",
         "dist/bundle-src/custom-widget.js": "cumulocity-datapoints-charting-CustomWidget"
     },
-    "version": "1.1.2",
+    "version": "1.1.3",
     "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "scripts": {
         "build": "gulp",
