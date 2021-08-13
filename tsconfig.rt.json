@@ -1,0 +1,14 @@
+{
+    "extends": "./node_modules/ng-packagr/lib/ts/conf/tsconfig.ngc.json",
+    "compilerOptions": {
+        "types": [
+            "node"
+        ],
+        "paths": {
+            "@widget-assets/*": [
+                "./src/cumulocity-datapoints-charting-widget/assets/*",
+                "./dist/widget-library/src/cumulocity-datapoints-charting-widget/assets"
+            ]
+        }
+    }
+}

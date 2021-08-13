@@ -2,14 +2,15 @@ const URLImportPlugin = require("webpack-external-import/webpack");
 const path = require('path');
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     devtool: 'source-map',
     entry: {
-        [require('./cumulocity.json').contextPath]: './dist/bundle-src/custom-widget.js'
+        [require('./widget-cumulocity.json').contextPath]: './dist/bundle-src/custom-widget.js'
     },
     resolve: {
         alias: {
-            "~styles": path.resolve(__dirname, 'styles')
+            "~styles": path.resolve(__dirname, 'styles'),
+            "@widget-assets": path.resolve(__dirname, 'src/cumulocity-datapoints-charting-widget/assets'),
         }
     },
     module: {
@@ -26,7 +27,7 @@ module.exports = {
                 loader: 'url-loader',
                 options: {
                     limit: 8192,
-                    publicPath: `/apps/${require('./cumulocity').contextPath}/`
+                    publicPath: `/apps/${require('./widget-cumulocity').contextPath}/`
                 },
             }
         ]
@@ -38,10 +39,10 @@ module.exports = {
     },
     plugins: [
         new URLImportPlugin({
-            manifestName: require('./cumulocity').contextPath,
+            manifestName: require('./widget-cumulocity').contextPath,
             fileName: "importManifest.js",
             basePath: '',
-            publicPath: `/apps/${require('./cumulocity').contextPath}/`,
+            publicPath: `/apps/${require('./widget-cumulocity').contextPath}/`,
             useExternals: {
                 "@angular/animations": "AngularAnimations",
                 "@angular/common": "AngularCommon",

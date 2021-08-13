@@ -1,22 +1,37 @@
-/** @format */
-
-import { Component, ElementRef, Input, OnInit, ViewChild } from "@angular/core";
-import { Observable, of } from "rxjs";
-import { FetchClient, InventoryService } from "@c8y/ngx-components/api";
-import { IResultList, IManagedObject, IdReference, IResult, IFetchResponse } from "@c8y/client";
-
-import { RawListItem, WidgetConfig } from "./widget-config";
-
-import * as _ from "lodash";
+/*
+* Copyright (c) 2019 Software AG, Darmstadt, Germany and/or its licensors
+*
+* SPDX-License-Identifier: Apache-2.0
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+ */
+import { Component, Input, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { WidgetHelper } from "./widget-helper";
+import { RawListItem, WidgetConfig } from "./widget-config";
+import { IResultList, IManagedObject, IdReference, IResult, IFetchResponse } from "@c8y/client";
+import { FetchClient, InventoryService } from '@c8y/ngx-components/api';
+import { Observable, of } from 'rxjs';
+import { deleteDB } from 'idb'; 
+import * as _ from 'lodash';
 import * as moment from "moment";
-import { deleteDB, openDB } from "idb";
+
 
 @Component({
-    templateUrl: "cumulocity-datapoints-charting-widget-config.component.html",
-    styleUrls: ["cumulocity-datapoints-charting-widget-config.component.css"],
+    selector: "cumulocity-datapoints-charting-widget-config-component",
+    templateUrl: "./cumulocity-datapoints-charting-widget.config.component.html",
+    styleUrls: ["./cumulocity-datapoints-charting-widget.config.component.css"]
 })
-export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
+export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestroy {
     //
     // All chosen options reside in the config
     //
@@ -35,6 +50,50 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     supportedSeries: RawListItem[];
 
     selectedSeries: string;
+
+    /**
+     * Constructs config object and injects inventory/fetch
+     * services so we can get objects and make api calls
+     * @param inventory
+     * @param fetchclient
+     */
+    constructor(private inventory: InventoryService, private fetchclient: FetchClient) {
+        this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default
+    }
+
+    /**
+     * Setup config, create the list of devices and populate
+     * data for controls
+     */
+    async ngOnInit(): Promise<void> {
+        this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
+
+        //set the devices observable for the config form
+        let deviceList = await this.getDevicesAndGroups();
+        this.rawDevices = deviceList
+            .map((item) => {
+                let v: RawListItem = { id: item.id, text: item.name, isGroup: item.isGroup };
+                return v;
+            })
+            .filter((item) => {
+                return item.text !== undefined;
+            });
+
+        this.updateConfig();
+    }
+
+    ngOnDestroy(): void {
+        //unsubscribe from observables here
+    }
+
+
+    onConfigChanged(): void {
+        console.log("CONFIG-CHANGED");
+        console.log(this.config);
+        this.widgetHelper.setWidgetConfig(this.config); //propgate changes 
+    }
+
+
     getSelectedSeries(): string {
         return this.selectedSeries;
     }
@@ -105,20 +164,10 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
     }
 
     /**
-     * Constructs config object and injects inventory/fetch
-     * services so we can get objects and make api calls
-     * @param inventory
-     * @param fetchclient
-     */
-    constructor(private inventory: InventoryService, private fetchclient: FetchClient) {
-        this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default
-    }
-
-    /**
-     * map the raw devices to a list of index/name for the dropdown.
-     *
-     * @returns observable for the devices/groups we have retrieved
-     */
+ * map the raw devices to a list of index/name for the dropdown.
+ *
+ * @returns observable for the devices/groups we have retrieved
+ */
     getDeviceDropdownList$(): Observable<RawListItem[]> {
         // let ddList = [];
         // if (this.rawDevices && this.rawDevices.length > 0) {
@@ -137,27 +186,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         //     });
         // }
         return of(this.supportedSeries);
-    }
-
-    /**
-     * Setup config, create the list of devices and populate
-     * data for controls
-     */
-    async ngOnInit(): Promise<void> {
-        this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
-
-        //set the devices observable for the config form
-        let deviceList = await this.getDevicesAndGroups();
-        this.rawDevices = deviceList
-            .map((item) => {
-                let v: RawListItem = { id: item.id, text: item.name, isGroup: item.isGroup };
-                return v;
-            })
-            .filter((item) => {
-                return item.text !== undefined;
-            });
-
-        this.updateConfig();
     }
 
     async getDevicesForGroup(id: string): Promise<IManagedObject[]> {
@@ -343,7 +371,7 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         //Formats
         let fmt =
             this.widgetHelper.getChartConfig().rangeDisplay[
-                this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
+            this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
             ];
 
         if (this.widgetHelper.getChartConfig().customFormat) {
@@ -384,4 +412,6 @@ export class CumulocityDataPointsChartingWidgetConfig implements OnInit {
         }
         this.widgetHelper.setWidgetConfig(this.config);
     }
+
+
 }
