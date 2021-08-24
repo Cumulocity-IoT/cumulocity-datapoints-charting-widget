@@ -135,7 +135,8 @@ export class MeasurementHelper {
         timeBucket: boolean,
         bucketPeriod: string,
         labelDateFormat: string,
-        maxMeasurements: number
+        maxMeasurements: number,
+        useCache: boolean = false
     ): Promise<MeasurementList> {
         //options for this query
         //console.log(` from ${dateFrom} to ${dateTo}`);
@@ -155,11 +156,13 @@ export class MeasurementHelper {
             },
         });
         //console.log("GET MEASUREMENTS", key);
-        const item = await db.transaction(storeName).objectStore(storeName).get(key);
         let data = [];
+        if (useCache) {
+            const item = await db.transaction(storeName).objectStore(storeName).get(key);
+            data = JSON.parse(item ? item : "[]"); //array of measurements
+        }
 
         //shortcut here - old data is fine - will update on next RT
-        data = JSON.parse(item ? item : "[]"); //array of measurements
         if (data.length > 0) {
             //reversed - newest first
             let rangeStart = new Date(data[data.length - 1].time);
@@ -225,12 +228,13 @@ export class MeasurementHelper {
             data = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
         }
 
-        const tx = db.transaction(storeName, "readwrite");
-        const store = await tx.objectStore(storeName);
-        //store the data so we can reopen immediately
-        const _value = await store.put(JSON.stringify(data), key);
-        await tx.done;
-
+        if (useCache) {
+            const tx = db.transaction(storeName, "readwrite");
+            const store = await tx.objectStore(storeName);
+            //store the data so we can reopen immediately
+            const _value = await store.put(JSON.stringify(data), key);
+            await tx.done;
+        }
         //console.log("STORED", data);
         db.close();
 

@@ -887,7 +887,8 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
                 this.widgetHelper.getChartConfig().aggregation == 0,
                 aggUnit,
                 aggFormat,
-                measurementLimit
+                measurementLimit,
+                this.widgetHelper.getChartConfig().useCache
             );
         } else {
             //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);

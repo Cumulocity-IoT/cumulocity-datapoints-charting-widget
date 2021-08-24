@@ -48,9 +48,9 @@ import { ChartsModule } from "ng2-charts";
                     data: {
                         ng1: {
                             options: {
-                                noDeviceTarget: false,
+                                noDeviceTarget: true,
                                 noNewWidgets: false,
-                                deviceTargetNotRequired: false,
+                                deviceTargetNotRequired: true,
                                 groupsSelectable: true
                             },
                         }
