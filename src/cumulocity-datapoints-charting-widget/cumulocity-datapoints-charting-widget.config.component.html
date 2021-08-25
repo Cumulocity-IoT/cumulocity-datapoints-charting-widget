@@ -7,21 +7,34 @@
     <div class="configSection">
         <h4 translate>Please select one or more Devices and Measurements</h4>
         <div class="row form-group">
-            <div class="col-lg-6">
-                <label class="label-with-help" for="deviceSelector" class="label-with-help" translate>Select device
+
+
+            <div class="col-lg-6" *ngIf="this.widgetHelper.getDeviceTarget() else selector">
+                <label class="label-with-help" for="deviceSelector" class="label-with-help" translate>
+                    {{widgetHelper.getWidgetConfig().selectedDevices[0].text}}
                     <span class="help-icon">
                         <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
-                             title="Select one or more devices for the chart.">
+                             title="Group device Id.">
                     </span>
-                    <ng-select [items]="getDeviceDropdownList$() | async" [multiple]="true" bindLabel="text"
-                               [closeOnSelect]="false" [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices"
-                               (ngModelChange)="updateConfig()">
-                        <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
-                            <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
-                        </ng-template>
-                    </ng-select>
                 </label>
             </div>
+            <ng-template #selector>
+                <div class="col-lg-6">
+                    <label class="label-with-help" for="deviceSelector" class="label-with-help" translate>Select device
+                        <span class="help-icon">
+                            <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
+                                 title="Select one or more devices for the chart.">
+                        </span>
+                        <ng-select [items]="getDeviceDropdownList$() | async" [multiple]="true" bindLabel="text"
+                                   [closeOnSelect]="false" [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices"
+                                   (ngModelChange)="updateConfig()">
+                            <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                                <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
+                            </ng-template>
+                        </ng-select>
+                    </label>
+                </div>
+            </ng-template>
 
             <!--
                 Hide until device(s) selected to prompt a flow

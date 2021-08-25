@@ -42,6 +42,7 @@ export class WidgetHelper<CONFIGTYPE> {
      */
     private config: CONFIGTYPE;
     private measurements: MeasurementHelper;
+    private rawConfig: any;
 
     /**
      *
@@ -51,6 +52,7 @@ export class WidgetHelper<CONFIGTYPE> {
      * @param ConfigCreator The type of the Custom Widget Class
      */
     constructor(c: Object, ConfigCreator: new () => CONFIGTYPE) {
+        this.rawConfig = c;
         this.reference = new ConfigCreator(); //template
         this.chartRef = new ChartConfig(); //NOT for data
 
@@ -67,6 +69,20 @@ export class WidgetHelper<CONFIGTYPE> {
                 Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));
             }
         }
+    }
+
+    getDeviceTarget(): string | undefined {
+        if (_.has(this.rawConfig, "device")) {
+            //console.log("DEVICE");
+            return this.rawConfig["device"].id;
+        } else if (_.has(this.rawConfig, "settings")) {
+            //console.log("SETTINGS");
+            if (_.has(this.rawConfig["settings"], "context")) {
+                //console.log("CONTEXT");
+                return this.rawConfig["settings"]["context"].id;
+            }
+        }
+        return undefined;
     }
 
     /**

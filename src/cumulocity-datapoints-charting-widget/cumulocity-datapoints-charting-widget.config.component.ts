@@ -20,10 +20,11 @@ import { WidgetHelper } from "./widget-helper";
 import { RawListItem, WidgetConfig } from "./widget-config";
 import { IResultList, IManagedObject, IdReference, IResult, IFetchResponse } from "@c8y/client";
 import { FetchClient, InventoryService } from '@c8y/ngx-components/api';
-import { Observable, of } from 'rxjs';
-import { deleteDB } from 'idb'; 
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { deleteDB } from 'idb';
 import * as _ from 'lodash';
 import * as moment from "moment";
+import { AlertService } from '@c8y/ngx-components';
 
 
 @Component({
@@ -45,9 +46,11 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     //
     // source data for config
     //
+    public rawDevices: BehaviorSubject<RawListItem[]>;
+    public supportedSeries: BehaviorSubject<RawListItem[]>;
 
-    rawDevices: RawListItem[];
-    supportedSeries: RawListItem[];
+    //rawDevices: RawListItem[];
+    //supportedSeries: RawListItem[];
 
     selectedSeries: string;
 
@@ -57,8 +60,10 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
      * @param inventory
      * @param fetchclient
      */
-    constructor(private inventory: InventoryService, private fetchclient: FetchClient) {
+    constructor(private inventory: InventoryService, private fetchclient: FetchClient, public alertService: AlertService) {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default
+        this.rawDevices = new BehaviorSubject<RawListItem[]>([]);
+        this.supportedSeries = new BehaviorSubject<RawListItem[]>([]);
     }
 
     /**
@@ -68,16 +73,27 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     async ngOnInit(): Promise<void> {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
 
-        //set the devices observable for the config form
-        let deviceList = await this.getDevicesAndGroups();
-        this.rawDevices = deviceList
-            .map((item) => {
-                let v: RawListItem = { id: item.id, text: item.name, isGroup: item.isGroup };
-                return v;
-            })
-            .filter((item) => {
-                return item.text !== undefined;
-            });
+        if (this.widgetHelper.getDeviceTarget()) {
+            let { data, res } = await this.getDeviceDetail(this.widgetHelper.getDeviceTarget());
+            if (res.status >= 200 && res.status < 300) {
+                let v: RawListItem = { id: data.id, text: data.name, isGroup: false };
+                this.widgetHelper.getWidgetConfig().selectedDevices = [v];
+            } else {
+                this.alertService.danger(`There was an issue getting device details, please refresh the page.`);
+                return;
+            }
+        } else {
+            //set the devices observable for the config form
+            let deviceList = await this.getDevicesAndGroups();
+            this.rawDevices.next(deviceList
+                .map((item) => {
+                    let v: RawListItem = { id: item.id, text: item.name, isGroup: item.isGroup };
+                    return v;
+                })
+                .filter((item) => {
+                    return item.text !== undefined;
+                }));
+        }
 
         this.updateConfig();
     }
@@ -175,7 +191,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         //         return { id: index, text: item.text };
         //     });
         // }
-        return of(this.rawDevices);
+        return this.rawDevices;
     }
 
     getSupportedSeries$(): Observable<RawListItem[]> {
@@ -185,7 +201,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         //         return { id: index, text: item.text };
         //     });
         // }
-        return of(this.supportedSeries);
+        return this.supportedSeries;
     }
 
     async getDevicesForGroup(id: string): Promise<IManagedObject[]> {
@@ -365,7 +381,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
                 }
             }
 
-            this.supportedSeries = await this.getSupportedSeries(conf.selectedDevices);
+            this.supportedSeries.next(await this.getSupportedSeries(conf.selectedDevices));
         }
 
         //Formats
