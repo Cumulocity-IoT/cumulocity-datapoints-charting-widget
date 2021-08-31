@@ -20,7 +20,7 @@
  */
 
 import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Realtime } from "@c8y/client";
+import { aggregationType, Realtime } from "@c8y/client";
 import { WidgetHelper } from "./widget-helper";
 import { DataObject, MeasurementOptions, WidgetConfig } from "./widget-config";
 import { BaseChartDirective, Label, ThemeService } from 'ng2-charts';
@@ -31,6 +31,7 @@ import { DatePipe } from '@angular/common';
 import * as _ from "lodash";
 import boll from "bollinger-bands";
 import * as moment from "moment";
+import { CumulocityHelper } from './cumulocity-service';
 
 @Component({
     selector: "lib-cumulocity-datapoints-charting-widget",
@@ -109,6 +110,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
     measurementHelper: MeasurementHelper;
     @Input() config;
 
+    private c8yHelper: CumulocityHelper;
 
     constructor(
         private measurementService: MeasurementService,
@@ -118,7 +120,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default access through here
         this.measurementHelper = new MeasurementHelper();
         this.seriesData = {};
-
+        this.c8yHelper = new CumulocityHelper();
     }
 
     /**
@@ -872,24 +874,44 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
             //
             // WorkHorse Functionality - retrieve and calculate derived numbers
             //
-            this.seriesData[key] = await this.measurementHelper.getMeasurements(
-                this.widgetHelper.getUniqueID(),
+            // this.seriesData[key] = await this.measurementHelper.getMeasurements(
+            //     this.widgetHelper.getUniqueID(),
+            //     deviceId,
+            //     name,
+            //     fragment,
+            //     series,
+            //     this.measurementService,
+            //     options,
+            //     from,
+            //     to,
+            //     null,
+            //     this.widgetHelper.getChartConfig().getChartType(),
+            //     this.widgetHelper.getChartConfig().aggregation == 0,
+            //     aggUnit,
+            //     aggFormat,
+            //     measurementLimit,
+            //     this.widgetHelper.getChartConfig().useCache
+            // );
+
+            console.log("TEST1------------------------");
+            let test = await this.c8yHelper.getData(this.measurementService,
                 deviceId,
-                name,
                 fragment,
                 series,
-                this.measurementService,
-                options,
                 from,
                 to,
-                null,
-                this.widgetHelper.getChartConfig().getChartType(),
-                this.widgetHelper.getChartConfig().aggregation == 0,
-                aggUnit,
-                aggFormat,
-                measurementLimit,
-                this.widgetHelper.getChartConfig().useCache
-            );
+                options.numdp);
+            let ml = new MeasurementList(options, [], [], [], test, test.length, [], [], 0, 0, 0);
+            this.seriesData[key] = ml;
+            console.log("TEST1-------------------------");
+
+            console.log("TEST2----Aggregate the data per time period---------------");
+            let test2 = await this.c8yHelper.getAggregateData(this.measurementService, deviceId, fragment, series, from, to, aggregationType.DAILY);
+            console.log(test2);
+            // let ml = new MeasurementList(options, [], [], [], test2, test2.length, [], [], 0, 0, 0);
+            // this.seriesData[key] = ml;
+            console.log("TEST2----Aggregate----------------------------------------");
+
         } else {
             //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);
             if (this.widgetHelper.getChartConfig().groupbyGroup) {

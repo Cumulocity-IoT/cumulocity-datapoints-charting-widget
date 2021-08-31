@@ -19,16 +19,23 @@
             widgetHelper.getChartConfig().getChartType() == 'pie' || 
             widgetHelper.getChartConfig().getChartType() == 'radar' || 
             widgetHelper.getChartConfig().getChartType() == 'doughnut' else normal">
-            <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
-                    [chartType]="widgetHelper.getChartConfig().getChartType()" [labels]="chartLabels"
+            <canvas #graph baseChart
+                    [datasets]="chartData"
+                    [options]="chartOptions"
+                    [chartType]="widgetHelper.getChartConfig().getChartType()"
+                    [labels]="chartLabels"
                     [legend]="chartLegend">
             </canvas>
         </ng-container>
         <ng-template #normal>
-            <canvas #graph baseChart [datasets]="chartData" [options]="chartOptions"
+            <canvas #graph baseChart
+                    [datasets]="chartData"
+                    [options]="chartOptions"
                     [chartType]="widgetHelper.getChartConfig().getChartType()">
             </canvas>
         </ng-template>
+
+        
     </ng-container>
 </div>
 <ng-template #error>

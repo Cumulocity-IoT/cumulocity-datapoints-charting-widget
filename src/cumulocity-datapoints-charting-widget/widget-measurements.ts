@@ -29,10 +29,10 @@ export class MeasurementList {
 
     constructor(
         options: MeasurementOptions,
-        upper: { x: Date; y: any; }[],
-        aggregate: { x: Date; y: any; }[],
-        lower: { x: Date; y: any; }[],
-        valtimes: { x: Date; y: any; }[],
+        upper: Chart.ChartPoint[],
+        aggregate: Chart.ChartPoint[],
+        lower: Chart.ChartPoint[],
+        valtimes: Chart.ChartPoint[],
         valCount,
         bucket: number[],
         labels: string[],
