@@ -4,7 +4,7 @@
 
 The Data Points Charting Widget allows you to create real time graphs showing customizable amounts of data from one or more devices.
 
-![Charts](src\cumulocity-datapoints-charting-widget\assets\img-preview.png)
+![Charts](/src/cumulocity-datapoints-charting-widget/assets/img-preview.png)
 
 ## Features
 
