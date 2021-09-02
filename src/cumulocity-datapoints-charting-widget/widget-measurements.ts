@@ -181,11 +181,11 @@ export class MeasurementHelper {
         console.log(`data required for  ${dateFrom} => ${dateTo}`);
 
         //cache hit if from and to are within range
-        console.log(data.length);
-        console.log(dateFrom, fromDateInRange);
-        console.log(dateTo, toDateInRange);
-        console.log(moment(dateFrom).isSameOrAfter(fromDateInRange));
-        console.log(moment(dateFrom).isSameOrBefore(toDateInRange));
+        // console.log(data.length);
+        // console.log(dateFrom, fromDateInRange);
+        // console.log(dateTo, toDateInRange);
+        // console.log(moment(dateFrom).isSameOrAfter(fromDateInRange));
+        // console.log(moment(dateFrom).isSameOrBefore(toDateInRange));
         if (data.length > 0 && moment(dateFrom).isSameOrAfter(fromDateInRange) && moment(dateFrom).isSameOrBefore(toDateInRange)) {
             //cache hit if from and/or to are within range
             if (moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {

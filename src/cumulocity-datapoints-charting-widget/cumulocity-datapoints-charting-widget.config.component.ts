@@ -104,8 +104,8 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
 
 
     onConfigChanged(): void {
-        console.log("CONFIG-CHANGED");
-        console.log(this.config);
+        //console.log("CONFIG-CHANGED");
+        //console.log(this.config);
         this.widgetHelper.setWidgetConfig(this.config); //propgate changes 
     }
 
