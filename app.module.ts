@@ -39,7 +39,7 @@ import { ChartsModule } from "ng2-charts";
             multi: true,
             useValue: [
                 {
-                    id: "com.softwareag.globalpresales.cumulocity.datapoints.charting.widget",
+                    id: "global.presales.CumulocityDataPointsCharting.widget",
                     label: "Data Points Charting",
                     description: "Graph measurements and statistics about measurements",
                     component: CumulocityDatapointsChartingWidget,

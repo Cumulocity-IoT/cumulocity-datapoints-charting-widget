@@ -1,11 +1,10 @@
 {
-    "name": "CumulocityDatapointsChartingWidget",
-    "contextPath": "cumulocity-datapoints-charting-widget",
-    "key": "cumulocity-datapoints-charting-widget-application-key",
+    "name": "Data Points Charting Widget",
+    "contextPath": "cumulocity-datapoints-charting",
+    "key": "cumulocity-datapoints-charting-application-key",
     "contentSecurityPolicy": "default-src 'self'",
-    "description": "DESCRIPTION FOR CumulocityDatapointsChartingWidget",
     "icon": {
-        "class": "fa fw fa-database"
+        "class": "fa fa-line-chart"
     },
     "manifest": {
         "noAppSwitcher": true

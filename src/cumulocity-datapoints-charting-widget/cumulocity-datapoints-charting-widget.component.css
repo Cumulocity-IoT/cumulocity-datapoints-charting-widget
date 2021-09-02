@@ -1,4 +1,6 @@
+/** @format */
+
 .cumulocity-datapoints-charting-widget-container {
-    display: grid;
-    justify-content: center;
+    padding-left: 5%;
+    padding-right: 5%;
 }

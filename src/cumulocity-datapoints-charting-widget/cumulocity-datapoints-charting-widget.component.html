@@ -1,41 +1,48 @@
-<div class="cumulocity-datapoints-charting-widget-container" *ngIf="verifyConfig() else error">
-    <!-- <div style="display: block; width: 500px; height: 400px;"> -->
-    <!-- <canvas baseChart [datasets]="chartData" [labels]="chartLabels" [options]="chartOptions" -->
-    <ng-container *ngIf="chartData && chartData.length > 0">
-        <ng-container *ngIf="!widgetHelper.getChartConfig().multivariateplot">
-            <div style="float: right; margin-right: 10px;">
-                <!-- <button type="button" class="btn btn-link c8y-realtime" title="Toggle realtime" (click)="toggle()">
-                            <span [ngClass]="realtimeState?'c8y-pulse active' : 'c8y-pulse inactive'"></span>
-                            <span>Realtime</span>
-                        </button> -->
-                <!--mat-icon-button-->
-                <button style="color:#1776BF;" type="button" class="button" (click)="refresh(this)"><span
-                          class="fa fa-refresh"></span></button>
+<div class="cumulocity-datapoints-charting-widget-container"
+     *ngIf="verifyConfig() else error"
+     style="justify-content: center;">
+
+    <ng-container *ngIf="!widgetHelper.getChartConfig().multivariateplot">
+        <div class="d-flex" style="flex-wrap: wrap;">
+            <!-- <button type="button" class="btn btn-link c8y-realtime" title="Toggle realtime" (click)="toggle()">
+                                    <span [ngClass]="realtimeState?'c8y-pulse active' : 'c8y-pulse inactive'"></span>
+                                    <span>Realtime</span>
+                                </button> -->
+            <!--mat-icon-button-->
+
+            <button style="color:#1776BF;" type="button" class="button" (click)="refresh(this)"><span
+                      class="fa fa-refresh"></span></button>
+        </div>
+
+    </ng-container>
+
+    <ng-container class="card-group" *ngIf="chartData && chartData.length > 0">
+
+        <div class="card m-8">
+            <div class="card-block">
+                <ng-container *ngIf="
+                                widgetHelper.getChartConfig().getChartType() == 'pie' || 
+                                widgetHelper.getChartConfig().getChartType() == 'radar' || 
+                                widgetHelper.getChartConfig().getChartType() == 'doughnut' else normal">
+                    <canvas #graph baseChart
+                            [datasets]="chartData"
+                            [options]="chartOptions"
+                            [chartType]="widgetHelper.getChartConfig().getChartType()"
+                            [labels]="chartLabels"
+                            [legend]="chartLegend" style="width:100%;height:90%;">
+                    </canvas>
+                </ng-container>
+                <ng-template #normal>
+                    <canvas #graph baseChart
+                            [datasets]="chartData"
+                            [options]="chartOptions"
+                            [chartType]="widgetHelper.getChartConfig().getChartType()"
+                            style="width:100%;height:90%;">
+                    </canvas>
+                </ng-template>
+
             </div>
-
-        </ng-container>
-
-        <ng-container *ngIf="
-            widgetHelper.getChartConfig().getChartType() == 'pie' || 
-            widgetHelper.getChartConfig().getChartType() == 'radar' || 
-            widgetHelper.getChartConfig().getChartType() == 'doughnut' else normal">
-            <canvas #graph baseChart
-                    [datasets]="chartData"
-                    [options]="chartOptions"
-                    [chartType]="widgetHelper.getChartConfig().getChartType()"
-                    [labels]="chartLabels"
-                    [legend]="chartLegend">
-            </canvas>
-        </ng-container>
-        <ng-template #normal>
-            <canvas #graph baseChart
-                    [datasets]="chartData"
-                    [options]="chartOptions"
-                    [chartType]="widgetHelper.getChartConfig().getChartType()">
-            </canvas>
-        </ng-template>
-
-        
+        </div>
     </ng-container>
 </div>
 <ng-template #error>

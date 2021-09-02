@@ -186,16 +186,21 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
                         let { from, to } = this.getDateRange();
                         //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
                         for (let index = 0; index < seriesConfig.idList.length; index++) {
-                            const seriesId = seriesConfig.idList[index];
+                            let deviceId = this.widgetHelper.getDeviceTarget();
+                            let splitSeriesId = seriesConfig.idList[index].split(".");
+                            if (deviceId === undefined) {
+                                deviceId = splitSeriesId[0];
+                            }
+
                             await this.getBaseMeasurements(
                                 seriesConfig.idList.length > 1,
-                                seriesId.split(".")[0],
+                                deviceId,
                                 seriesConfig.name,
-                                seriesId.split(".")[1],
-                                seriesId.split(".")[2],
+                                splitSeriesId[1],
+                                splitSeriesId[2],
                                 from,
                                 to,
-                                seriesConfig.idList.length > 1 ? seriesId : seriesName,
+                                seriesConfig.idList.length > 1 ? seriesConfig.idList[index] : seriesName,
                                 options
                             );
                         }
@@ -695,12 +700,18 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
                 let { from, to } = this.getDateRange();
                 for (let index = 0; index < seriesConfig.idList.length; index++) {
                     const seriesId = seriesConfig.idList[index];
+                    let deviceId = this.widgetHelper.getDeviceTarget();
+                    let splitSeriesId = seriesConfig.idList[index].split(".");
+                    if (deviceId === undefined) {
+                        deviceId = splitSeriesId[0];
+                    }
+
                     await this.getBaseMeasurements(
                         seriesConfig.idList.length > 1,
-                        seriesId.split(".")[0],
+                        deviceId,
                         seriesConfig.name,
-                        seriesId.split(".")[1],
-                        seriesId.split(".")[2],
+                        splitSeriesId[1],
+                        splitSeriesId[2],
                         from,
                         to,
                         seriesConfig.idList.length > 1 ? seriesId : seriesName,
@@ -871,46 +882,47 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
         }
 
         if (!isGroup) {
-            //
-            // WorkHorse Functionality - retrieve and calculate derived numbers
-            //
-            // this.seriesData[key] = await this.measurementHelper.getMeasurements(
-            //     this.widgetHelper.getUniqueID(),
-            //     deviceId,
-            //     name,
-            //     fragment,
-            //     series,
-            //     this.measurementService,
-            //     options,
-            //     from,
-            //     to,
-            //     null,
-            //     this.widgetHelper.getChartConfig().getChartType(),
-            //     this.widgetHelper.getChartConfig().aggregation == 0,
-            //     aggUnit,
-            //     aggFormat,
-            //     measurementLimit,
-            //     this.widgetHelper.getChartConfig().useCache
-            // );
 
-            console.log("TEST1------------------------");
-            let test = await this.c8yHelper.getData(this.measurementService,
+            //WorkHorse Functionality - retrieve and calculate derived numbers
+            //we need to plug in the dashboard supplied device id if it is there.
+
+            this.seriesData[key] = await this.measurementHelper.getMeasurements(
+                this.widgetHelper.getUniqueID(),
                 deviceId,
+                name,
                 fragment,
                 series,
+                this.measurementService,
+                options,
                 from,
                 to,
-                options.numdp);
-            let ml = new MeasurementList(options, [], [], [], test, test.length, [], [], 0, 0, 0);
-            this.seriesData[key] = ml;
-            console.log("TEST1-------------------------");
+                null,
+                this.widgetHelper.getChartConfig().getChartType(),
+                this.widgetHelper.getChartConfig().aggregation == 0,
+                aggUnit,
+                aggFormat,
+                measurementLimit,
+                this.widgetHelper.getChartConfig().useCache
+            );
 
-            console.log("TEST2----Aggregate the data per time period---------------");
-            let test2 = await this.c8yHelper.getAggregateData(this.measurementService, deviceId, fragment, series, from, to, aggregationType.DAILY);
-            console.log(test2);
-            // let ml = new MeasurementList(options, [], [], [], test2, test2.length, [], [], 0, 0, 0);
+            // console.log("TEST1------------------------");
+            // let test = await this.c8yHelper.getData(this.measurementService,
+            //     deviceId,
+            //     fragment,
+            //     series,
+            //     from,
+            //     to,
+            //     options.numdp);
+            // let ml = new MeasurementList(options, [], [], [], test, test.length, [], [], 0, 0, 0);
             // this.seriesData[key] = ml;
-            console.log("TEST2----Aggregate----------------------------------------");
+            // console.log("TEST1-------------------------");
+
+            // console.log("TEST2----Aggregate the data per time period---------------");
+            // let test2 = await this.c8yHelper.getAggregateData(this.measurementService, deviceId, fragment, series, from, to, aggregationType.DAILY);
+            // console.log(test2);
+            // // let ml = new MeasurementList(options, [], [], [], test2, test2.length, [], [], 0, 0, 0);
+            // // this.seriesData[key] = ml;
+            // console.log("TEST2----Aggregate----------------------------------------");
 
         } else {
             //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);
@@ -1095,13 +1107,21 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
                         let { from, to } = this.getDateRange();
                         //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
                         for (let index = 0; index < seriesConfig.idList.length; index++) {
+
                             const seriesId = seriesConfig.idList[index];
+
+                            let deviceId = this.widgetHelper.getDeviceTarget();
+                            let splitSeriesId = seriesId.split(".");
+                            if (deviceId === undefined) {
+                                deviceId = splitSeriesId[0];
+                            }
+
                             await this.getBaseMeasurements(
                                 seriesConfig.idList.length > 1,
-                                seriesId.split(".")[0],
+                                splitSeriesId[0],
                                 seriesConfig.name,
-                                seriesId.split(".")[1],
-                                seriesId.split(".")[2],
+                                splitSeriesId[1],
+                                splitSeriesId[2],
                                 from,
                                 to,
                                 seriesConfig.idList.length > 1 ? seriesId : seriesName,
