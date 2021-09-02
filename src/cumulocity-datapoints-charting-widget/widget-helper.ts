@@ -13,9 +13,9 @@
  */
 
 import * as _ from "lodash";
+import { v4 as uuidv4 } from "uuid";
 import { ChartConfig } from "./widget-charts";
 import { MeasurementHelper } from "./widget-measurements";
-import { v4 as uuidv4 } from "uuid";
 
 /**
  * The C8Y process has a standard member "config". This member has
@@ -42,6 +42,7 @@ export class WidgetHelper<CONFIGTYPE> {
      */
     private config: CONFIGTYPE;
     private measurements: MeasurementHelper;
+    private rawConfig: any;
 
     /**
      *
@@ -51,20 +52,37 @@ export class WidgetHelper<CONFIGTYPE> {
      * @param ConfigCreator The type of the Custom Widget Class
      */
     constructor(c: Object, ConfigCreator: new () => CONFIGTYPE) {
+        this.rawConfig = c;
         this.reference = new ConfigCreator(); //template
         this.chartRef = new ChartConfig(); //NOT for data
 
         // only set if it doesn't exist
         if (!_.has(c, "customwidgetdata")) {
             this.config = new ConfigCreator();
+            console.log("Create new config", this.config);
         } else {
             // because this is stored and retrieved from mongo db
             // reset the prototype and leave the data
+            console.log("Exists", c);
             this.config = _.get(c, "customwidgetdata");
             if (Object.getPrototypeOf(this.config) !== Object.getPrototypeOf(this.reference)) {
                 Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));
             }
         }
+    }
+
+    getDeviceTarget(): string | undefined {
+        if (_.has(this.rawConfig, "device")) {
+            //console.log("DEVICE");
+            return this.rawConfig["device"].id;
+        } else if (_.has(this.rawConfig, "settings")) {
+            //console.log("SETTINGS");
+            if (_.has(this.rawConfig["settings"], "context")) {
+                //console.log("CONTEXT");
+                return this.rawConfig["settings"]["context"].id;
+            }
+        }
+        return undefined;
     }
 
     /**
@@ -86,12 +104,20 @@ export class WidgetHelper<CONFIGTYPE> {
         _.set(c, "customwidgetdata", this.config);
     }
 
+    getUniqueID(): string {
+        if (!_.has(this.config, "uuid")) {
+            _.set(this.config, "uuid", uuidv4());
+        }
+        //console.log(this.config);
+        return _.get(this.config, "uuid");
+    }
+
     /**
-     * If an object exists it will be returned with the correct prototype
-     * If it doesn't it will be created and a default returned.
-     *
-     * @returns Chart config object attached to the general configuration
-     */
+ * If an object exists it will be returned with the correct prototype
+ * If it doesn't it will be created and a default returned.
+ *
+ * @returns Chart config object attached to the general configuration
+ */
     getChartConfig(): ChartConfig {
         let chartConfig: ChartConfig;
         if (_.has(this.config, "chart")) {
@@ -111,13 +137,5 @@ export class WidgetHelper<CONFIGTYPE> {
             this.measurements = new MeasurementHelper();
         }
         return this.measurements;
-    }
-
-    getUniqueID(): string {
-        if (!_.has(this.config, "uuid")) {
-            _.set(this.config, "uuid", uuidv4());
-        }
-        //console.log(this.config);
-        return _.get(this.config, "uuid");
     }
 }

@@ -83,7 +83,7 @@ export class ChartConfig {
         { id: 31536000, text: "year", format: "YYYY" },
     ];
 
-    public chartTypeList: RawListItem[] =[
+    public chartTypeList: RawListItem[] = [
         { id: 0, text: "line" },
         { id: 5, text: "spline" },
         { id: 1, text: "bar" },
@@ -94,8 +94,8 @@ export class ChartConfig {
         //{ isGroup:false , id: 5, text: "polarArea" },
         { id: 8, text: "scatter" },
         { id: 6, text: "bubble" },
-            // { isGroup:false , id: 9, text: "histogram" },
-        ];
+        // { isGroup:false , id: 9, text: "histogram" },
+    ];
 
     /**
      * This structure is the default options and formats
@@ -172,7 +172,7 @@ export class ChartConfig {
     realtime: string = "realtime"; // type of update
     timerDelay: number = 30; // seconds delay if timer (default 30)
     groupbyGroup: boolean = false; // default no grouping by "group"
-    groupCumulative: boolean = false; // default avearge, if true sum measurements for "Group"
+    groupCumulative: boolean = false; // default average, if true sum measurements for "Group"
 
     customFormat: boolean = false;
     customFormatString: string = "yyyy-MM-DD HH:mm";
@@ -209,9 +209,10 @@ export class ChartConfig {
     /**
      * The individual settings for each data point set
      */
-    series: { [key: string]: ChartSeries } = {};
+    series: { [key: string]: ChartSeries; } = {};
+    useCache: boolean = true;
 
-    constructor() {}
+    constructor() { }
 
     getChartType() {
         if (this.type == "spline") {

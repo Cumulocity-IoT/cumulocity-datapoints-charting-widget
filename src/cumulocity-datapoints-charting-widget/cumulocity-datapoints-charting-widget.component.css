@@ -1,10 +1,6 @@
 /** @format */
 
-.chart-container {
-    display: block;
-    position: relative;
-    height: 90%;
-    /* border: 1px solid black; */
-    margin: 1rem;
+.cumulocity-datapoints-charting-widget-container {
+    padding-left: 5%;
+    padding-right: 5%;
 }
-

@@ -1,37 +1,45 @@
-/** @format */
+/**
+ * /*
+ * Copyright (c) 2019 Software AG, Darmstadt, Germany and/or its licensors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @format
+ */
 
-import { Component, Input, OnDestroy, OnInit, ViewChild } from "@angular/core";
-import { WidgetConfig } from "./widget-config";
-import * as _ from "lodash";
-import { ChartDataSets, ChartOptions, ChartPoint, ChartTooltipItem, PositionType } from "chart.js";
-import { ThemeService, BaseChartDirective, Label } from "ng2-charts";
-import { DatePipe } from "@angular/common";
-import { MeasurementList, MeasurementOptions, MeasurementHelper } from "./widget-measurements";
-import { MeasurementService, Realtime } from "@c8y/ngx-components/api";
+import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { aggregationType, Realtime } from "@c8y/client";
 import { WidgetHelper } from "./widget-helper";
-import * as moment from "moment";
+import { DataObject, MeasurementOptions, WidgetConfig } from "./widget-config";
+import { BaseChartDirective, Label, ThemeService } from 'ng2-charts';
+import { MeasurementHelper, MeasurementList } from './widget-measurements';
+import { ChartDataSets, ChartOptions, ChartPoint, PositionType } from 'chart.js';
+import { MeasurementService } from '@c8y/ngx-components/api';
+import { DatePipe } from '@angular/common';
+import * as _ from "lodash";
 import boll from "bollinger-bands";
-import "chartjs-plugin-labels";
-import { openDB } from "idb";
-//import { openDB } from "idb";
-
-interface DataObject {
-    data: any;
-    key: string;
-    options: MeasurementOptions;
-}
+import * as moment from "moment";
+import { CumulocityHelper } from './cumulocity-service';
 
 @Component({
+    selector: "lib-cumulocity-datapoints-charting-widget",
     templateUrl: "./cumulocity-datapoints-charting-widget.component.html",
     styleUrls: ["./cumulocity-datapoints-charting-widget.component.css"],
-    providers: [DatePipe, ThemeService],
+    providers: [DatePipe, ThemeService]
 })
-export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
-    /**
-     * Standard config element, access this via the widgetHelper
-     * rather than directly.
-     */
-    @Input() config;
+export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
 
     /**
      * Gain access to chart object so we can call update
@@ -45,12 +53,6 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
      */
     dataLoaded: boolean = false;
 
-    /**
-     * These are the main interfaces to the config
-     * and the measurements
-     */
-    widgetHelper: WidgetHelper<WidgetConfig>;
-    measurementHelper: MeasurementHelper;
 
     /**
      * This charts data, retrieved initially in init, and then
@@ -99,61 +101,18 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         },
     };
 
-    /**
-     * Used on the page
-     *
-     * @returns true if we have devices and measurements selected
-     */
-    verifyConfig(): boolean {
-        //optimism
-        this.widgetHelper.getChartConfig().enabled = this.widgetHelper.getWidgetConfig() !== undefined;
-        this.widgetHelper.getChartConfig().message = "Loading Data...";
-        if (this.widgetHelper.getChartConfig().enabled) {
-            if (!this.widgetHelper.getWidgetConfig().selectedDevices.length || !this.widgetHelper.getWidgetConfig().selectedMeasurements.length) {
-                //1: do we have devices
-                this.widgetHelper.getChartConfig().enabled = false;
-                this.widgetHelper.getChartConfig().message = "You must choose at least one device and fragment to plot a chart.";
-            } else if (this.widgetHelper.getChartConfig().multivariateplot) {
-                let checks = this.checkMultivariateChart();
-                //console.log(this.widgetHelper.getChartConfig().getChartType(), checks);
-                if (this.widgetHelper.getChartConfig().getChartType() == "bubble") {
-                    if (checks.series != 3 || !checks.x || !checks.y || !checks.r) {
-                        this.widgetHelper.getChartConfig().enabled = false;
-                        this.widgetHelper.getChartConfig().message = "You must choose exactly 3 fragments and assign x,y, and r.";
-                    }
-                } else if (checks.series != 2) {
-                    this.widgetHelper.getChartConfig().enabled = false;
-                    this.widgetHelper.getChartConfig().message = "You must choose exactly 2 fragments and assign x,y.";
-                } else if (!checks.x || !checks.y) {
-                    this.widgetHelper.getChartConfig().enabled = false;
-                    this.widgetHelper.getChartConfig().message = "You must assign x,y.";
-                } else {
-                    //just in case
-                    this.widgetHelper.getChartConfig().enabled = true;
-                }
-            } else if (!this.chartData.length && this.dataLoaded) {
-                this.widgetHelper.getChartConfig().enabled = false;
-                this.widgetHelper.getChartConfig().message = "There appears to be no data selected to plot a chart (check series).";
-            } else if (!this.dataLoaded) {
-                this.widgetHelper.getChartConfig().enabled = false;
-                this.widgetHelper.getChartConfig().message = "Loading Data...";
-            }
-        }
-
-        return this.widgetHelper.getChartConfig().enabled;
-    }
 
     /**
-     * Initialize the Measurement service, Realtime service and date pipe.
-     * Sets the widgetHelper up and points it at config - initializes seriesData
-     * as empty.
-     *
-     * @param measurementService
-     * @param datepipe
-     * @param realtimeService
+     * These are the main interfaces to the config
+     * and the measurements
      */
+    widgetHelper: WidgetHelper<WidgetConfig>;
+    measurementHelper: MeasurementHelper;
+    @Input() config;
+
+    private c8yHelper: CumulocityHelper;
+
     constructor(
-        //        private http: HttpClient,
         private measurementService: MeasurementService,
         public datepipe: DatePipe,
         private realtimeService: Realtime
@@ -161,6 +120,155 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default access through here
         this.measurementHelper = new MeasurementHelper();
         this.seriesData = {};
+        this.c8yHelper = new CumulocityHelper();
+    }
+
+    /**
+     * Lifecycle
+     */
+    async ngOnInit(): Promise<void> {
+        this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
+
+        //Clean up
+        this.chartData = [];
+
+        let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
+        for (const subKey in this.subscription) {
+            if (Object.prototype.hasOwnProperty.call(this.subscription, subKey)) {
+                const sub = this.subscription[subKey];
+                if (!(subKey in seriesKeys) && sub !== "timer") {
+                    this.realtimeService.unsubscribe(sub);
+                    delete this.subscription[subKey];
+                }
+            }
+        }
+
+        //
+        // Display Legend or not - needs logic for certain conditions
+        // lhs display can cause issues if widget size is too small
+        //
+        this.setAxes();
+
+        let localChartData = []; //build list locally because empty dataset is added by framework
+
+        /**
+         *  handle independent series.
+         *
+         *
+         *
+         */
+        if (!this.widgetHelper.getChartConfig().multivariateplot) {
+            //console.log("getting independent variables");
+            //for each fragment/series to be plotted
+            //ChartSeries has most of the config for the series
+            //the MeasurementList contains the data (and its independent)
+            let groups = [];
+
+            for (let seriesName of Object.keys(this.widgetHelper.getChartConfig().series)) {
+                if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, seriesName)) {
+                    const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
+
+                    if (!seriesConfig.isParent) {
+                        //each series (aggregates and functions of raw data too) gets this
+                        let options: MeasurementOptions = new MeasurementOptions(
+                            this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
+                            this.widgetHelper.getChartConfig().getChartType(),
+                            this.widgetHelper.getChartConfig().numdp,
+                            this.widgetHelper.getChartConfig().sizeBuckets,
+                            this.widgetHelper.getChartConfig().minBucket,
+                            this.widgetHelper.getChartConfig().maxBucket,
+                            this.widgetHelper.getChartConfig().groupby,
+                            this.widgetHelper.getChartConfig().cumulative,
+                            seriesConfig.memberOf
+                        );
+                        //a period of time where quantity is the # of units,
+                        // and type(unit) has the # of seconds per unit in the id field
+                        let { from, to } = this.getDateRange();
+                        //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
+                        for (let index = 0; index < seriesConfig.idList.length; index++) {
+                            let deviceId = this.widgetHelper.getDeviceTarget();
+                            let splitSeriesId = seriesConfig.idList[index].split(".");
+                            if (deviceId === undefined) {
+                                deviceId = splitSeriesId[0];
+                            }
+
+                            await this.getBaseMeasurements(
+                                seriesConfig.idList.length > 1,
+                                deviceId,
+                                seriesConfig.name,
+                                splitSeriesId[1],
+                                splitSeriesId[2],
+                                from,
+                                to,
+                                seriesConfig.idList.length > 1 ? seriesConfig.idList[index] : seriesName,
+                                options
+                            );
+                        }
+
+                        if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
+                            //different to line/bar type plots - potentially lots of colours req
+                            //if lots of points added. If they run out you get grey...
+                            this.createPieChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
+                        } else {
+                            //Normal plot
+                            this.createNormalChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
+                        }
+                    } else {
+                        groups.push(seriesName);
+                    }
+                }
+            }
+
+            //now add the group series (we should have data at this point.)
+            for (let index = 0; index < groups.length; index++) {
+                const seriesName = groups[index];
+                const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
+                //each series (aggregates and functions of raw data too) gets this
+                let options: MeasurementOptions = new MeasurementOptions(
+                    this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
+                    this.widgetHelper.getChartConfig().getChartType(),
+                    this.widgetHelper.getChartConfig().numdp,
+                    this.widgetHelper.getChartConfig().sizeBuckets,
+                    this.widgetHelper.getChartConfig().minBucket,
+                    this.widgetHelper.getChartConfig().maxBucket,
+                    this.widgetHelper.getChartConfig().groupby,
+                    this.widgetHelper.getChartConfig().cumulative,
+                    seriesName
+                );
+
+                let { from, to } = this.getDateRange();
+
+                //TODO : tidy up these unused params
+                await this.getBaseMeasurements(
+                    seriesConfig.idList.length > 1, //should be true
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    seriesConfig.name,
+                    from,
+                    to,
+                    seriesName,
+                    options
+                );
+
+                //do something here with the parent group.
+                if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
+                    //different to line/bar type plots - potentially lots of colours req
+                    //if lots of points added. If they run out you get grey...
+                    this.createPieChart(seriesName, localChartData, options);
+                } else {
+                    //Normal plot
+                    this.createNormalChart(seriesName, localChartData, options);
+                }
+            }
+        } else {
+            await this.retrieveAndPlotMultivariateChart(localChartData);
+        }
+        //console.log("DATA", localChartData);
+
+        this.chartData = localChartData; //replace
+        this.dataLoaded = true; //update
+        this.widgetHelper.getWidgetConfig().changed = false;
     }
 
     /**
@@ -506,148 +614,53 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
     }
 
+
+
     /**
-     * Lifecycle
+     * Used on the page
+     *
+     * @returns true if we have devices and measurements selected
      */
-    async ngOnInit(): Promise<void> {
-        this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
-
-        //Clean up
-        this.chartData = [];
-
-        let seriesKeys = Object.keys(this.widgetHelper.getChartConfig().series);
-        for (const subKey in this.subscription) {
-            if (Object.prototype.hasOwnProperty.call(this.subscription, subKey)) {
-                const sub = this.subscription[subKey];
-                if (!(subKey in seriesKeys) && sub !== "timer") {
-                    this.realtimeService.unsubscribe(sub);
-                    delete this.subscription[subKey];
-                }
-            }
-        }
-
-        //
-        // Display Legend or not - needs logic for certain conditions
-        // lhs display can cause issues if widget size is too small
-        //
-        this.setAxes();
-
-        let localChartData = []; //build list locally because empty dataset is added by framework
-
-        /**
-         *  handle independent series.
-         *
-         *
-         *
-         */
-        if (!this.widgetHelper.getChartConfig().multivariateplot) {
-            //console.log("getting independent variables");
-            //for each fragment/series to be plotted
-            //ChartSeries has most of the config for the series
-            //the MeasurementList contains the data (and its independent)
-            let groups = [];
-
-            for (let seriesName of Object.keys(this.widgetHelper.getChartConfig().series)) {
-                if (Object.prototype.hasOwnProperty.call(this.widgetHelper.getChartConfig().series, seriesName)) {
-                    const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
-
-                    if (!seriesConfig.isParent) {
-                        //each series (aggregates and functions of raw data too) gets this
-                        let options: MeasurementOptions = new MeasurementOptions(
-                            this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
-                            this.widgetHelper.getChartConfig().getChartType(),
-                            this.widgetHelper.getChartConfig().numdp,
-                            this.widgetHelper.getChartConfig().sizeBuckets,
-                            this.widgetHelper.getChartConfig().minBucket,
-                            this.widgetHelper.getChartConfig().maxBucket,
-                            this.widgetHelper.getChartConfig().groupby,
-                            this.widgetHelper.getChartConfig().cumulative,
-                            seriesConfig.memberOf
-                        );
-                        //a period of time where quantity is the # of units,
-                        // and type(unit) has the # of seconds per unit in the id field
-                        let { from, to } = this.getDateRange();
-                        //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
-                        for (let index = 0; index < seriesConfig.idList.length; index++) {
-                            const seriesId = seriesConfig.idList[index];
-                            await this.getBaseMeasurements(
-                                seriesConfig.idList.length > 1,
-                                seriesId.split(".")[0],
-                                seriesConfig.name,
-                                seriesId.split(".")[1],
-                                seriesId.split(".")[2],
-                                from,
-                                to,
-                                seriesConfig.idList.length > 1 ? seriesId : seriesName,
-                                options
-                            );
-                        }
-
-                        if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
-                            //different to line/bar type plots - potentially lots of colours req
-                            //if lots of points added. If they run out you get grey...
-                            this.createPieChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
-                        } else {
-                            //Normal plot
-                            this.createNormalChart(seriesConfig.idList.length > 1 ? seriesConfig.idList[0] : seriesName, localChartData, options);
-                        }
-                    } else {
-                        groups.push(seriesName);
+    verifyConfig(): boolean {
+        //optimism
+        this.widgetHelper.getChartConfig().enabled = this.widgetHelper.getWidgetConfig() !== undefined;
+        this.widgetHelper.getChartConfig().message = "Loading Data...";
+        if (this.widgetHelper.getChartConfig().enabled) {
+            if (!this.widgetHelper.getWidgetConfig().selectedDevices.length || !this.widgetHelper.getWidgetConfig().selectedMeasurements.length) {
+                //1: do we have devices
+                this.widgetHelper.getChartConfig().enabled = false;
+                this.widgetHelper.getChartConfig().message = "You must choose at least one device and fragment to plot a chart.";
+            } else if (this.widgetHelper.getChartConfig().multivariateplot) {
+                let checks = this.checkMultivariateChart();
+                //console.log(this.widgetHelper.getChartConfig().getChartType(), checks);
+                if (this.widgetHelper.getChartConfig().getChartType() == "bubble") {
+                    if (checks.series != 3 || !checks.x || !checks.y || !checks.r) {
+                        this.widgetHelper.getChartConfig().enabled = false;
+                        this.widgetHelper.getChartConfig().message = "You must choose exactly 3 fragments and assign x,y, and r.";
                     }
-                }
-            }
-
-            //now add the group series (we should have data at this point.)
-            for (let index = 0; index < groups.length; index++) {
-                const seriesName = groups[index];
-                const seriesConfig = this.widgetHelper.getChartConfig().series[seriesName];
-                //each series (aggregates and functions of raw data too) gets this
-                let options: MeasurementOptions = new MeasurementOptions(
-                    this.widgetHelper.getChartConfig().series[seriesName].avgPeriod,
-                    this.widgetHelper.getChartConfig().getChartType(),
-                    this.widgetHelper.getChartConfig().numdp,
-                    this.widgetHelper.getChartConfig().sizeBuckets,
-                    this.widgetHelper.getChartConfig().minBucket,
-                    this.widgetHelper.getChartConfig().maxBucket,
-                    this.widgetHelper.getChartConfig().groupby,
-                    this.widgetHelper.getChartConfig().cumulative,
-                    seriesName
-                );
-
-                let { from, to } = this.getDateRange();
-
-                //TODO : tidy up these unused params
-                await this.getBaseMeasurements(
-                    seriesConfig.idList.length > 1, //should be true
-                    seriesConfig.name,
-                    seriesConfig.name,
-                    seriesConfig.name,
-                    seriesConfig.name,
-                    from,
-                    to,
-                    seriesName,
-                    options
-                );
-
-                //do something here with the parent group.
-                if (options.targetGraphType == "pie" || options.targetGraphType == "doughnut") {
-                    //different to line/bar type plots - potentially lots of colours req
-                    //if lots of points added. If they run out you get grey...
-                    this.createPieChart(seriesName, localChartData, options);
+                } else if (checks.series != 2) {
+                    this.widgetHelper.getChartConfig().enabled = false;
+                    this.widgetHelper.getChartConfig().message = "You must choose exactly 2 fragments and assign x,y.";
+                } else if (!checks.x || !checks.y) {
+                    this.widgetHelper.getChartConfig().enabled = false;
+                    this.widgetHelper.getChartConfig().message = "You must assign x,y.";
                 } else {
-                    //Normal plot
-                    this.createNormalChart(seriesName, localChartData, options);
+                    //just in case
+                    this.widgetHelper.getChartConfig().enabled = true;
                 }
+            } else if (!this.chartData.length && this.dataLoaded) {
+                this.widgetHelper.getChartConfig().enabled = false;
+                this.widgetHelper.getChartConfig().message = "There appears to be no data selected to plot a chart (check series).";
+            } else if (!this.dataLoaded) {
+                this.widgetHelper.getChartConfig().enabled = false;
+                this.widgetHelper.getChartConfig().message = "Loading Data...";
             }
-        } else {
-            await this.retrieveAndPlotMultivariateChart(localChartData);
         }
-        //console.log("DATA", localChartData);
 
-        this.chartData = localChartData; //replace
-        this.dataLoaded = true; //update
-        this.widgetHelper.getWidgetConfig().changed = false;
+        return this.widgetHelper.getChartConfig().enabled;
     }
+
+
 
     private async retrieveAndPlotMultivariateChart(localChartData: any[]) {
         //console.log("generating composite series from sources");
@@ -687,12 +700,18 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 let { from, to } = this.getDateRange();
                 for (let index = 0; index < seriesConfig.idList.length; index++) {
                     const seriesId = seriesConfig.idList[index];
+                    let deviceId = this.widgetHelper.getDeviceTarget();
+                    let splitSeriesId = seriesConfig.idList[index].split(".");
+                    if (deviceId === undefined) {
+                        deviceId = splitSeriesId[0];
+                    }
+
                     await this.getBaseMeasurements(
                         seriesConfig.idList.length > 1,
-                        seriesId.split(".")[0],
+                        deviceId,
                         seriesConfig.name,
-                        seriesId.split(".")[1],
-                        seriesId.split(".")[2],
+                        splitSeriesId[1],
+                        splitSeriesId[2],
                         from,
                         to,
                         seriesConfig.idList.length > 1 ? seriesId : seriesName,
@@ -863,9 +882,10 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
 
         if (!isGroup) {
-            //
-            // WorkHorse Functionality - retrieve and calculate derived numbers
-            //
+
+            //WorkHorse Functionality - retrieve and calculate derived numbers
+            //we need to plug in the dashboard supplied device id if it is there.
+
             this.seriesData[key] = await this.measurementHelper.getMeasurements(
                 this.widgetHelper.getUniqueID(),
                 deviceId,
@@ -881,8 +901,29 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                 this.widgetHelper.getChartConfig().aggregation == 0,
                 aggUnit,
                 aggFormat,
-                measurementLimit
+                measurementLimit,
+                true, //this.widgetHelper.getChartConfig().useCache
             );
+
+            // console.log("TEST1------------------------");
+            // let test = await this.c8yHelper.getData(this.measurementService,
+            //     deviceId,
+            //     fragment,
+            //     series,
+            //     from,
+            //     to,
+            //     options.numdp);
+            // let ml = new MeasurementList(options, [], [], [], test, test.length, [], [], 0, 0, 0);
+            // this.seriesData[key] = ml;
+            // console.log("TEST1-------------------------");
+
+            // console.log("TEST2----Aggregate the data per time period---------------");
+            // let test2 = await this.c8yHelper.getAggregateData(this.measurementService, deviceId, fragment, series, from, to, aggregationType.DAILY);
+            // console.log(test2);
+            // // let ml = new MeasurementList(options, [], [], [], test2, test2.length, [], [], 0, 0, 0);
+            // // this.seriesData[key] = ml;
+            // console.log("TEST2----Aggregate----------------------------------------");
+
         } else {
             //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);
             if (this.widgetHelper.getChartConfig().groupbyGroup) {
@@ -1022,13 +1063,13 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
         }
     }
 
-    async handleTimer(parent: CumulocityDataPointsChartingWidget) {
+    async handleTimer(parent: CumulocityDatapointsChartingWidget) {
         let localChartData = []; //build list locally because empty dataset is added by framework
         parent.retrieveAndPlotMultivariateChart(localChartData);
         parent.chartData = localChartData;
     }
 
-    async refresh(parent: CumulocityDataPointsChartingWidget) {
+    async refresh(parent: CumulocityDatapointsChartingWidget) {
         let localChartData = []; //build list locally because empty dataset is added by framework
 
         /**
@@ -1066,13 +1107,21 @@ export class CumulocityDataPointsChartingWidget implements OnInit, OnDestroy {
                         let { from, to } = this.getDateRange();
                         //console.log("MEMBER", seriesConfig.name, seriesConfig.idList);
                         for (let index = 0; index < seriesConfig.idList.length; index++) {
+
                             const seriesId = seriesConfig.idList[index];
+
+                            let deviceId = this.widgetHelper.getDeviceTarget();
+                            let splitSeriesId = seriesId.split(".");
+                            if (deviceId === undefined) {
+                                deviceId = splitSeriesId[0];
+                            }
+
                             await this.getBaseMeasurements(
                                 seriesConfig.idList.length > 1,
-                                seriesId.split(".")[0],
+                                splitSeriesId[0],
                                 seriesConfig.name,
-                                seriesId.split(".")[1],
-                                seriesId.split(".")[2],
+                                splitSeriesId[1],
+                                splitSeriesId[2],
                                 from,
                                 to,
                                 seriesConfig.idList.length > 1 ? seriesId : seriesName,
