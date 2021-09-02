@@ -110,7 +110,7 @@ export class CumulocityHelper {
             result = [...data];
             page = paging.nextPage;
             while (page != null && (maxMeasurements == 0 || data.length < maxMeasurements)) {
-                console.log(`requesting page ${page}`);
+                //console.log(`requesting page ${page}`);
                 // Need to handle errors here and also could there be
                 // other status codes to handle?
                 let { data, res } = await paging.next();

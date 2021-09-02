@@ -162,24 +162,46 @@ export class MeasurementHelper {
             data = JSON.parse(item ? item : "[]"); //array of measurements
         }
 
+        let adjustedFrom = dateFrom;
+        let adjustedTo = dateTo;
+        let toDateInRange = undefined;
+        let fromDateInRange = undefined;
+
         //shortcut here - old data is fine - will update on next RT
         if (data.length > 0) {
             //reversed - newest first
-            let rangeStart = new Date(data[data.length - 1].time);
-            let rangeEnd = new Date(data[0].time);
-            //console.log(`retrieved stored data for ${key} = ${rangeStart} => ${rangeEnd}`);
-            //console.log(`data required for  ${dateFrom} => ${dateTo}`);
+            fromDateInRange = new Date(data[data.length - 1].time);
+            toDateInRange = new Date(data[0].time);
+            console.log(`retrieved stored data for ${key} = ${fromDateInRange} => ${toDateInRange}`);
+        } else {
+            console.log(`no stored data for ${key}`);
+        }
 
-            if (moment(dateFrom).isSameOrBefore(rangeStart)) {
-                //we need to fill the gap
-                //we need everything.
+
+        console.log(`data required for  ${dateFrom} => ${dateTo}`);
+
+        //cache hit if from and to are within range
+        console.log(data.length);
+        console.log(dateFrom, fromDateInRange);
+        console.log(dateTo, toDateInRange);
+        console.log(moment(dateFrom).isSameOrAfter(fromDateInRange));
+        console.log(moment(dateFrom).isSameOrBefore(toDateInRange));
+        if (data.length > 0 && moment(dateFrom).isSameOrAfter(fromDateInRange) && moment(dateFrom).isSameOrBefore(toDateInRange)) {
+            //cache hit if from and/or to are within range
+            if (moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {
+                console.log("cache hit (1)");
+                //totally within range in cache 
+            } else {
+                console.log("partial cache hit (2)");
+                //starts in range - need to get latestDateInRange to dateTo
+                adjustedFrom = toDateInRange;
                 options.setFilter(
                     deviceId,
                     name,
                     fragment,
                     series,
-                    dateFrom,
-                    rangeStart,
+                    adjustedFrom,
+                    adjustedTo,
                     count,
                     targetGraphType,
                     timeBucket,
@@ -188,37 +210,35 @@ export class MeasurementHelper {
                 );
 
                 let filter = options.filter();
-                //get the first page
-                data.pop();
+                data.pop(); //stop duplicate
                 let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
-                //console.log(`appending data for ${key} = ${dateFrom} => ${rangeStart}`, newData);
                 data = [...data, ...newData];
             }
+        } else if (data.length > 0 && moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {
+            console.log("partial cache hit (3)");
+            //ends in range - need to get dateFrom to earliestDateInRange
+            adjustedTo = fromDateInRange;
+            options.setFilter(
+                deviceId,
+                name,
+                fragment,
+                series,
+                adjustedFrom,
+                adjustedTo,
+                count,
+                targetGraphType,
+                timeBucket,
+                bucketPeriod,
+                labelDateFormat
+            );
 
-            if (moment(dateTo).isSameOrAfter(rangeEnd)) {
-                //we need to fill the gap
-                //we need everything.
-                options.setFilter(
-                    deviceId,
-                    name,
-                    fragment,
-                    series,
-                    rangeEnd,
-                    dateTo,
-                    count,
-                    targetGraphType,
-                    timeBucket,
-                    bucketPeriod,
-                    labelDateFormat
-                );
+            let filter = options.filter();
+            data.shift(); //stop duplicate
+            let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
+            data = [...newData, ...data];
 
-                let filter = options.filter();
-                let newData = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
-                data.shift(); // returned includes first element don't duplicate
-                //console.log(`prepending data for ${key} = ${rangeEnd} => ${dateTo}`, newData);
-                data = [...newData, ...data];
-            }
         } else {
+            console.log("Cache Miss (4,5)");
             //console.log(`getting data for ${key} = ${dateFrom} => ${dateTo}`);
             //we need everything.
             options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
@@ -227,6 +247,9 @@ export class MeasurementHelper {
             //get the first page
             data = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
         }
+
+
+
 
         if (useCache) {
             const tx = db.transaction(storeName, "readwrite");
@@ -239,17 +262,26 @@ export class MeasurementHelper {
         db.close();
 
         //lets make sure we only show what's required.
+        //From
         let startIndex = data.length - 1;
         if (startIndex >= 0) {
             let rangeStart = new Date(data[data.length - 1].time);
-            //console.log(`trimming data required to start at  ${dateFrom}`);
             while ((startIndex < data.length - 1) && moment(rangeStart).isBefore(dateFrom)) {
                 rangeStart = new Date(data[--startIndex].time);
             }
         }
 
+        //To
+        let endIndex = 0;
+        if (endIndex <= data.length - 1) {
+            let rangeEnd = new Date(data[0].time);
+            while ((endIndex > 0) && moment(rangeEnd).isAfter(dateTo)) {
+                rangeEnd = new Date(data[++endIndex].time);
+            }
+        }
+
         options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
-        return this.processData(data.slice(0, startIndex), options);
+        return this.processData(data.slice(endIndex, startIndex), options);
     }
 
     private async getDataFromC8y(filter: Object, measurementService: MeasurementService, data: any[], maxMeasurements: number) {
@@ -260,7 +292,7 @@ export class MeasurementHelper {
             data = [...resp.data];
             page = resp.paging.nextPage;
             while (page != null && (maxMeasurements == 0 || data.length < maxMeasurements)) {
-                console.log(`requesting page ${page}`);
+                //console.log(`requesting page ${page}`);
                 // Need to handle errors here and also could there be
                 // other status codes to handle?
                 resp = await resp.paging.next();

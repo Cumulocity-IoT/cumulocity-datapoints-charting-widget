@@ -902,7 +902,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
                 aggUnit,
                 aggFormat,
                 measurementLimit,
-                this.widgetHelper.getChartConfig().useCache
+                true, //this.widgetHelper.getChartConfig().useCache
             );
 
             // console.log("TEST1------------------------");

@@ -172,7 +172,7 @@ export class ChartConfig {
     realtime: string = "realtime"; // type of update
     timerDelay: number = 30; // seconds delay if timer (default 30)
     groupbyGroup: boolean = false; // default no grouping by "group"
-    groupCumulative: boolean = false; // default avearge, if true sum measurements for "Group"
+    groupCumulative: boolean = false; // default average, if true sum measurements for "Group"
 
     customFormat: boolean = false;
     customFormatString: string = "yyyy-MM-DD HH:mm";
@@ -210,7 +210,7 @@ export class ChartConfig {
      * The individual settings for each data point set
      */
     series: { [key: string]: ChartSeries; } = {};
-    useCache: boolean = false;
+    useCache: boolean = true;
 
     constructor() { }
 
