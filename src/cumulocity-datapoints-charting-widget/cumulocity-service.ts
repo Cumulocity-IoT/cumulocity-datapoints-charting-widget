@@ -49,7 +49,7 @@ export class CumulocityHelper {
         _.set(filter, "pageSize", 2000);
         _.set(filter, "revert", true);
         _.set(filter, "withTotalPages", true);
-        console.log(formatDate(startDate, this.queryDateFormat, this.locale), formatDate(endDate, this.queryDateFormat, this.locale));
+       //console.log(formatDate(startDate, this.queryDateFormat, this.locale), formatDate(endDate, this.queryDateFormat, this.locale));
 
         if (startDate) {
             _.set(filter, "dateFrom", formatDate(startDate, this.queryDateFormat, this.locale));
@@ -59,9 +59,9 @@ export class CumulocityHelper {
             _.set(filter, "dateTo", formatDate(endDate, this.queryDateFormat, this.locale));
         }
 
-        console.log(`getting data for filter=`, filter);
+       //console.log(`getting data for filter=`, filter);
         let rawPoints = await this.getRawMeasurements(filter, measurementService, maxPoints);
-        console.log(`got=`, rawPoints);
+       //console.log(`got=`, rawPoints);
 
         return Promise.resolve(this.transform(rawPoints, fragment, series, 2));
     }
@@ -83,9 +83,9 @@ export class CumulocityHelper {
             dateTo: formatDate(endDate, this.queryDateFormat, this.locale),
             series: [`${fragment}.${series}`]
         };
-        console.log(`getting aggregate data for filter=`, filter);
+       //console.log(`getting aggregate data for filter=`, filter);
         let rawPoints = await this.getRawAggregateMeasurements(filter, measurementService);
-        console.log(`got=`, rawPoints);
+       //console.log(`got=`, rawPoints);
 
         return Promise.resolve(this.transform(rawPoints, fragment, series, 2));
     }
@@ -125,7 +125,7 @@ export class CumulocityHelper {
             if (maxMeasurements > 0 && data.length > maxMeasurements) {
                 data.length = maxMeasurements;
             }
-            console.log(`total of ${data.length} points`);
+           //console.log(`total of ${data.length} points`);
         }
         return Promise.resolve(result);
     }
@@ -143,8 +143,8 @@ export class CumulocityHelper {
         measurementService: MeasurementService): Promise<IMeasurement[]> {
         let result = [];
         let { data, res } = await measurementService.listSeries(filter);
-        console.log(data);
-        console.log(res);
+       //console.log(data);
+       //console.log(res);
         if (res.status >= 200 && res.status < 300) {
             let { series, truncated, values } = data;
             //transform the data into a format that chart.js can use
@@ -200,7 +200,7 @@ export class CumulocityHelper {
             return chartPoints;
         }, []);
 
-        console.log("result", result);
+       //console.log("result", result);
         return result.reverse();
     }
 
@@ -214,7 +214,7 @@ export class CumulocityHelper {
 
         let result: ChartPoint[] = [];
         _.forOwn(data, (value, key) => {
-            console.log("V=", value[0], "K=", key);
+           //console.log("V=", value[0], "K=", key);
             let cp: ChartPoint = {
                 x: Date.parse(key),
                 y: parseFloat((value[0].min).toFixed(numdp))
@@ -230,7 +230,7 @@ export class CumulocityHelper {
 
 
 
-        console.log("result", result);
+       //console.log("result", result);
         return result.reverse();
     }
 

@@ -354,7 +354,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
 
     async clearCache() {
         let dbName = "cumulocity-datapoints-charting-widget-db";
-        await deleteDB(dbName, { blocked: () => console.log(`Waiting to Removing DB ${dbName}`) });
+        await deleteDB(dbName, { blocked: () =>console.log(`Waiting to Removing DB ${dbName}`) });
     }
 
     /**
