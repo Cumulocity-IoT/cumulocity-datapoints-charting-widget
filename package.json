@@ -1,6 +1,6 @@
 {
     "name": "cumulocity-datapoints-charting-widget",
-    "version": "1.1.15",
+    "version": "1.1.17",
     "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "main": "index.js",
     "scripts": {

@@ -905,7 +905,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
                 true, //this.widgetHelper.getChartConfig().useCache
             );
 
-            // console.log("TEST1------------------------");
+            ////console.log("TEST1------------------------");
             // let test = await this.c8yHelper.getData(this.measurementService,
             //     deviceId,
             //     fragment,
@@ -915,14 +915,14 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
             //     options.numdp);
             // let ml = new MeasurementList(options, [], [], [], test, test.length, [], [], 0, 0, 0);
             // this.seriesData[key] = ml;
-            // console.log("TEST1-------------------------");
+            ////console.log("TEST1-------------------------");
 
-            // console.log("TEST2----Aggregate the data per time period---------------");
+            ////console.log("TEST2----Aggregate the data per time period---------------");
             // let test2 = await this.c8yHelper.getAggregateData(this.measurementService, deviceId, fragment, series, from, to, aggregationType.DAILY);
-            // console.log(test2);
+            ////console.log(test2);
             // // let ml = new MeasurementList(options, [], [], [], test2, test2.length, [], [], 0, 0, 0);
             // // this.seriesData[key] = ml;
-            // console.log("TEST2----Aggregate----------------------------------------");
+            ////console.log("TEST2----Aggregate----------------------------------------");
 
         } else {
             //console.log("GROUP", key, this.widgetHelper.getChartConfig().series[key].idList);

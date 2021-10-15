@@ -59,11 +59,11 @@ export class WidgetHelper<CONFIGTYPE> {
         // only set if it doesn't exist
         if (!_.has(c, "customwidgetdata")) {
             this.config = new ConfigCreator();
-            console.log("Create new config", this.config);
+           //console.log("Create new config", this.config);
         } else {
             // because this is stored and retrieved from mongo db
             // reset the prototype and leave the data
-            console.log("Exists", c);
+           //console.log("Exists", c);
             this.config = _.get(c, "customwidgetdata");
             if (Object.getPrototypeOf(this.config) !== Object.getPrototypeOf(this.reference)) {
                 Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));

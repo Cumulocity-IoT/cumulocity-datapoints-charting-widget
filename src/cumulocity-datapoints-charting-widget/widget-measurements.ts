@@ -172,27 +172,27 @@ export class MeasurementHelper {
             //reversed - newest first
             fromDateInRange = new Date(data[data.length - 1].time);
             toDateInRange = new Date(data[0].time);
-            console.log(`retrieved stored data for ${key} = ${fromDateInRange} => ${toDateInRange}`);
+           //console.log(`retrieved stored data for ${key} = ${fromDateInRange} => ${toDateInRange}`);
         } else {
-            console.log(`no stored data for ${key}`);
+           //console.log(`no stored data for ${key}`);
         }
 
 
-        console.log(`data required for  ${dateFrom} => ${dateTo}`);
+       //console.log(`data required for  ${dateFrom} => ${dateTo}`);
 
         //cache hit if from and to are within range
-        // console.log(data.length);
-        // console.log(dateFrom, fromDateInRange);
-        // console.log(dateTo, toDateInRange);
-        // console.log(moment(dateFrom).isSameOrAfter(fromDateInRange));
-        // console.log(moment(dateFrom).isSameOrBefore(toDateInRange));
+        ////console.log(data.length);
+        ////console.log(dateFrom, fromDateInRange);
+        ////console.log(dateTo, toDateInRange);
+        ////console.log(moment(dateFrom).isSameOrAfter(fromDateInRange));
+        ////console.log(moment(dateFrom).isSameOrBefore(toDateInRange));
         if (data.length > 0 && moment(dateFrom).isSameOrAfter(fromDateInRange) && moment(dateFrom).isSameOrBefore(toDateInRange)) {
             //cache hit if from and/or to are within range
             if (moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {
-                console.log("cache hit (1)");
+               //console.log("cache hit (1)");
                 //totally within range in cache 
             } else {
-                console.log("partial cache hit (2)");
+               //console.log("partial cache hit (2)");
                 //starts in range - need to get latestDateInRange to dateTo
                 adjustedFrom = toDateInRange;
                 options.setFilter(
@@ -215,7 +215,7 @@ export class MeasurementHelper {
                 data = [...data, ...newData];
             }
         } else if (data.length > 0 && moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {
-            console.log("partial cache hit (3)");
+           //console.log("partial cache hit (3)");
             //ends in range - need to get dateFrom to earliestDateInRange
             adjustedTo = fromDateInRange;
             options.setFilter(
@@ -238,7 +238,7 @@ export class MeasurementHelper {
             data = [...newData, ...data];
 
         } else {
-            console.log("Cache Miss (4,5)");
+           //console.log("Cache Miss (4,5)");
             //console.log(`getting data for ${key} = ${dateFrom} => ${dateTo}`);
             //we need everything.
             options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
@@ -306,7 +306,7 @@ export class MeasurementHelper {
             if (maxMeasurements > 0 && data.length > maxMeasurements) {
                 data.length = maxMeasurements;
             }
-            console.log(`total of ${data.length} points`);
+           //console.log(`total of ${data.length} points`);
         }
         return data;
     }
