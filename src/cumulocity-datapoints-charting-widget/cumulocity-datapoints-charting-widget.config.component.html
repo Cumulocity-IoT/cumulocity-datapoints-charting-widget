@@ -25,14 +25,14 @@
                             <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                  title="Select one or more devices for the chart.">
                         </span>
-                        <ng-select [items]="getDeviceDropdownList$() | async" [multiple]="true" bindLabel="text"
-                                   [closeOnSelect]="false" [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices"
-                                   (ngModelChange)="updateConfig()">
-                            <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
-                                <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
-                            </ng-template>
-                        </ng-select>
                     </label>
+                    <ng-select [items]="getDeviceDropdownList$() | async" [multiple]="true" bindLabel="text"
+                               [closeOnSelect]="false" [(ngModel)]="widgetHelper.getWidgetConfig().selectedDevices"
+                               (ngModelChange)="updateConfig()">
+                        <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                            <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
+                        </ng-template>
+                    </ng-select>
                 </div>
             </ng-template>
 
@@ -49,15 +49,15 @@
                             <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                  title="Select one or more data fragments for the chart.">
                         </span>
-                        <ng-select [items]="getSupportedSeries$() | async" [multiple]="true" bindLabel="text"
-                                   [closeOnSelect]="false"
-                                   [(ngModel)]="widgetHelper.getWidgetConfig().selectedMeasurements"
-                                   (ngModelChange)="updateSelectedMeasurements()">
-                            <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
-                                <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
-                            </ng-template>
-                        </ng-select>
                     </label>
+                    <ng-select [items]="getSupportedSeries$() | async" [multiple]="true" bindLabel="text"
+                               [closeOnSelect]="false"
+                               [(ngModel)]="widgetHelper.getWidgetConfig().selectedMeasurements"
+                               (ngModelChange)="updateSelectedMeasurements()">
+                        <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                            <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.text}}
+                        </ng-template>
+                    </ng-select>
                 </div>
             </ng-container>
         </div>
