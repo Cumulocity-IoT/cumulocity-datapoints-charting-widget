@@ -4,7 +4,7 @@
     "key": "cumulocity-datapoints-charting-application-key",
     "contentSecurityPolicy": "default-src 'self'",
     "icon": {
-        "class": "fa fa-line-chart"
+        "class": "dlt-icon-line-chart"
     },
     "manifest": {
         "noAppSwitcher": true

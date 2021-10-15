@@ -10,8 +10,8 @@
                                 </button> -->
             <!--mat-icon-button-->
 
-            <button style="color:#1776BF;" type="button" class="button" (click)="refresh(this)"><span
-                      class="fa fa-refresh"></span></button>
+            <button style="color:#1776BF;" type="button" class="button" (click)="refresh(this)"><i
+                      [c8yIcon]="'refresh'"></i></button>
         </div>
 
     </ng-container>
@@ -47,7 +47,7 @@
 </div>
 <ng-template #error>
     <div class="cumulocity-datapoints-charting-widget-container">
-        <i class="fa fa-exclamation-circle fa-5x primary"></i>
+        <i [c8yIcon]="'exclamation-circle'" primary></i>
         <h4>{{widgetHelper.getChartConfig().message}}</h4>
     </div>
 </ng-template>

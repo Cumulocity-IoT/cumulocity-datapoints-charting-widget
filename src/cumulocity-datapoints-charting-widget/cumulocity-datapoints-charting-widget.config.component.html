@@ -100,12 +100,13 @@
             </div>
             <div class="row form-group">
                 <div class="form-check-inline col-lg-3">
+                    <input
+                           [disabled]="widgetHelper.getChartConfig().multivariateplot && widgetHelper.getChartConfig().getChartType() !== 'radar'"
+                           class="form-check-input" type="checkbox" name="groupby"
+                           [(ngModel)]="widgetHelper.getChartConfig().groupby" (ngModelChange)="updateConfig()" />
                     <label class="label-with-help" class="form-check-label" for="groupby" translate>
-                        <input
-                               [disabled]="widgetHelper.getChartConfig().multivariateplot && widgetHelper.getChartConfig().getChartType() !== 'radar'"
-                               class="form-check-input" type="checkbox" name="groupby"
-                               [(ngModel)]="widgetHelper.getChartConfig().groupby" (ngModelChange)="updateConfig()" />
-                        Group measurements within time unit<span class="help-icon">
+                        Group measurements within time unit
+                        <span class="help-icon">
                             <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                  title="Average or sum measurement values for the unit of the range (E.G minute, hour, etc...)">
                         </span>
@@ -113,14 +114,14 @@
                 </div>
                 <div class="form-check-inline col-lg-3">
                     <label class="label-with-help" class="form-check-label" for="cumulative" translate>
-                        <input [disabled]="!widgetHelper.getChartConfig().groupby" class="form-check-input"
-                               type="checkbox" name="cumulative" [(ngModel)]="widgetHelper.getChartConfig().cumulative"
-                               (ngModelChange)="updateConfig()" />
                         Sum measurements in group<span class="help-icon">
                             <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                  title="check to sum values default is averaging.">
                         </span>
                     </label>
+                    <input [disabled]="!widgetHelper.getChartConfig().groupby" class="form-check-input"
+                           type="checkbox" name="cumulative" [(ngModel)]="widgetHelper.getChartConfig().cumulative"
+                           (ngModelChange)="updateConfig()" />
                 </div>
                 <div class=" col-lg-2">
                     <button type="button" class="btn btn-primary" (click)="clearCache()">Clear Measurements
@@ -155,19 +156,16 @@
                         <span class="help-icon">
                             <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip" title="The type of chart to plot.">
                         </span>
-
-                        <select class="form-control" name="chartSelector"
-                                [(ngModel)]="widgetHelper.getChartConfig().type" (ngModelChange)="updateConfig()">
-                            <option *ngFor="
-                                let chart of widgetHelper.getChartConfig()
-                                    .chartTypeList; index as i;
-                            " [ngValue]="chart.text">
-                                {{ chart.text }}
-                            </option>
-                        </select>
-
-
                     </label>
+                    <select class="form-control" name="chartSelector"
+                            [(ngModel)]="widgetHelper.getChartConfig().type" (ngModelChange)="updateConfig()">
+                        <option *ngFor="
+                                                        let chart of widgetHelper.getChartConfig()
+                                                            .chartTypeList; index as i;
+                                                    " [ngValue]="chart.text">
+                            {{ chart.text }}
+                        </option>
+                    </select>
                 </div>
             </div>
 
@@ -182,18 +180,18 @@
                         ">
                 <div class="row form-group">
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input" type="checkbox" name="showXAxis"
+                               [(ngModel)]="widgetHelper.getChartConfig().showx" (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="showXAxis" translate>
-                            <input class="form-check-input" type="checkbox" name="showXAxis"
-                                   [(ngModel)]="widgetHelper.getChartConfig().showx" (ngModelChange)="updateConfig()" />
                             Show X axis<span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip" title="Show the x axis.">
                             </span>
                         </label>
                     </div>
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input" type="checkbox" name="showYAxis"
+                               [(ngModel)]="widgetHelper.getChartConfig().showy" (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="showYAxis" translate>
-                            <input class="form-check-input" type="checkbox" name="showYAxis"
-                                   [(ngModel)]="widgetHelper.getChartConfig().showy" (ngModelChange)="updateConfig()" />
                             Show Y axis<span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip" title="Show the y axis.">
                             </span>
@@ -203,10 +201,11 @@
                         Need to make this work in the case of a single dataset
                     -->
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input" type="checkbox" name="showYAxis"
+                               [(ngModel)]="widgetHelper.getChartConfig().showAxesLabels"
+                               (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="showYAxis" translate>
-                            <input class="form-check-input" type="checkbox" name="showYAxis"
-                                   [(ngModel)]="widgetHelper.getChartConfig().showAxesLabels"
-                                   (ngModelChange)="updateConfig()" /> Label axes<span class="help-icon">
+                            Label axes<span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                      title="Show the x & y axis labels.">
                             </span>
@@ -214,10 +213,11 @@
                     </div>
                     <div *ngIf="widgetHelper.getChartConfig().showy">
                         <div class="form-check-inline col-lg-2">
+                            <input class="form-check-input" type="checkbox" name="beginAtZero2"
+                                   [(ngModel)]="widgetHelper.getChartConfig().fitAxis"
+                                   (ngModelChange)="updateConfig()" />
                             <label class="label-with-help" class="form-check-label" for="beginAtZero2" translate>
-                                <input class="form-check-input" type="checkbox" name="beginAtZero2"
-                                       [(ngModel)]="widgetHelper.getChartConfig().fitAxis"
-                                       (ngModelChange)="updateConfig()" /> Fit axes<span class="help-icon">
+                                Fit axes<span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                          title="Fit the range of the chart axes to the data.">
                                 </span>
@@ -226,10 +226,12 @@
                     </div>
                     <ng-container *ngIf="widgetHelper.getChartConfig().getChartType() === 'line'">
                         <div class="form-check-inline col-lg-2">
-                            <label class="label-with-help" class="form-check-label" for="fillArea" translate>
-                                <input class="form-check-input" type="checkbox" name="fillArea"
-                                       [(ngModel)]="widgetHelper.getChartConfig().fillArea"
-                                       (ngModelChange)="updateConfig()" /> Fill area<span class="help-icon">
+                            <input class="form-check-input" type="checkbox" name="fillArea"
+                                   [(ngModel)]="widgetHelper.getChartConfig().fillArea"
+                                   (ngModelChange)="updateConfig()" />
+                            <label class="label-with-help"
+                                   class="form-check-label" for="fillArea" translate>
+                                Fill area<span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                          title="Fill the area under the line with the color of the series.">
                                 </span>
@@ -247,18 +249,18 @@
                           *ngIf="widgetHelper.getChartConfig().getChartType() === 'bar' || widgetHelper.getChartConfig().getChartType() === 'horizontalBar'">
                 <div class="row form-group">
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input" type="checkbox" name="showXAxis"
+                               [(ngModel)]="widgetHelper.getChartConfig().showx" (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="showXAxis" translate>
-                            <input class="form-check-input" type="checkbox" name="showXAxis"
-                                   [(ngModel)]="widgetHelper.getChartConfig().showx" (ngModelChange)="updateConfig()" />
                             Show X axis<span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip" title="Show the x axis.">
                             </span>
                         </label>
                     </div>
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input" type="checkbox" name="showYAxis"
+                               [(ngModel)]="widgetHelper.getChartConfig().showy" (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="showYAxis" translate>
-                            <input class="form-check-input" type="checkbox" name="showYAxis"
-                                   [(ngModel)]="widgetHelper.getChartConfig().showy" (ngModelChange)="updateConfig()" />
                             Show Y axis<span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip" title="Show the y axis.">
                             </span>
@@ -266,10 +268,11 @@
                     </div>
                     <div class="form-check-inline col-lg-2">
                         <div *ngIf="widgetHelper.getChartConfig().showy">
+                            <input class="form-check-input" type="checkbox" name="beginAtZero1"
+                                   [(ngModel)]="widgetHelper.getChartConfig().fitAxis"
+                                   (ngModelChange)="updateConfig()" />
                             <label class="label-with-help" class="form-check-label" for="beginAtZero1" translate>
-                                <input class="form-check-input" type="checkbox" name="beginAtZero1"
-                                       [(ngModel)]="widgetHelper.getChartConfig().fitAxis"
-                                       (ngModelChange)="updateConfig()" /> Fit axes
+                                Fit axes
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                          title="Fit the range of the chart axes to the data.">
@@ -278,12 +281,13 @@
                         </div>
                     </div>
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input"
+                               [disabled]="widgetHelper.getWidgetConfig().selectedMeasurements.length < 2"
+                               type="checkbox" name="stackSeries"
+                               [(ngModel)]="widgetHelper.getChartConfig().stackSeries"
+                               (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="stackSeries" translate>
-                            <input class="form-check-input"
-                                   [disabled]="widgetHelper.getWidgetConfig().selectedMeasurements.length < 2"
-                                   type="checkbox" name="stackSeries"
-                                   [(ngModel)]="widgetHelper.getChartConfig().stackSeries"
-                                   (ngModelChange)="updateConfig()" /> Stack series
+                            Stack series
                             <span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                      title="Stack series on the bar chart.">
@@ -331,10 +335,11 @@
                         </div>
 
                         <div class=" col-lg-2">
+                            <input class="form-check-input" type="checkbox" name="customFormat"
+                                   [(ngModel)]="widgetHelper.getChartConfig().customFormat"
+                                   (ngModelChange)="updateConfig()" />
                             <label class="label-with-help" class="form-check-label" for="customFormat" translate>
-                                <input class="form-check-input" type="checkbox" name="customFormat"
-                                       [(ngModel)]="widgetHelper.getChartConfig().customFormat"
-                                       (ngModelChange)="updateConfig()" /> Use custom format
+                                Use custom format
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                          title="Specify a custom date format for the chart">
@@ -349,15 +354,15 @@
                                              title="Choose a date format for the chart.">
                                     </span>
 
-                                    <select class="form-control" name="formatSelector"
-                                            [(ngModel)]="widgetHelper.getChartConfig().aggTimeFormatType"
-                                            (ngModelChange)="updateConfig()">
-                                        <option
-                                                *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
-                                                [ngValue]="i">
-                                            {{ rType.format }}
-                                    </select>
                                 </label>
+                                <select class="form-control" name="formatSelector"
+                                        [(ngModel)]="widgetHelper.getChartConfig().aggTimeFormatType"
+                                        (ngModelChange)="updateConfig()">
+                                    <option
+                                            *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
+                                            [ngValue]="i">
+                                        {{ rType.format }}
+                                </select>
                             </div>
                         </ng-container>
 
@@ -426,10 +431,10 @@
                     widgetHelper.getChartConfig().getChartType() !== 'doughnut'">
                 <div class="row form-group">
                     <div class="form-check-inline col-lg-2">
+                        <input class="form-check-input" type="checkbox" name="customFormat"
+                               [(ngModel)]="widgetHelper.getChartConfig().customFormat"
+                               (ngModelChange)="updateConfig()" />
                         <label class="label-with-help" class="form-check-label" for="customFormat" translate>
-                            <input class="form-check-input" type="checkbox" name="customFormat"
-                                   [(ngModel)]="widgetHelper.getChartConfig().customFormat"
-                                   (ngModelChange)="updateConfig()" />
                             Use custom format
                             <span class="help-icon">
                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
@@ -445,14 +450,14 @@
                                          title="Choose the date format for the chart">
                                 </span>
 
-                                <select class="form-control" name="formatSelector"
-                                        [(ngModel)]="widgetHelper.getChartConfig().timeFormatType"
-                                        (ngModelChange)="updateConfig()">
-                                    <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
-                                            [ngValue]="i">
-                                        {{ rType.format }}
-                                </select>
                             </label>
+                            <select class="form-control" name="formatSelector"
+                                    [(ngModel)]="widgetHelper.getChartConfig().timeFormatType"
+                                    (ngModelChange)="updateConfig()">
+                                <option *ngFor="let rType of widgetHelper.getChartConfig().rangeUnits; index as i;"
+                                        [ngValue]="i">
+                                    {{ rType.format }}
+                            </select>
                         </div>
                     </ng-container>
                     <ng-template #selectFormat>
@@ -525,15 +530,17 @@
                     ">
                     <div class="row form-group">
                         <div class="form-check-inline  col-lg-6">
+                            <input class="form-check-input"
+                                   [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
+                                                                       this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
+                                                                       this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
+                                                                       this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
+                                                                       this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
+                                   type="checkbox" [ngModelOptions]="{ standalone: true }"
+                                   [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
+                                   (ngModelChange)="updateConfig()" />
                             <label class="label-with-help" class=" form-check-label" translate>
-                                <input class="form-check-input" [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
-                                       type="checkbox" [ngModelOptions]="{ standalone: true }"
-                                       [(ngModel)]="widgetHelper.getChartConfig().multivariateplot"
-                                       (ngModelChange)="updateConfig()" /> Plot data points from one series against
+                                Plot data points from one series against
                                 another
                                 <span class="help-icon">
                                     <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
@@ -544,29 +551,33 @@
                         </div>
                         <ng-container *ngIf="!widgetHelper.getChartConfig().multivariateplot">
                             <div class="form-check-inline  col-lg-4">
+                                <input class="form-check-input"
+                                       [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
+                                       type="checkbox" [ngModelOptions]="{ standalone: true }"
+                                       [(ngModel)]="widgetHelper.getChartConfig().groupbyGroup"
+                                       (ngModelChange)="updateConfig()" />
                                 <label class="label-with-help" class=" form-check-label" translate>
-                                    <input class="form-check-input" [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
-                                           type="checkbox" [ngModelOptions]="{ standalone: true }"
-                                           [(ngModel)]="widgetHelper.getChartConfig().groupbyGroup"
-                                           (ngModelChange)="updateConfig()" /> Show datapoints for cumulocity group
+                                    Show datapoints for cumulocity group
                                     <span class="help-icon">
                                         <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                              title="If you have chosen a group checking this option will show a plot of the average or sum of all the selected series">
                                     </span>
                                 </label>
+                                <input class="form-check-input"
+                                       [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
+                                                                           this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
+                                       type="checkbox" [ngModelOptions]="{ standalone: true }"
+                                       [(ngModel)]="widgetHelper.getChartConfig().groupCumulative"
+                                       (ngModelChange)="updateConfig()" />
                                 <label class="label-with-help" class=" form-check-label" translate>
-                                    <input class="form-check-input" [disabled]="widgetHelper.getChartConfig().seriesKeys().length < 2 || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'bar' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'horizontalBar' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'pie' || 
-                                       this.widgetHelper.getChartConfig().getChartType() === 'doughnut' "
-                                           type="checkbox" [ngModelOptions]="{ standalone: true }"
-                                           [(ngModel)]="widgetHelper.getChartConfig().groupCumulative"
-                                           (ngModelChange)="updateConfig()" /> sum for group
+                                    sum for group
                                     <span class="help-icon">
                                         <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                              title="Default average meeasurments, if checked then sum them ">
@@ -645,7 +656,7 @@
                                        this.widgetHelper.getChartConfig().getChartType() !== 'doughnut' &&
                                        !widgetHelper.getChartConfig().series[seriesKey].isParent">
                                 <button (click)="showSection(seriesKey)" class="btn btn-primary">
-                                    <i class="fa fa-angle-double-down"></i>
+                                    <i [c8yIcon]="'angle-double-down'"></i>
                                 </button>
                             </div>
 
@@ -667,11 +678,12 @@
                             <ng-container *ngIf="!widgetHelper.getChartConfig().multivariateplot == true">
                                 <div class="row form-group">
                                     <div class="form-check-inline col-lg-12">
+                                        <input class="form-check-input" type="checkbox"
+                                               [ngModelOptions]="{ standalone: true }"
+                                               [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].hideMeasurements"
+                                               (ngModelChange)="updateConfig()" />
                                         <label class="label-with-help" class="form-check-label" translate>
-                                            <input class="form-check-input" type="checkbox"
-                                                   [ngModelOptions]="{ standalone: true }"
-                                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].hideMeasurements"
-                                                   (ngModelChange)="updateConfig()" /> Hide measurements
+                                            Hide measurements
                                             <span class="help-icon">
                                                 <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                                      title="If you check this option it will hide the data points selected, this can be used when you only wish to show an aggregate.">
@@ -684,36 +696,38 @@
                                                      title="Add moving average and/or bollinger bands to your chart">
                                             </span>
 
-                                            <select class="form-control" name="avgSelector"
-                                                    [ngModelOptions]="{ standalone: true }"
-                                                    [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgType">
-                                                <option>None</option>
-                                                <option>Moving Average</option>
-                                                <option>Bollinger Bands</option>
-                                                <option>Moving Average + Bollinger Bands</option>
-                                            </select>
                                         </label>
+                                        <select class="form-control" name="avgSelector"
+                                                [ngModelOptions]="{ standalone: true }"
+                                                [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgType">
+                                            <option>None</option>
+                                            <option>Moving Average</option>
+                                            <option>Bollinger Bands</option>
+                                            <option>Moving Average + Bollinger Bands</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <ng-container *ngIf="widgetHelper.getChartConfig().series[seriesKey].avgType !=='None'">
                                     <div class="row form-group">
                                         <div class=" col-lg-12">
                                             <label class="label-with-help" translate>Colour
-                                                <input class="form-control" type="color"
-                                                       [ngModelOptions]="{standalone: true}"
-                                                       [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgColor"
-                                                       [value]="widgetHelper.getChartConfig().series[seriesKey].avgColor"
-                                                       (change)="updateConfig()" /></label>
+                                            </label>
+                                            <input class="form-control" type="color"
+                                                   [ngModelOptions]="{standalone: true}"
+                                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgColor"
+                                                   [value]="widgetHelper.getChartConfig().series[seriesKey].avgColor"
+                                                   (change)="updateConfig()" />
                                             <label class="label-with-help" translate>Aggregate period
                                                 <span class="help-icon">
                                                     <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                                                          title="Define the number of measurements to be used for the moving average and/or Bollinger bands.">
                                                 </span>
 
-                                                <input class="form-control" type="text"
-                                                       [ngModelOptions]="{standalone: true}"
-                                                       [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgPeriod"
-                                                       (ngModelChange)="updateConfig()" /></label>
+                                            </label>
+                                            <input class="form-control" type="text"
+                                                   [ngModelOptions]="{standalone: true}"
+                                                   [(ngModel)]="widgetHelper.getChartConfig().series[seriesKey].avgPeriod"
+                                                   (ngModelChange)="updateConfig()" />
                                         </div>
                                     </div>
                                 </ng-container>
