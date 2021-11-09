@@ -15,16 +15,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-import { Component, Input, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { WidgetHelper } from "./widget-helper";
 import { RawListItem, WidgetConfig } from "./widget-config";
 import { IResultList, IManagedObject, IdReference, IResult, IFetchResponse } from "@c8y/client";
 import { FetchClient, InventoryService } from '@c8y/ngx-components/api';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { deleteDB } from 'idb';
-import * as _ from 'lodash';
 import * as moment from "moment";
 import { AlertService } from '@c8y/ngx-components';
+import { get, set, has } from 'lodash';
 
 
 @Component({
@@ -37,7 +37,6 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     // All chosen options reside in the config
     //
     @Input() config: any = {};
-    @ViewChild("#seriesDiv", { static: true }) seriesDiv;
 
     public CONST_HELP_IMAGE_FILE =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAADdgAAA3YBfdWCzAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATzSURBVGiB7VlrTBxVFP7usLu8kUeBLSAFipUqFg1Qq5EgaCU2/DAxpYqJCVExmNC0Km1jolmbxgSCKbWoITG+oq1Ba6M1mvQHqxJTEyS0aEBiSyvIY2F5dl32Mczxh1WZndmdubOoTeD7d88995zvzH2cM/cC61jH2gZbFSs2m2B1l5VIEMoYUArgFgBZAa5GARogRj0CE7ono77uhc0mhes6rAAyD9iz/MQamUCPgZDJOXwUhA9FUWqfOXrfmFEOhgLIPtSd5JXEwwCeAhBp1Pk1eMDQ4fXCNt9WMc87mDsA68GuGiLWDiCVd6wGHAR6Zqql8lOeQfoDqP/BnJ7oageonpsaB4jw+lQs9sFWIerR1xVAqs0eJyyxUyB6IDx6+kDAV0zy7Xa0Vv2upStoKeQ3fhkpuPHFf0UeABjwIATLmVttnRYtXc0AXFFRRwGUrwozPlQ4l1JbtJRCLqH0JvseMHy0epz4QaCHQ23soAFsOHA2I4JZBkGUoNcZY8CO3CRUF1lRdGM8Yi0mAIBPlHBx2o2uwWmc6XfAJ/LkLzYLybvV0Vo1pdZrCjYsAubDPOQTos048lAB7t6cpNqfEmfBnbmJqN2RiYOfDOLilOb+vAZKZoLlZQANar2qM2A9ZM8hCb8gRIArYRIYOh7fhqKsG3RRcrp8qOnoxeKSX5c+AH8EE/PHm3eOBHaobmJaxtPQSR4AqovSFeRFidBzZR7nhufg9i/L+jbEWVC7navyMC+TSTX/KAOw2U1gqOOxvqswTdb2ixLq37+Ahg/60XjiR9S8qfza5VuSeVwAYHXY3RkRKFUEkLYkbQeQzmM6LzVW1u4amkH/b4t/tycXPbAPzch0spKjeVwAoAxrbkpxoFQRACOhgtMyEmPMsvbo7JJCx+WVVwbE6wQAoOSmts5LeM2WHPlWU6d4k3yPXJ7WewqtAENpoEhtE9/Ebzk0HinNRIE1Xib7/LyD2w4RtgTKVAJgG7kth0B1UTr278yTyfpGFnC6b8KIOQU3tSUUZ8SyGmpKMtBUlQ+2Ittcdrrx3McDkIxtgvhAgcoM0Kr8J2/LSsDzVZtl5H+dcWPvyZ94Epgm1JbQ1dUw3HBvDoQV7CcWPHjyvQuYWPCEY1bBTW0GDC3OlYiLNOGObPmp8+JnQ5hzh/3lFdyUeYDh53C9bEqJgUn45+uPz3twfmQhXLOACjdFAEToC9dPQpQ841+adodrEgDACL2BMsUpREyyM9L8UQuJc8NzupIbPyR7oETBdCq6+3uAKcrW/x9seLKlsidQqlKN2iQQnQjHlUlgaCjPwbt1t+N47W3YulFxfBsAnQSYInuo/w+Yl9sAKCsyndhTmoknyrJRmJmAu/KS8NqjhYgxKyphHrgiltGm1qEawNQr9zuI8LZRb8U5ibJ2UowZeWmxQbR14a3xVyucah1Bd6voWXoBKueuHozNySdPlMh4AmMYW4b5pWDdQQOYPb5rEYT9Rny+890oBib+TJp+UULr2UuYcfmMmAIR7XW23BO0OtCse6xNXW8QY6o3AlrYEGfBVa8Ir9/gMwDDMUdzxb5QKpoH/uQVZyMYThvx73T5DJNnDKcc0d88q6mnx9j1fLm7Nq7XV+J6e+DgLnommys7IwXTzQDaAXh5x6vAA4ZjXh8KeMkDa/WRT4Hgz6x/3fTO/VvPrOtYx1rHHxm4yOkGvwZ0AAAAAElFTkSuQmCC";
@@ -76,7 +75,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (this.widgetHelper.getDeviceTarget()) {
             let { data, res } = await this.getDeviceDetail(this.widgetHelper.getDeviceTarget());
             if (res.status >= 200 && res.status < 300) {
-                let v: RawListItem = { id: data.id, text: data.name, isGroup: false };
+                let v: RawListItem = { id: data.id, text: data.name, isGroup: has(data, 'c8y_IsDeviceGroup') };
                 this.widgetHelper.getWidgetConfig().selectedDevices = [v];
             } else {
                 this.alertService.danger(`There was an issue getting device details, please refresh the page.`);
@@ -104,8 +103,6 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
 
 
     onConfigChanged(): void {
-        //console.log("CONFIG-CHANGED");
-        //console.log(this.config);
         this.widgetHelper.setWidgetConfig(this.config); //propgate changes 
     }
 
@@ -143,7 +140,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (result.res.status === 200) {
             do {
                 result.data.forEach((mo) => {
-                    _.set(mo, "isGroup", true);
+                    set(mo, "isGroup", true);
                     retrieved.push(mo);
                 });
 
@@ -157,7 +154,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (result.res.status === 200) {
             do {
                 result.data.forEach((mo) => {
-                    _.set(mo, "isGroup", false);
+                    set(mo, "isGroup", false);
                     retrieved.push(mo);
                 });
 
@@ -173,7 +170,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         return this.inventory.detail(id);
     }
 
-    async fetchSeries(id): Promise<string[]> {
+    async fetchSeries(id: string | number): Promise<string[]> {
         let resp: IFetchResponse = await this.fetchclient.fetch("/inventory/managedObjects/" + id + "/supportedSeries");
         let body = await resp.json();
         return body.c8y_SupportedSeries;
@@ -204,7 +201,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         return this.supportedSeries;
     }
 
-    async getDevicesForGroup(id: string): Promise<IManagedObject[]> {
+    async getDevicesForGroup(id: number): Promise<IManagedObject[]> {
         let retrieved: IManagedObject[] = []; //could be empty.
 
         //get the 3 types of children for the node at id.
@@ -220,7 +217,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (result.res.status === 200) {
             do {
                 result.data.forEach((mo) => {
-                    if (_.has(mo, "c8y_IsDevice")) {
+                    if (has(mo, "c8y_IsDevice")) {
                         retrieved.push(mo);
                     }
                 });
@@ -237,7 +234,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (result.res.status === 200) {
             do {
                 result.data.forEach((mo) => {
-                    if (_.has(mo, "c8y_IsDevice")) {
+                    if (has(mo, "c8y_IsDevice")) {
                         retrieved.push(mo);
                     }
                 });
@@ -278,7 +275,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
                 //is it a group
                 if (dev.isGroup) {
                     //get the child devices and generate the list of ids to process
-                    let actualDevices = await this.getDevicesForGroup(dev.id);
+                    const actualDevices = await this.getDevicesForGroup(dev.id);
 
                     for (let index = 0; index < actualDevices.length; index++) {
                         const device = actualDevices[index];
@@ -312,39 +309,37 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
      * respond to changes in options, record in config
      */
     async updateSelectedMeasurements() {
-        this.widgetHelper.getChartConfig().clearSeries(this.widgetHelper.getWidgetConfig().selectedMeasurements);
-        this.widgetHelper.getWidgetConfig().selectedMeasurements.forEach((v, i) => {
-            //console.log("CURRENT SELECTED = ", v);
+        const config = this.widgetHelper.getChartConfig();
+        const selectedMeasurements = this.widgetHelper.getWidgetConfig().selectedMeasurements;
+        config.clearSeries(selectedMeasurements);
+        selectedMeasurements.forEach((v, i) => {
             this.widgetHelper
                 .getChartConfig()
                 .addSeries(
-                    [v.id],
+                    [v.id.toString()],
                     v.text,
-                    this.widgetHelper.getChartConfig().colorList[i],
-                    this.widgetHelper.getChartConfig().avgColorList[i],
+                    config.colorList[i],
+                    config.avgColorList[i],
                     v.groupname
                 );
             //add a series for the group - this will be controlled via a flag as well...
-            if (v.isGroup && !(v.groupname in this.widgetHelper.getChartConfig().series)) {
-                //console.log("CREATING ", v.groupname);
-
-                this.widgetHelper.getChartConfig().addSeries(
-                    [v.id], //create and add the source device
+            if (v.isGroup && !(v.groupname in config.series)) {
+                config.addSeries(
+                    [v.id.toString()], //create and add the source device
                     v.groupname,
-                    this.widgetHelper.getChartConfig().colorList[i],
-                    this.widgetHelper.getChartConfig().avgColorList[i],
+                    config.colorList[i],
+                    config.avgColorList[i],
                     v.groupname,
                     true
                 );
-            } else if (v.isGroup && v.groupname in this.widgetHelper.getChartConfig().series) {
+            } else if (v.isGroup && v.groupname in config.series) {
                 //add this device if
-                //console.log("ADDING device to ", v.groupname);
-                this.widgetHelper.getChartConfig().series[v.groupname].idList.push(v.id);
+                config.series[v.groupname].idList.push(v.id.toString());
             }
         });
     }
 
-    showSection(id) {
+    showSection(id: string) {
         if (this.selectedSeries === id) {
             this.selectedSeries = "";
         } else {
@@ -354,7 +349,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
 
     async clearCache() {
         let dbName = "cumulocity-datapoints-charting-widget-db";
-        await deleteDB(dbName, { blocked: () =>console.log(`Waiting to Removing DB ${dbName}`) });
+        await deleteDB(dbName, { blocked: () => console.log(`Waiting to Removing DB ${dbName}`) });
     }
 
     /**
@@ -362,10 +357,10 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
      */
     async updateConfig() {
         let conf = this.widgetHelper.getWidgetConfig();
-        let chart = this.widgetHelper.getChartConfig();
         conf.changed = true;
+        let chartConfig = this.widgetHelper.getChartConfig();
         // get the list of possible fragments
-        if (chart && conf.selectedDevices && conf.selectedDevices.length > 0) {
+        if (chartConfig && conf.selectedDevices && conf.selectedDevices.length) {
             let checklist = new Set([]);
 
             for (let index = 0; index < conf.selectedDevices.length; index++) {
@@ -373,9 +368,9 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
             }
 
             let newSelected: RawListItem[] = [];
-            if (conf.selectedMeasurements && conf.selectedMeasurements.length > 0) {
+            if (conf.selectedMeasurements && conf.selectedMeasurements.length) {
                 for (let index = 0; index < conf.selectedMeasurements.length; index++) {
-                    if (checklist.has(conf.selectedMeasurements[index].id.split(".")[0])) {
+                    if (checklist.has(conf.selectedMeasurements[index].id.toString().split(".")[0])) {
                         newSelected.push(conf.selectedMeasurements[index]);
                     }
                 }
@@ -385,49 +380,42 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         }
 
         //Formats
-        let fmt =
-            this.widgetHelper.getChartConfig().rangeDisplay[
-            this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
-            ];
-
-        if (this.widgetHelper.getChartConfig().customFormat) {
-            fmt = this.widgetHelper.getChartConfig().customFormatString;
-
-            this.widgetHelper.getChartConfig().rangeDisplay[
-                this.widgetHelper.getChartConfig().rangeUnits[this.widgetHelper.getChartConfig().timeFormatType].text
-            ] = fmt; //store custom in list
+        const rangeUnit = chartConfig.rangeUnits[chartConfig.timeFormatType];
+        let fmt = get(chartConfig.rangeDisplay, rangeUnit.text);
+        if (chartConfig.customFormat) {
+            fmt = chartConfig.customFormatString;
+            //store custom in list
+            set(chartConfig.rangeDisplay, rangeUnit.text, fmt);
         }
-        this.widgetHelper.getChartConfig().dateExample = moment().format(fmt);
-
+        chartConfig.dateExample = moment().format(fmt);
+        const chartType = chartConfig.getChartType();
         //Some charts need certain defaults
-        if (this.widgetHelper.getChartConfig().multivariateplot === true) {
-            if (this.widgetHelper.getChartConfig().getChartType() !== "radar") {
-                this.widgetHelper.getChartConfig().groupby = true;
+        if (chartConfig.multivariateplot) {
+            if (chartType !== "radar") {
+                chartConfig.groupby = true;
             }
-            this.widgetHelper.getChartConfig().realtime = "timer";
+            chartConfig.realtime = "timer";
         } else {
-            this.widgetHelper.getChartConfig().realtime = "realtime";
+            chartConfig.realtime = "realtime";
         }
 
         //Some charts need certain defaults
         if (
-            (this.widgetHelper.getChartConfig().getChartType() === "scatter" || this.widgetHelper.getChartConfig().getChartType() === "bubble") &&
-            this.widgetHelper.getChartConfig().showPoints == 0
+            (chartType === "scatter" || chartType === "bubble") &&
+            chartConfig.showPoints == 0
         ) {
-            this.widgetHelper.getChartConfig().showPoints = 4;
+            chartConfig.showPoints = 4;
         }
 
         //Bar and horizontalBar should be time based
         if (
-            this.widgetHelper.getChartConfig().getChartType() === "bar" ||
-            this.widgetHelper.getChartConfig().getChartType() === "horizontalBar" ||
-            this.widgetHelper.getChartConfig().getChartType() === "pie" ||
-            this.widgetHelper.getChartConfig().getChartType() === "doughnut"
+            chartType === "bar" ||
+            chartType === "horizontalBar" ||
+            chartType === "pie" ||
+            chartType === "doughnut"
         ) {
-            this.widgetHelper.getChartConfig().multivariateplot = false;
+            chartConfig.multivariateplot = false;
         }
         this.widgetHelper.setWidgetConfig(this.config);
     }
-
-
 }

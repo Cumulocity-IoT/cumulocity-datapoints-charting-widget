@@ -1,13 +1,12 @@
 /** @format */
 
-import _ from "lodash";
+import { has, get } from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
 import * as Chart from "chart.js";
 import { openDB } from "idb";
 import { MeasurementOptions } from "./widget-config";
-
 
 /**
  * The product of this class is a list of value/date pairs
@@ -22,10 +21,10 @@ export class MeasurementList {
     valCount: number; // this will contain the raw data
     bucket: number[]; // pie/doughnut mainly
     labels: string[]; // pie/doughnut mainly
-    mx: Number;
-    mn: Number;
-    sm: Number;
-    av: Number;
+    mx: number;
+    mn: number;
+    sm: number;
+    av: number;
 
     constructor(
         options: MeasurementOptions,
@@ -33,7 +32,7 @@ export class MeasurementList {
         aggregate: Chart.ChartPoint[],
         lower: Chart.ChartPoint[],
         valtimes: Chart.ChartPoint[],
-        valCount,
+        valCount: number,
         bucket: number[],
         labels: string[],
         mx: number,
@@ -78,7 +77,7 @@ export class MeasurementList {
 }
 
 class RawData {
-    vl: any[];
+    vl: Chart.ChartPoint[];
     vlCounts: number[];
     mx: number;
     mn: number;
@@ -139,24 +138,20 @@ export class MeasurementHelper {
         useCache: boolean = false
     ): Promise<MeasurementList> {
         //options for this query
-        //console.log(` from ${dateFrom} to ${dateTo}`);
         let dbName = "cumulocity-datapoints-charting-widget-db";
         let storeName = `datasets`;
         let key = `${chartID}-${deviceId}.${fragment}.${series}`;
         const db = await openDB(dbName, 1, {
             upgrade(db, oldVersion, newVersion, transaction) {
-                var store;
+               
                 try {
-                    //console.log("Get the store");
-                    store = transaction.objectStore(storeName);
+                    transaction.objectStore(storeName);
                 } catch (e) {
-                    //console.log("Create the store");
-                    store = db.createObjectStore(storeName); //needs to be in here to work
+                    db.createObjectStore(storeName); //needs to be in here to work
                 }
             },
         });
-        //console.log("GET MEASUREMENTS", key);
-        let data = [];
+        let data: IMeasurement[] = [];
         if (useCache) {
             const item = await db.transaction(storeName).objectStore(storeName).get(key);
             data = JSON.parse(item ? item : "[]"); //array of measurements
@@ -168,31 +163,17 @@ export class MeasurementHelper {
         let fromDateInRange = undefined;
 
         //shortcut here - old data is fine - will update on next RT
-        if (data.length > 0) {
+        if (data.length) {
             //reversed - newest first
             fromDateInRange = new Date(data[data.length - 1].time);
             toDateInRange = new Date(data[0].time);
-           //console.log(`retrieved stored data for ${key} = ${fromDateInRange} => ${toDateInRange}`);
-        } else {
-           //console.log(`no stored data for ${key}`);
         }
 
-
-       //console.log(`data required for  ${dateFrom} => ${dateTo}`);
-
-        //cache hit if from and to are within range
-        ////console.log(data.length);
-        ////console.log(dateFrom, fromDateInRange);
-        ////console.log(dateTo, toDateInRange);
-        ////console.log(moment(dateFrom).isSameOrAfter(fromDateInRange));
-        ////console.log(moment(dateFrom).isSameOrBefore(toDateInRange));
-        if (data.length > 0 && moment(dateFrom).isSameOrAfter(fromDateInRange) && moment(dateFrom).isSameOrBefore(toDateInRange)) {
+        if (data.length && moment(dateFrom).isSameOrAfter(fromDateInRange) && moment(dateFrom).isSameOrBefore(toDateInRange)) {
             //cache hit if from and/or to are within range
             if (moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {
-               //console.log("cache hit (1)");
                 //totally within range in cache 
             } else {
-               //console.log("partial cache hit (2)");
                 //starts in range - need to get latestDateInRange to dateTo
                 adjustedFrom = toDateInRange;
                 options.setFilter(
@@ -215,7 +196,6 @@ export class MeasurementHelper {
                 data = [...data, ...newData];
             }
         } else if (data.length > 0 && moment(dateTo).isSameOrBefore(toDateInRange) && moment(dateTo).isSameOrAfter(fromDateInRange)) {
-           //console.log("partial cache hit (3)");
             //ends in range - need to get dateFrom to earliestDateInRange
             adjustedTo = fromDateInRange;
             options.setFilter(
@@ -238,8 +218,6 @@ export class MeasurementHelper {
             data = [...newData, ...data];
 
         } else {
-           //console.log("Cache Miss (4,5)");
-            //console.log(`getting data for ${key} = ${dateFrom} => ${dateTo}`);
             //we need everything.
             options.setFilter(deviceId, name, fragment, series, dateFrom, dateTo, count, targetGraphType, timeBucket, bucketPeriod, labelDateFormat);
 
@@ -248,17 +226,13 @@ export class MeasurementHelper {
             data = await this.getDataFromC8y(filter, measurementService, data, maxMeasurements);
         }
 
-
-
-
         if (useCache) {
             const tx = db.transaction(storeName, "readwrite");
             const store = await tx.objectStore(storeName);
             //store the data so we can reopen immediately
-            const _value = await store.put(JSON.stringify(data), key);
+            await store.put(JSON.stringify(data), key);
             await tx.done;
         }
-        //console.log("STORED", data);
         db.close();
 
         //lets make sure we only show what's required.
@@ -284,15 +258,14 @@ export class MeasurementHelper {
         return this.processData(data.slice(endIndex, startIndex), options);
     }
 
-    private async getDataFromC8y(filter: Object, measurementService: MeasurementService, data: any[], maxMeasurements: number) {
-        _.set(filter, "currentPage", 1);
+    private async getDataFromC8y(filter: object, measurementService: MeasurementService, data: IMeasurement[], maxMeasurements: number) {
+       const f = {...filter, currentPage: 1};
         let page = 1;
-        let resp = await measurementService.list(filter);
+        let resp = await measurementService.list(f);
         if (resp.res.status == 200) {
             data = [...resp.data];
             page = resp.paging.nextPage;
             while (page != null && (maxMeasurements == 0 || data.length < maxMeasurements)) {
-                //console.log(`requesting page ${page}`);
                 // Need to handle errors here and also could there be
                 // other status codes to handle?
                 resp = await resp.paging.next();
@@ -306,7 +279,6 @@ export class MeasurementHelper {
             if (maxMeasurements > 0 && data.length > maxMeasurements) {
                 data.length = maxMeasurements;
             }
-           //console.log(`total of ${data.length} points`);
         }
         return data;
     }
@@ -318,44 +290,36 @@ export class MeasurementHelper {
         sumData: boolean = false
     ): Promise<MeasurementList> {
         let rawData: RawData = new RawData();
-        let upper = [];
-        let lower = [];
-        let aggseries = [];
+        let upper: Chart.ChartPoint[] = [];
+        let lower: Chart.ChartPoint[] = [];
+        let aggseries: Chart.ChartPoint[] = [];
 
         //we have the rawdata - MUST fill out the sources before attempting this.
         for (let index = 0; index < measurements.length; index++) {
             const seriesKey = measurements[index];
             const raw = seriesData[seriesKey];
-            //console.log("DEST", seriesKey, rawData.vl);
-            //console.log("SOURCE", seriesKey, raw.valtimes);
             //lets accumulate the data...
             if (rawData.vl.length == 0) {
-                //console.log("COPY FIRST", seriesKey);
                 rawData.vl = JSON.parse(JSON.stringify(raw.valtimes)); //deep copy
             } else {
                 //add the values
-                //console.log("ADD ", seriesKey);
                 let theLength = Math.min(rawData.vl.length, raw.valtimes.length);
                 rawData.vl.length = theLength;
                 raw.valtimes.length = theLength;
                 for (let innerIndex = 0; innerIndex < theLength; innerIndex++) {
                     const element = raw.valtimes[innerIndex];
-                    rawData.vl[innerIndex].y += element.y;
+                    (<number>rawData.vl[innerIndex].y) += <number>element.y;
                 }
             }
         }
 
-        //console.log("SUM ", rawData.vl);
-
         if (!sumData) {
             for (let index = 0; index < rawData.vl.length; index++) {
                 const point = rawData.vl[index];
-                rawData.vl[index].y = parseFloat((point.y / measurements.length).toFixed(options.numdp));
+                rawData.vl[index].y = parseFloat((<number>point.y / measurements.length).toFixed(options.numdp));
             }
 
         }
-
-        //console.log("AVG ", rawData.vl);
         //instance of data for use
         let measurementList: MeasurementList = new MeasurementList(
             options,
@@ -386,19 +350,19 @@ export class MeasurementHelper {
         rawData.vl = rawData.vl.reverse();
 
         //Create aggregate function from data (decompose and recompose {x,y}[])
-        let upper = [];
-        let aggseries = [];
-        let lower = [];
+        let upper: Chart.ChartPoint[] = [];
+        let aggseries: Chart.ChartPoint[] = [];
+        let lower: Chart.ChartPoint[] = [];
 
         //only line graphs need this (Checked internally - noop if other)
         this.createAggregateSeries(options, rawData, upper, aggseries, lower);
 
         //only pie/doughnut/histogram graphs need this (Checked internally - noop if other)
         //histogram will be special type - need to add in handling for bucketing by value (stddev etc)
-        let rawBucketData = this.createBucketSeries(options, rawData);
+        const rawBucketData = this.createBucketSeries(options, rawData);
 
         //instance of data for use
-        let measurementList: MeasurementList = new MeasurementList(
+        const measurementList = new MeasurementList(
             options,
             upper,
             aggseries,
@@ -456,10 +420,10 @@ export class MeasurementHelper {
 
             let measurementValue = 0;
             //need the fragment, series
-            if (_.has(row, options.fragment)) {
-                let frag = _.get(row, options.fragment);
-                if (_.has(frag, options.series)) {
-                    let ser = _.get(frag, options.series);
+            if (has(row, options.fragment)) {
+                let frag = get(row, options.fragment);
+                if (has(frag, options.series)) {
+                    let ser = get(frag, options.series);
                     //if there is a group by we need to either sum or average the
                     //value for the current set of measurements
                     measurementValue = parseFloat(parseFloat(ser.value).toFixed(options.numdp));
@@ -495,9 +459,9 @@ export class MeasurementHelper {
                     newArr.vlCounts.push(1);
                 } else {
                     if (options.targetGraphType == "horizontalBar") {
-                        newArr.vl[newArr.vl.length - 1].x = newArr.vl[newArr.vl.length - 1].x + v.x;
+                        newArr.vl[newArr.vl.length - 1].x = <number>newArr.vl[newArr.vl.length - 1].x + <number>v.x;
                     } else {
-                        newArr.vl[newArr.vl.length - 1].y = newArr.vl[newArr.vl.length - 1].y + v.y;
+                        newArr.vl[newArr.vl.length - 1].y = <number>newArr.vl[newArr.vl.length - 1].y + <number>v.y;
                     }
                     newArr.vlCounts[newArr.vlCounts.length - 1] += 1; //increment
                 }
@@ -515,16 +479,15 @@ export class MeasurementHelper {
             if (!options.cumulative) {
                 result.vl = d.vl.map((val, index) => {
                     if (options.targetGraphType == "horizontalBar") {
-                        val.x = parseFloat((val.x / d.vlCounts[index]).toFixed(options.numdp));
+                        val.x = parseFloat((<number>val.x / d.vlCounts[index]).toFixed(options.numdp));
                     } else {
-                        val.y = parseFloat((val.y / d.vlCounts[index]).toFixed(options.numdp));
+                        val.y = parseFloat((<number>val.y / d.vlCounts[index]).toFixed(options.numdp));
                     }
                     return val;
                 });
             }
         }
 
-        //console.log("RawData", result);
         return result;
     }
 
@@ -537,7 +500,7 @@ export class MeasurementHelper {
      * @param aggseries target for moving average
      * @param lower target array for boll band series
      */
-    private createAggregateSeries(options: MeasurementOptions, rawData: RawData, upper: any[], aggseries: any[], lower: any[]) {
+    private createAggregateSeries(options: MeasurementOptions, rawData: RawData, upper: Chart.ChartPoint[], aggseries: Chart.ChartPoint[], lower: Chart.ChartPoint[]) {
         if (options.targetGraphType == "line") {
             if (options.avgPeriod && options.avgPeriod > 0) {
                 //just the values
@@ -587,7 +550,7 @@ export class MeasurementHelper {
                     // same size as the input - but as labels
                     // simple 1 dim array
                     let mapped = this.categorize(options, val);
-                    if (_.has(result, mapped)) {
+                    if (has(result, mapped)) {
                         result[mapped] = result[mapped] + 1;
                     } else {
                         result[mapped] = 1;
@@ -595,7 +558,7 @@ export class MeasurementHelper {
                 });
             } else {
                 //values buckets
-                let vals = rawData.vl.map((val) => val.y);
+                let vals = rawData.vl.map((val) => val.y as number);
                 let hist = this.calculateHistogram(vals, options.mxBuckets, options.mnBuckets, options.sizeBuckets, options.numdp);
                 return { labels: hist.labels, data: hist.counts };
             }
@@ -634,7 +597,7 @@ export class MeasurementHelper {
         }
 
         //histogram
-        let bin: string = "";
+        let bin = "";
 
         if (typeof val.y !== "number") {
             bin = val.y.toString();
@@ -642,7 +605,6 @@ export class MeasurementHelper {
             bin = Math.floor((val.y - mn) / buckets).toString();
         }
 
-        //console.log(`BIN: ${bin}`);
         return bin;
     }
 
@@ -653,15 +615,12 @@ export class MeasurementHelper {
      * @param numBins number of buckets
      * @returns data and labels in object
      */
-    calculateHistogram(arr: number[], maxBucket: any, minBucket: any, binSize: any, dp: number): { labels: string[]; counts: number[]; } {
+    calculateHistogram(arr: number[], maxBucket: number, minBucket: number, binSize: number, dp: number): { labels: string[]; counts: number[]; } {
         const bins: number[] = [];
         const binLabels: string[] = [];
-        let previousLabel: string = parseFloat(minBucket).toFixed(dp);
+        let previousLabel = parseFloat(minBucket.toString()).toFixed(dp);
         let dataCopy = arr.sort((a, b) => a - b);
 
-        //const min = dataCopy[0];
-        //const max = dataCopy[dataCopy.length - 1];
-        //const binSize = (max - min) / numBins === 0 ? 1 : (max - min) / numBins;
         bins.push(0); //lower catch all
         binLabels.push(`< ${minBucket}`);
 
@@ -676,7 +635,6 @@ export class MeasurementHelper {
 
         bins.push(0); //upper catch all
         binLabels.push(`> ${maxBucket}`);
-        //console.log(`Buckets:,  ${minBucket}, ${binSize}`, bins, binLabels, dataCopy);
 
         dataCopy.forEach((item) => {
             let binIndex = Math.floor((item - minBucket) / binSize);
@@ -686,14 +644,12 @@ export class MeasurementHelper {
             } else if (item > maxBucket) {
                 bins[bins.length - 1]++;
             } else {
-                //console.log("binIndex==numBins", item, binIndex, binLabels[binIndex]);
                 // for values that lie exactly on last bin we need to subtract one
                 if (binIndex === numBins) {
                     binIndex--;
                 }
                 bins[binIndex + 1]++; //offset the <x bucket
             }
-            //console.log(bins, binLabels);
         });
 
         return { labels: binLabels, counts: bins };

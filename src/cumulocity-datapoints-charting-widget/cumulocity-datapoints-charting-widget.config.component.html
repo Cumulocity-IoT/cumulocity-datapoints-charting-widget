@@ -10,8 +10,8 @@
 
 
             <div class="col-lg-6" *ngIf="this.widgetHelper.getDeviceTarget() else selector">
-                <label class="label-with-help" for="deviceSelector" class="label-with-help" translate>
-                    {{widgetHelper.getWidgetConfig().selectedDevices[0].text}}
+                <label class="label-with-help" for="deviceSelector" class="label-with-help">
+                    {{widgetHelper.getWidgetConfig().selectedDevices[0]?.text}}
                     <span class="help-icon">
                         <img src="{{CONST_HELP_IMAGE_FILE}}" alt="help tooltip"
                              title="Group device Id.">
