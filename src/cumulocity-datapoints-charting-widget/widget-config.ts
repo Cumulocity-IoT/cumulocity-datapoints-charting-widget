@@ -5,7 +5,7 @@
 //
 import { formatDate } from "@angular/common";
 import { ChartConfig } from "./widget-charts";
-import * as _ from 'lodash';
+import { has, set, get } from 'lodash';
 
 /**
  * These elements can form the criteria
@@ -80,11 +80,11 @@ export class MeasurementOptions {
         this.fragment = fragment;
         this.series = series;
         if (from) {
-            _.set(this, "dateFrom", from);
+            set(this, "dateFrom", from);
         }
 
         if (to) {
-            _.set(this, "dateTo", to);
+            set(this, "dateTo", to);
         }
         this.pageSize = count;
         this.targetGraphType = targetGraphType;
@@ -95,21 +95,21 @@ export class MeasurementOptions {
 
     public filter(): Object {
         let filter = {};
-        _.set(filter, "source", this.deviceId);
-        _.set(filter, "valueFragmentType", this.fragment);
-        _.set(filter, "valueFragmentSeries", this.series);
-        _.set(filter, "pageSize", 2000);
-        _.set(filter, "revert", true);
-        _.set(filter, "withTotalPages", true);
+        set(filter, "source", this.deviceId);
+        set(filter, "valueFragmentType", this.fragment);
+        set(filter, "valueFragmentSeries", this.series);
+        set(filter, "pageSize", 2000);
+        set(filter, "revert", true);
+        set(filter, "withTotalPages", true);
 
         //dates are strings in the filter
-        if (_.has(this, "dateFrom")) {
-            _.set(filter, "dateFrom", formatDate(_.get(this, "dateFrom"), this.queryDateFormat, this.locale));
+        if (has(this, "dateFrom")) {
+            set(filter, "dateFrom", formatDate(get(this, "dateFrom"), this.queryDateFormat, this.locale));
         }
 
         //this should always be "now" for the moment it can't be entered manually
-        if (_.has(this, "dateTo")) {
-            _.set(filter, "dateTo", formatDate(_.get(this, "dateTo"), this.queryDateFormat, this.locale));
+        if (has(this, "dateTo")) {
+            set(filter, "dateTo", formatDate(get(this, "dateTo"), this.queryDateFormat, this.locale));
         }
 
         return filter;
@@ -132,8 +132,14 @@ export interface DataObject {
  * optional generic field for label/text/date formatting etc
  */
 export interface RawListItem {
-    id: any;
-    text: any;
+    /**
+     * FIXME: changing to number | string reveals the different interactions with this property.
+     * Sometimes its a number used to access a position in an array.
+     * Sometimes its a string used to access attributes of an object.
+     * This leads to a high risk of issues!
+     */
+    id: any 
+    text: string;
     format?: string;
     isGroup?: boolean;
     groupname?: string;
@@ -153,7 +159,7 @@ export class WidgetConfig {
      * charts configuration
      */
     chart: ChartConfig;
-    changed: boolean = false;
+    changed = false;
 
     /**
      *  Create an instance of the config object

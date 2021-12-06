@@ -1,7 +1,7 @@
 /** @format */
 import { RawListItem } from "./widget-config";
-import * as _ from "lodash";
 import { TimeDisplayFormat } from "chart.js";
+import { has } from 'lodash';
 
 export interface Aggregation {
     type: string;
@@ -16,15 +16,15 @@ export interface Aggregation {
  */
 export class ChartSeries {
     idList: string[] = []; //series id
-    name: string = ""; //series name
-    variable: string = "Assign variable"; //part of composite co-ordinate (0 = no order, 1 = x, 2 = y...)
-    color: string = "#4ABBF0"; //display colour default just in case
-    showAdvanced: boolean = false;
-    hideMeasurements: boolean = false;
-    avgType: string = "None";
-    avgPeriod: number = 10;
-    avgColor: string = "#4ABBF0"; //display colour
-    memberOf: string = "default";
+    name = ""; //series name
+    variable = "Assign variable"; //part of composite co-ordinate (0 = no order, 1 = x, 2 = y...)
+    color = "#4ABBF0"; //display colour default just in case
+    showAdvanced = false;
+    hideMeasurements = false;
+    avgType = "None";
+    avgPeriod = 10;
+    avgColor = "#4ABBF0"; //display colour
+    memberOf = "default";
     isParent: boolean;
     constructor(k: string[], n: string, c: string, a: string, g: string, p: boolean) {
         this.idList = k;
@@ -195,11 +195,15 @@ export class ChartConfig {
      * N.B. the time and agg format types may be different and reflect
      * that the format of axes and bucket parameters can differ
      */
-    rangeType: number = 2; //default minutes (index into rangeUnits)
-    timeFormatType: number = 2; //default minutes (index into rangeUnits)
-    aggregation: number = this.aggregationType[0].id; // conditionally applied default to time base counts
-    aggTimeFormatType: number = 2; //default minutes (index into rangeUnits)
-    rangeValue: number = 10;
+    rangeType = 2; //default minutes (index into rangeUnits)
+    
+    /** default minutes (index into rangeUnits) */
+    timeFormatType = 2; 
+    aggregation: number = +this.aggregationType[0].id; // conditionally applied default to time base counts
+    
+    /** default minutes (index into rangeUnits) */
+    aggTimeFormatType = 2; 
+    rangeValue = 10;
 
     /**
      * Local copy of the options - values can be changed per chart
@@ -233,10 +237,8 @@ export class ChartConfig {
             { isGroup: false, id: 4, text: "doughnut" },
             { isGroup: false, id: 7, text: "pie" },
             { isGroup: false, id: 3, text: "radar" },
-            //{ isGroup:false , id: 5, text: "polarArea" },
             { isGroup: false, id: 8, text: "scatter" },
             { isGroup: false, id: 6, text: "bubble" },
-            // { isGroup:false , id: 9, text: "histogram" },
         ];
     }
     /**
@@ -283,11 +285,11 @@ export class ChartConfig {
      */
     addSeries(devices: string[], seriesName: string, seriesColor: string, altColor: string, memberOf: string = "default", isParent: boolean = false) {
         if (!isParent) {
-            if (!_.has(this.series, devices[0])) {
+            if (!has(this.series, devices[0])) {
                 this.series[devices[0]] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);
             }
         } else {
-            if (!_.has(this.series, seriesName)) {
+            if (!has(this.series, seriesName)) {
                 this.series[seriesName] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);
             }
         }
