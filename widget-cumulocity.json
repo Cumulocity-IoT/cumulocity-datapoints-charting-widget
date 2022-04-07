@@ -7,6 +7,10 @@
         "class": "dlt-icon-line-chart"
     },
     "manifest": {
-        "noAppSwitcher": true
+        "noAppSwitcher": true,
+        "requiredPlatformVersion": ">=1010.0.4",
+        "version": "1.1.19",
+        "author": "Software AG, Global Presales",
+        "license": "Apache 2.0"
     }
 }
