@@ -149,6 +149,79 @@ The above chart is a basic line chart, but you can use the ability to plot data 
 -   bubble (x,y,r) r = diameter of plotted point
     ![series](/images/bubble.png)
 
+## Build Instructions
+
+**Note:** It is only necessary to follow these instructions if you are modifying/extending this widget, otherwise see the [Installation Guide](#Installation).
+
+**Requirements:**
+  
+* Git  
+
+* NodeJS (release builds are currently built with `v12.19.0`)
+  
+
+* NPM (Included with NodeJS)
+  
+
+**Instructions**
+
+
+1. Clone the repository:
+
+    ```  
+
+    git clone https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget.git
+
+    ```
+
+2. Change directory:
+
+    ```
+
+    cd cumulocity-datapoints-charting-widget
+
+    ```
+
+3. (Optional) Checkout a specific version:
+
+    ```
+
+    git checkout <your version>
+    
+    ```  
+
+4. Install the dependencies:
+
+    ```
+
+    npm install
+
+    ```
+
+5. (Optional) Local development server:
+
+    ```
+
+    npm run start
+
+    ```
+
+6. Build the app:
+
+    ```
+
+    npm run build
+
+    ```
+
+7. Deploy the app:
+
+    ```
+
+    npm run deploy
+
+    ```
+
 ---
 
 These tools are provided as-is and without warranty or support. They do not constitute part of the Software AG product suite. Users are free to use, fork and modify them, subject to the license agreement. While Software AG welcomes contributions, we cannot guarantee to include every contribution in the master project.
