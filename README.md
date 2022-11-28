@@ -41,7 +41,7 @@ _There will be more added in the future depending on demand (E.G histogram)_
 
 ### Runtime Widget Deployment?
 
--   This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.19/cumulocity-datapoints-chart-widget-1.1.19.zip) and follow runtime deployment instructions from [here](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader).
+-   This widget supports runtime deployment. Download the [Runtime Binary](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.19/cumulocity-datapoints-chart-widget-1.1.19.zip).
 
 ## User guide
 
