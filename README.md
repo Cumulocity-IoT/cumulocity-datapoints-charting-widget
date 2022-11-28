@@ -222,7 +222,7 @@ The above chart is a basic line chart, but you can use the ability to plot data 
 
     ```
     
-8. Run gulp command to create a binary file under dist folder. Run npm install -g gulp to install gulp if not already:
+8. Run gulp command to create a binary file under dist folder. Run `npm install -g gulp` to install gulp if not already:
 
     ```
 
