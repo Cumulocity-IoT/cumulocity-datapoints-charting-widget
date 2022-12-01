@@ -6,34 +6,34 @@ The Data Points Charting Widget allows you to create real time graphs showing cu
 
 ## Features
 
-### Chart Types
+**Chart Types**
 
 The widget currently supports the following chart types
 
--   line and spline
-    -   ![line and spline](/images/line_vs_spline.png)
-    -   supporting multiple plots on the same graph
--   bar & horizontal bar
-    -   supporting stacked
-    -   ![horizontal and vertical stacked bars](/images/horz_vs_vertbar.png)
--   pie & doughnut
-    -   aggregated by time or value range buckets
-    -   ![bucket types](/images/buckets.png)
--   radar
--   scatter and bubble
+*   line and spline
+    *   ![line and spline](/images/line_vs_spline.png)
+    *   supporting multiple plots on the same graph
+*   bar & horizontal bar
+    *   supporting stacked
+    *   ![horizontal and vertical stacked bars](/images/horz_vs_vertbar.png)
+*   pie & doughnut
+    *   aggregated by time or value range buckets
+    *   ![bucket types](/images/buckets.png)
+*   radar
+*   scatter and bubble
 
-_There will be more added in the future depending on demand (E.G histogram)_
+* There will be more added in the future depending on demand (E.G histogram)_
 
-### Customization
+**Customization**
 
--   Selected data ranges configurable (# of measurements, time range)
--   precision of data configurable
--   Choose which Axes are displayed and scaled
--   Show Aggregate data (Moving average, Bollinger Bands, or both)
--   Choose colours for plotted data, data point visibility
--   configurable legend
--   show and hide data by clicking legend items, tool tips
--   configurable label format for times
+*   Selected data ranges configurable (# of measurements, time range)
+*   precision of data configurable
+*   Choose which Axes are displayed and scaled
+*   Show Aggregate data (Moving average, Bollinger Bands, or both)
+*   Choose colours for plotted data, data point visibility
+*   configurable legend
+*   show and hide data by clicking legend items, tool tips
+*   configurable label format for times
 
 ![Options](/images/options.png)
 
