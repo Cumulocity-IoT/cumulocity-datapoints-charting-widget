@@ -1,6 +1,6 @@
 {
     "name": "cumulocity-datapoints-charting-widget",
-    "version": "1.1.19",
+    "version": "1.1.22",
     "description": "Widget for displaying realtime measurement data in graphs (written by Software AG Global Pre-sales)",
     "main": "index.js",
     "scripts": {
@@ -49,6 +49,7 @@
         "@angular/compiler-cli": "8.2.13",
         "@angular/language-service": "8.2.13",
         "@c8y/cli": "1010.0.15",
+        "@types/uuid": "^9.0.0",
         "caniuse-lite": "1.0.30001237",
         "css-loader": "3.5.3",
         "gulp": "4.0.2",

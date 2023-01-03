@@ -234,9 +234,9 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (result.res.status === 200) {
             do {
                 result.data.forEach((mo) => {
-                    if (has(mo, "c8y_IsDevice")) {
+                   if (has(mo, "c8y_IsAsset")) {
                         retrieved.push(mo);
-                    }
+                   }
                 });
                 if (result.paging.nextPage) {
                     result = await result.paging.next();
@@ -244,7 +244,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
             } while (result.paging && result.paging.nextPage);
         }
 
-        //get the assets
+        //get the devices
         result = await this.inventory.childDevicesList(id, childFilter);
 
         if (result.res.status === 200) {
@@ -274,6 +274,15 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
                 const dev: RawListItem = devices[index];
                 //is it a group
                 if (dev.isGroup) {
+                    let current: RawListItem[] = (await this.fetchSeries(dev.id)).map((m) => {
+                        return {
+                            id: dev.id + "." + m,
+                            text: `${m}(${dev.text})`,
+                            isGroup: false,
+                            groupname: "default",
+                        };
+                    });
+                    local = [...local, ...current];
                     //get the child devices and generate the list of ids to process
                     const actualDevices = await this.getDevicesForGroup(dev.id);
 
