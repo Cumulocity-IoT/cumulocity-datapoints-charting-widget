@@ -1,5 +1,8 @@
 # Data points charting widget [<img width="35" src="https://user-images.githubusercontent.com/67993842/97668428-f360cc80-1aa7-11eb-8801-da578bda4334.png"/>](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget/releases/download/v1.1.19/cumulocity-datapoints-chart-widget-1.1.19.zip)
 
+### ⚠️ This project is no longer under development. Please use [cumulocity-datapoints-charting-widget-plugin
+](https://github.com/SoftwareAG/cumulocity-datapoints-charting-widget-plugin) for Application Builder >=2.x.x and Cumulocity >=1016.x.x⚠️
+
 The Data Points Charting Widget allows you to create real time graphs showing customizable amounts of data from one or more devices.
 
 ![Charts](/src/cumulocity-datapoints-charting-widget/assets/img-preview.png)
